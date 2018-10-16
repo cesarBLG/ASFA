@@ -1,0 +1,97 @@
+package dmi.Pantalla;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.Timer;
+
+import dmi.DMI;
+import ecp.ASFA;
+import ecp.Main;
+
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
+public class ÚltimaInfo extends JPanel {
+
+    public enum Info {
+        Vía_libre,
+        Vía_libre_condicional,
+        Anuncio_parada,
+        Anuncio_precaución,
+        Preanuncio,
+        Preanuncio_AV,
+        Parada,
+        Rebase,
+        Desconocido,
+        Apagado
+    }
+    Info info;
+    JLabel j;
+    Timer t;
+    Icono[] iconos;
+
+    @Override
+    public void setBounds(int arg0, int arg1, int arg2, int arg3) {
+        super.setBounds(arg0, arg1, arg2, arg3);
+        update();
+    }
+
+    public ÚltimaInfo() {
+        j = new JLabel();
+        t = new Timer(500, new ActionListener() {
+            boolean state = false;
+
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                // TODO Auto-generated method stub
+                if (state) {
+                    j.setIcon(iconos[Info.Vía_libre_condicional.ordinal()].getIcon());
+                } else {
+                    j.setIcon(iconos[Info.Apagado.ordinal()].getIcon());
+                }
+                state = !state;
+            }
+        });
+        setLayout(null);
+        setBackground(new Color(150, 150, 150));
+        add(j);
+        int num = Info.values().length;
+        iconos = new Icono[num];
+        for (int i = 0; i < num; i++) {
+            iconos[i] = new Icono(true, Info.values()[i].name().concat(".png"));
+        }
+        setInfo(Info.Desconocido);
+    }
+
+    public void update() {
+        if (Main.ASFA.dmi.pantalla.modo == ModoDisplay.Noche && info != Info.Vía_libre) {
+            setOpaque(true);
+            this.repaint();
+        } else {
+            setOpaque(false);
+            this.repaint();
+        }
+        j.setIcon(iconos[info.ordinal()].getIcon());
+        if (info != Info.Vía_libre_condicional) {
+            if (t.isRunning()) {
+                t.stop();
+            }
+            t.setRepeats(false);
+        } else {
+            t.start();
+            t.setRepeats(true);
+        }
+        if (j.getIcon() != null) {
+            j.setBounds(getWidth() / 2 - j.getIcon().getIconWidth() / 2, 42, j.getIcon().getIconWidth(), j.getIcon().getIconHeight());
+        }
+    }
+
+    public void setInfo(Info i) {
+        info = i;
+        update();
+    }
+}
