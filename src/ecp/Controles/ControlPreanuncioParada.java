@@ -6,11 +6,13 @@ public class ControlPreanuncioParada extends ControlFASF implements ControlAumen
 
     public boolean AumentoVelocidad;
     private double O;
+    private double T;
     private ASFA.Modo Modo;
 
-    public ControlPreanuncioParada(double time, double O, ASFA.Modo Modo) {
+    public ControlPreanuncioParada(double time, double O, double T, ASFA.Modo Modo) {
         super(time, 0, 0, 0);
         this.O = O;
+        this.T = T;
         this.Modo = Modo;
         Curvas();
     }
@@ -29,6 +31,10 @@ public class ControlPreanuncioParada extends ControlFASF implements ControlAumen
             } else if (O <= 100) {
                 IF = new Curva(O + 3, 63, 0.26, 11);
                 VC = new Curva(O, 60, 0.36, 7.5);
+            }
+            if(T>100) {
+            	VC.OrdenadaFinal = 80;
+            	IF.OrdenadaFinal = 83;
             }
             if (AumentoVelocidad) {
                 IF.OrdenadaFinal += 20;

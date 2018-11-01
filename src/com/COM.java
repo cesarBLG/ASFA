@@ -32,7 +32,7 @@ public interface COM {
         if (functn == 0) {
             int BotNum = val >> 2;
             int Ilum = val & 1;
-            if ((val & 2) != 0)  return;
+            if ((val & 2) != 0) return;
             if (BotNum == Botón.TipoBotón.VLCond.ordinal() && Ilum == 1) Ilum++;
             if (Botón.ListaBotones[BotNum] != null) Botón.ListaBotones[BotNum].iluminar(Ilum);
         }

@@ -4,7 +4,7 @@ public class ControlViaLibreCondicional extends ControlFASF {
 
     public ControlViaLibreCondicional(double time, double T, double O, boolean Fixed) {
         super(time, 0, 0, 0);
-        if (Fixed || T <= 160) {
+        if (Fixed || T <= 160 || O <= 160) {
             VC = new Curva(Math.min(T, 160), Math.min(T, 160), 0, 0);
             IF = new Curva(Math.min(T + 5, 163), Math.min(T + 5, 163), 0, 0);
         } else if (O == 180) {

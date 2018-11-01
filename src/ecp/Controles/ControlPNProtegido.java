@@ -14,8 +14,8 @@ public class ControlPNProtegido extends Control {
             IF = new Curva(165, 158, 0.5, 9);
             VC = new Curva(160, 155, 0.55, 7.5);
         } else {
-            IF = new Curva(T + 5, T + 5, 0, 0);
-            VC = new Curva(T, T, 0, 0);
+            IF = new Curva(Math.min(T + 5, 158));
+            VC = new Curva(Math.min(T, 155));
         }
     }
 }

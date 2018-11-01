@@ -1,9 +1,14 @@
 package dmi;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -21,8 +26,9 @@ import java.util.logging.Logger;
 
 public class Sound implements Runnable {
 
-    final List<Sonido> activeSounds = new ArrayList<>();
-    Sonido activo = null;
+	public Queue<Runnable> tasks = new LinkedList<>();
+	
+	Sonido activo = null;
 
     public Sound()
     {
@@ -30,120 +36,96 @@ public class Sound implements Runnable {
     }
 
     public void Trigger(String s) {
-        synchronized(activeSounds)
+    	if(activo!=null && activo.equals(s)) return;
+    	Runnable r = () -> {
+            clip.stop();
+        	clip.flush();
+        	clip.close();
+        	Sonido son = new Sonido(s);
+        	activo = son;
+        	try {
+				clip.open(son.stream);
+			} catch (LineUnavailableException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(son.loop) clip.loop(Clip.LOOP_CONTINUOUSLY);
+			else clip.start();
+    	};
+    	synchronized(tasks)
+    	{
+    		tasks.add(r);
+    		tasks.notify();
+    	}
+        /*synchronized(activeSounds)
         {
         	if(activeSounds.contains(s)) return;
             activeSounds.add(new Sonido(s));
             activeSounds.notify();
-        }
+        }*/
     }
 
     public void Stop(String s) {
-        synchronized(activeSounds)
-        {
-            activeSounds.removeIf(x -> x.name.equals(s));
-            activeSounds.notify();
-        }
+    	if(activo==null || !activo.equals(s)) return;
+    	synchronized(tasks)
+    	{
+    		tasks.add(() -> {clip.stop(); clip.flush();});
+    		tasks.notify();
+    	}
     }
-    LineListener getListener()
-    {
-    	return new LineListener() {
-
-            @Override
-                public void update(LineEvent arg0) {
-                    // TODO Auto-generated method stub
-                    synchronized(activeSounds)
-                    {
-                        if(arg0.getType()==LineEvent.Type.STOP&&activo!=null&&!activo.loop)
-                        {
-                            activeSounds.remove(activo);
-                            activeSounds.notify();
-                        }        
-                    }    
-                }
-                @Override
-                public boolean equals(Object obj)
-                {
-                    return obj instanceof LineListener;
-                }
-        };
-    }
-    public Clip getClip()
-    {
-        Clip clip = null;
-        try {
-            clip = AudioSystem.getClip(null);
-        } catch (LineUnavailableException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        clip.addLineListener(getListener());
-        return clip;
-    }
+    Clip clip = null;
     @Override
     public void run() {
-        // TODO Auto-generated method stub
-    	//if(true && true) return;
-        SourceDataLine source;
-        try {
-        	AudioInputStream ais = AudioSystem.getAudioInputStream(getClass().getResource("/content/Sonido/S0.wav"));
-			source = (SourceDataLine)AudioSystem.getLine(new DataLine.Info(SourceDataLine.class, ais.getFormat()));
-			source.open(ais.getFormat());
-	        source.start();
-	        Thread.sleep(10000);
-	        source.drain();
-	        source.close();
-		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException | InterruptedException e) {
+    	try {
+			clip = AudioSystem.getClip();
+		} catch (LineUnavailableException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
-        /*while(true)
-        {
-            synchronized(activeSounds)
-            {
-                if(clip!=null)
-                {
-                    clip.removeLineListener(getListener());
-                	clip.close();
-                    //if(clip.isRunning()) clip.stop();
-                    if(clip.isOpen()) clip.close();
-                }
-                if(!activeSounds.isEmpty())
-                {
-                    clip = getClip();
-                    activo = activeSounds.get(0);
-                    try {
-                        clip.open(AudioSystem.getAudioInputStream(activo.file));
-                    } catch (IOException | LineUnavailableException | UnsupportedAudioFileException e) {
-                        e.printStackTrace();
-                    }
-                    if (activo.loop) {
-                        clip.loop(Clip.LOOP_CONTINUOUSLY);
-                    } else {
-                        clip.setMicrosecondPosition((long) ((Clock.getSeconds() - activo.startTime) * 1000000f));
-                        clip.start();
-                    } 
-                }
-                try {
-                    activeSounds.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }*/
+    	while(true)
+		{
+			Runnable r = null;
+			synchronized(tasks)
+			{
+				if(tasks.isEmpty())
+				{
+					try
+					{
+						tasks.wait();
+					}
+					catch (InterruptedException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				else r = tasks.poll();
+			}
+			if(r!=null) r.run();
+		}
     }
 }
 
 class Sonido {
 
     public String name;
-    public File file;
+    public static Hashtable<String, AudioInputStream> streams = new Hashtable<>();
     public boolean loop;
     public double startTime = 0;
+    public AudioInputStream stream;
 
     public Sonido(String name) {
         this.name = name;
-        file = new File("src/content/Sonido/" + name + ".wav");
+        if(!streams.contains(name))
+        {
+			try {
+				streams.put(name, AudioSystem.getAudioInputStream(new File("src/content/Sonido/" + name + ".wav")));
+			} catch (UnsupportedAudioFileException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+        stream = streams.get(name);
         loop = name == "S3-1" || name == "S3-2" || name == "S5";
         startTime = Clock.getSeconds();
     }

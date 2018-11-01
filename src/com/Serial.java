@@ -23,7 +23,7 @@ public class Serial implements COM {
 
     @Override
     public void start() {
-        begin(115000);
+        //begin(115000);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class Serial implements COM {
     }
 
     void begin(int BaudRate) {
-        /*CommPortIdentifier portId = null;
+        CommPortIdentifier portId = null;
         Enumeration<?> portEnum = CommPortIdentifier.getPortIdentifiers();
         while (portEnum.hasMoreElements()) {
             CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
@@ -83,15 +83,21 @@ public class Serial implements COM {
         } catch (Exception e) {
             return;
         }
-        Connected = true;*/
+        Connected = true;
     }
-
+    boolean Missed = false;
     void Receive() {
         try {
+        	if(Missed)
+        	{
+        		while(Input.read() != 0xFF) {}
+        		Missed = false;
+        	}
             if (Input.available() >= 3) {
                 byte[] data = new byte[3];
                 Input.read(data, 0, 3);
                 if ((int) (data[2] & 0xFF) != 0xFF) {
+                    Missed = true;
                     return;
                 }
                 COM.parse(data);

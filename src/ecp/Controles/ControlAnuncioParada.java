@@ -4,7 +4,7 @@ import ecp.ASFA;
 
 public class ControlAnuncioParada extends ControlFASF {
 	
-    public ControlAnuncioParada(double time, double O, ASFA.Modo Modo) {
+    public ControlAnuncioParada(double time, double O, double T, ASFA.Modo Modo) {
         super(time, 0, 0, 0);
         if (Modo == ASFA.Modo.CONV) {
             if (O <= 100) {
@@ -19,6 +19,10 @@ public class ControlAnuncioParada extends ControlFASF {
             } else if (O >= 160) {
                 VC = new Curva(160, 80, 0.6, 7.5);
                 IF = new Curva(163, 83, 0.5, 9);
+            }
+            if(T>100) {
+            	VC.OrdenadaFinal = 80;
+            	IF.OrdenadaFinal = 83;
             }
         }
         if (Modo == ASFA.Modo.AV) {
@@ -40,6 +44,10 @@ public class ControlAnuncioParada extends ControlFASF {
             } else if (O == 200) {
                 VC = new Curva(200, 100, 0.55, 7.5);
                 IF = new Curva(205, 103, 0.5, 9);
+            }
+            if(T>100) {
+            	VC.OrdenadaFinal = 100;
+            	IF.OrdenadaFinal = 103;
             }
         }
     }

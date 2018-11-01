@@ -35,17 +35,6 @@ public class Botón extends JButton {
     }
     public TipoBotón tipo;
     public static Botón[] ListaBotones = new Botón[14];
-    double StartTime = 0;
-
-    public double TiempoPulsado() {
-        if (!Main.ASFA.display.pressed(tipo)) {
-            return 0;
-        }
-        if (Clock.getSeconds() >= StartTime + 0.5) {
-            Main.ASFA.display.pulsar(tipo, false);
-        }
-        return Clock.getSeconds() - StartTime;
-    }
     int Iluminado;
     ImageIcon[] Icons;
     int NumIcons;
@@ -89,7 +78,6 @@ public class Botón extends JButton {
                     iluminar(1);
                 }
                 if (arg0.getButton() == MouseEvent.BUTTON1) {
-                    StartTime = Clock.getSeconds();
                 	COM.parse(10, (tipo.ordinal()<<1) | 1);
                     if (tipo == TipoBotón.PrePar) {
                     	COM.parse(10, (TipoBotón.VLCond.ordinal()<<1) | 1);

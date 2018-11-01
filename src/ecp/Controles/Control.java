@@ -32,7 +32,4 @@ public abstract class Control {
         }
         return v;
     }
-    
-    //abstract Curva getCurvaVC(int T);
-    //abstract Curva getCurvaIF(int T);
 }

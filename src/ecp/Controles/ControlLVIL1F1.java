@@ -6,11 +6,13 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
 
     private boolean AumentoVelocidad = false;
     private double O;
+    private double T;
     private ASFA.Modo Modo;
 
-    public ControlLVIL1F1(double time, double O, ASFA.Modo Modo) {
+    public ControlLVIL1F1(double time, double O, double T, ASFA.Modo Modo) {
         super(time);
         this.O = O;
+        this.T = T;
         this.Modo = Modo;
         Curvas();
     }
@@ -30,6 +32,10 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
                 } else if (O <= 100) {
                     IF = new Curva(O + 3, O + 3, 0, 0);
                     VC = new Curva(O, O, 0, 0);
+                }
+                if(T>100) {
+                	VC.OrdenadaFinal = 100;
+                	IF.OrdenadaFinal = 103;
                 }
             } else {
                 if (O >= 160) {

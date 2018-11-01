@@ -14,10 +14,36 @@ class EstadoBotón {
 
     public boolean pulsado;
     public boolean iluminado;
+    public double startTime = 0;
+    Object lector;
 
     public EstadoBotón(boolean p, boolean i) {
-        pulsado = p;
         iluminado = i;
+        pulsar(p);
+    }
+    public void pulsar(boolean p)
+    {
+    	if(p == pulsado) return;
+    	pulsado = p;
+    	if(pulsado && lector != null) startTime = Clock.getSeconds();
+    	else startTime = 0;
+    }
+    public void esperarPulsado(Object detector)
+    {
+    	if(lector!=null && (detector.equals(lector) || !flancoPulsado(lector))) return;
+    	startTime = 0;
+    	lector = detector;
+    }
+    public boolean flancoPulsado(Object detector)
+    {
+    	if(!detector.equals(lector)) return false;
+    	boolean val = startTime!=0 && Clock.getSeconds() - startTime >= 0.5;
+    	if(val)
+    	{
+    		startTime = 0;
+    		lector = null;
+    	}
+    	return val;
     }
 }
 
@@ -66,10 +92,8 @@ public class DisplayInterface {
     public void pulsar(TipoBotón botón, boolean state) {
         if (!botones.containsKey(botón)) {
             botones.put(botón, new EstadoBotón(state, false));
-        } else if (botones.get(botón).pulsado == state) {
-            return;
         } else {
-            botones.get(botón).pulsado = state;
+            botones.get(botón).pulsar(state);
         }
         write(0, (botón.ordinal() << 2) | 2 | (state ? 1 : 0));
     }
@@ -77,9 +101,12 @@ public class DisplayInterface {
     public boolean pressed(TipoBotón botón) {
         return botones.get(botón).pulsado;
     }
-
-    public double pulsado(TipoBotón botón) {
-        return Botón.ListaBotones[botón.ordinal()].TiempoPulsado();
+    public void esperarPulsado(TipoBotón botón, Object detector)
+    {
+    	botones.get(botón).esperarPulsado(detector);
+    }
+    public boolean pulsado(TipoBotón botón, Object detector) {
+        return botones.get(botón).flancoPulsado(detector);
     }
     Hashtable<String, Integer> controles = new Hashtable<String, Integer>();
 

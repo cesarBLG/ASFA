@@ -34,6 +34,7 @@ public class DIV {
         }
         /*if(dataCount == 64) */
         data[38] = (byte) 140;
+        data[16] = 1; //Serie 446: Controles de tipo 120
         return data;
         //else return null;
     }
