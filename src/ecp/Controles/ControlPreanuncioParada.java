@@ -5,19 +5,15 @@ import ecp.ASFA;
 public class ControlPreanuncioParada extends ControlFASF implements ControlAumentable {
 
     public boolean AumentoVelocidad;
-    private double O;
-    private double T;
-    private ASFA.Modo Modo;
 
-    public ControlPreanuncioParada(double time, double O, double T, ASFA.Modo Modo) {
-        super(time, 0, 0, 0);
-        this.O = O;
-        this.T = T;
-        this.Modo = Modo;
+    public ControlPreanuncioParada(double time, TrainParameters param) {
+        super(time, 0, 0, 0, param);
         Curvas();
     }
 
-    private void Curvas() {
+    Curva[] getCurvas(int O) {
+    	Curva VC = null;
+    	Curva IF = null;
         if (Modo == ASFA.Modo.CONV) {
             if (O >= 160) {
                 IF = new Curva(163, 83, 0.5, 9);
@@ -32,15 +28,12 @@ public class ControlPreanuncioParada extends ControlFASF implements ControlAumen
                 IF = new Curva(O + 3, 63, 0.26, 11);
                 VC = new Curva(O, 60, 0.36, 7.5);
             }
-            if(T>100) {
-            	VC.OrdenadaFinal = 80;
-            	IF.OrdenadaFinal = 83;
-            }
             if (AumentoVelocidad) {
                 IF.OrdenadaFinal += 20;
                 VC.OrdenadaFinal += 20;
             }
         }
+        return new Curva[] {VC, IF};
     }
 
     @Override

@@ -5,19 +5,15 @@ import ecp.ASFA;
 public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
 
     private boolean AumentoVelocidad = false;
-    private double O;
-    private double T;
-    private ASFA.Modo Modo;
 
-    public ControlLVIL1F1(double time, double O, double T, ASFA.Modo Modo) {
-        super(time);
-        this.O = O;
-        this.T = T;
-        this.Modo = Modo;
+    public ControlLVIL1F1(double time, TrainParameters param) {
+        super(time, param);
         Curvas();
     }
 
-    private void Curvas() {
+    Curva[] getCurvas(int O) {
+    	Curva VC = null;
+    	Curva IF = null;
         if (Modo == ASFA.Modo.CONV) {
             if (AumentoVelocidad) {
                 if (O >= 160) {
@@ -32,10 +28,6 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
                 } else if (O <= 100) {
                     IF = new Curva(O + 3, O + 3, 0, 0);
                     VC = new Curva(O, O, 0, 0);
-                }
-                if(T>100) {
-                	VC.OrdenadaFinal = 100;
-                	IF.OrdenadaFinal = 103;
                 }
             } else {
                 if (O >= 160) {
@@ -53,6 +45,7 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
                 }
             }
         }
+        return new Curva[] {VC, IF};
     }
 
     public final void SpeedUp() {
@@ -67,6 +60,7 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
         if (!Reached) {
             return;
         }
+        if(VC.OrdenadaFinal<40) return;
         VC = new Curva(VC.OrdenadaFinal - 20);
         IF = new Curva(IF.OrdenadaFinal - 20);
     }

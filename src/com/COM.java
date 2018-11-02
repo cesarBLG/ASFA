@@ -66,6 +66,7 @@ public interface COM {
             if (control == 1) pantalla.controles.SecAA = activate;
             if ((control & 2) != 0) pantalla.controles.LVI = val & 3;
             if (control == 4) pantalla.controles.PNdesp = activate;
+            if(control == 8) pantalla.controles.PNprot = activate;
             pantalla.controles.update();
         }
         if (functn == 6) pantalla.set();

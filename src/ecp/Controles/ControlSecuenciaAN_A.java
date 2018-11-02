@@ -4,9 +4,19 @@ import ecp.ASFA;
 
 public class ControlSecuenciaAN_A extends ControlFASF {
 
-    public ControlSecuenciaAN_A(double time, double O, double T, boolean AnteriorAumVel, boolean FirstBalise, ASFA.Modo Modo) {
-        super(time, 0, 0, 0);
-        if (Modo == ASFA.Modo.CONV) {
+	boolean AnteriorAumVel;
+	boolean FirstBalise;
+    public ControlSecuenciaAN_A(double time, TrainParameters param, boolean AnteriorAumVel, boolean FirstBalise) {
+        super(time, 0, 0, 0, param);
+        this.AnteriorAumVel = AnteriorAumVel;
+        this.FirstBalise = FirstBalise;
+        Curvas();
+    }
+	@Override
+	Curva[] getCurvas(int O) {
+		Curva VC = null;
+		Curva IF = null;
+		if (Modo == ASFA.Modo.CONV) {
             if (!AnteriorAumVel) {
                 double Vf = 60;
                 if (FirstBalise) {
@@ -36,10 +46,6 @@ public class ControlSecuenciaAN_A extends ControlFASF {
                         IF = new Curva(83, 63, 0.26, 5);
                         VC = new Curva(80, 60, 0.36, 2.5);
                     }
-                    if(T>100) {
-                    	VC.OrdenadaFinal = 90;
-                    	IF.OrdenadaFinal = 93;
-                    }
                 } else {
                     if (O >= 160) {
                         IF = new Curva(93, 83, 0.5, 9);
@@ -54,12 +60,9 @@ public class ControlSecuenciaAN_A extends ControlFASF {
                         IF = new Curva(63);
                         VC = new Curva(60);
                     }
-                    if(T>100) {
-                    	VC.OrdenadaFinal = 80;
-                    	IF.OrdenadaFinal = 83;
-                    }
                 }
             }
         }
-    }
+		return new Curva[] {VC, IF};
+	}
 }

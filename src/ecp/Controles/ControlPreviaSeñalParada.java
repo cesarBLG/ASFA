@@ -1,11 +1,18 @@
 package ecp.Controles;
 
 import ecp.ASFA;
+import ecp.ASFA.Modo;
 
 public class ControlPreviaSeñalParada extends ControlFASF {
 
-    public ControlPreviaSeñalParada(double time, double O, ASFA.Modo Modo) {
-        super(time, 0, 0, 0);
+	public ControlPreviaSeñalParada(double time, TrainParameters param) {
+        super(time, 0, 0, 0, param);
+        Curvas();
+    }
+	@Override
+	Curva[] getCurvas(int O) {
+		Curva VC = null;
+		Curva IF = null;
         if (Modo == ASFA.Modo.AV || Modo == ASFA.Modo.BasicoAV || Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BasicoCONV) {
             if (O > 100) {
                 VC = new Curva(50, 15, 0.6, 1.5);
@@ -17,5 +24,6 @@ public class ControlPreviaSeñalParada extends ControlFASF {
         } else if (Modo == ASFA.Modo.RAM) {
 
         }
-    }
+		return new Curva[] {VC, IF};
+	}
 }

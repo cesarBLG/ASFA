@@ -2,7 +2,7 @@ package ecp.Controles;
 
 public class Curva {
 
-    private double OrdenadaOrigen;
+    public double OrdenadaOrigen;
     public double OrdenadaFinal;
     private double Deceleracion;
     private double TiempoReaccion;

@@ -5,17 +5,15 @@ import ecp.ASFA;
 public class ControlSeñalParada extends ControlFASF implements ControlAumentable {
 
     private boolean AumentoVelocidad = false;
-    private double T;
-    private ASFA.Modo Modo;
 
-    public ControlSeñalParada(double T, ASFA.Modo Modo, double time) {
-        super(time, 0, 20, 0);
-        this.T = T;
-        this.Modo = Modo;
+    public ControlSeñalParada(TrainParameters param, double time) {
+        super(time, 0, 20, 0, param);
         Curvas();
     }
 
-    private void Curvas() {
+    Curva[] getCurvas(int O) {
+    	Curva VC = null;
+    	Curva IF = null;
         if (Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BasicoCONV || Modo == ASFA.Modo.AV || Modo == ASFA.Modo.BasicoAV) {
             if (AumentoVelocidad) {
                 VC = new Curva(Math.min(T, 100));
@@ -25,6 +23,7 @@ public class ControlSeñalParada extends ControlFASF implements ControlAumentabl
                 IF = new Curva(43);
             }
         }
+        return new Curva[] {VC, IF};
     }
 
     @Override

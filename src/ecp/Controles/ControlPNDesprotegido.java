@@ -4,8 +4,10 @@ import ecp.ASFA;
 
 public class ControlPNDesprotegido extends Control {
 
-    public ControlPNDesprotegido(double O, double T, ASFA.Modo Modo, double time, double dist) {
-        super(time, dist, 0, 1800);
+	Curva[] getCurvas(int O)
+	{
+		Curva VC = null;
+		Curva IF = null;
         if (Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.AV || Modo == ASFA.Modo.BTS) {
             if (O >= 160) {
                 IF = new Curva(163, 33, 0.5, 9);
@@ -21,6 +23,11 @@ public class ControlPNDesprotegido extends Control {
                 VC = new Curva(O, 30, 0.36, 7.5);
             }
         }
+        return new Curva[] {VC, IF};
+	}
+    public ControlPNDesprotegido(TrainParameters param, double time, double dist) {
+        super(time, dist, 0, 1800, param);
+        Curvas();
     }
 
     @Override

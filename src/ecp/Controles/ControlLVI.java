@@ -16,9 +16,10 @@ public class ControlLVI extends Control {
         return Reached;
     }
     public boolean Aumentable;
-
-    public ControlLVI(double O, double Vf, boolean aumentable, double time) {
-        super(time, 0, 0, 0);
+    int Vf;
+    Curva[] getCurvas(int O) {
+    	Curva VC = null;
+    	Curva IF = null;
         if (O > 160) {
             IF = new Curva(O + 5, Vf + 3, 0.5, 9);
             VC = new Curva(O, Vf, 0.6, 7.5);
@@ -39,6 +40,13 @@ public class ControlLVI extends Control {
             IF.OrdenadaFinal = IF.valor(0);
             VC.OrdenadaFinal = VC.valor(0);
         }
+        return new Curva[] {VC, IF};
+    }
+    public ControlLVI(TrainParameters param, int Vf, boolean aumentable, double time) {
+        super(time, 0, 0, 0, param);
+        this.Vf = Vf;
+        this.Aumentable = aumentable;
+        Curvas();
     }
 
     public void AumentarVelocidad() {
@@ -49,7 +57,7 @@ public class ControlLVI extends Control {
         }
     }
 
-    protected ControlLVI(double time) {
-        super(time, 0, 0, 0);
+    protected ControlLVI(double time, TrainParameters param) {
+        super(time, 0, 0, 0, param);
     }
 }

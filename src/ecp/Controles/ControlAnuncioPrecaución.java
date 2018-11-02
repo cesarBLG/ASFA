@@ -5,19 +5,15 @@ import ecp.ASFA;
 public class ControlAnuncioPrecaución extends ControlFASF implements ControlAumentable {
 
     public boolean AumentoVelocidad;
-    private ASFA.Modo Modo;
-    private double O;
-    private double T;
     
-    public ControlAnuncioPrecaución(double time, double dist, double O, double T, ASFA.Modo Modo) {
-        super(time, dist, 0, Modo == ASFA.Modo.RAM ? 200 : 0);
-        this.Modo = Modo;
-        this.O = O;
-        this.T = T;
+    public ControlAnuncioPrecaución(double time, double dist, TrainParameters param) {
+        super(time, dist, 0, param.Modo == ASFA.Modo.RAM ? 200 : 0, param);
         Curvas();
     }
 
-    private void Curvas() {
+    Curva[] getCurvas(int O) {
+    	Curva VC = null;
+    	Curva IF = null;
         if (Modo == ASFA.Modo.CONV) {
             if (AumentoVelocidad) {
                 if (O >= 160) {
@@ -33,10 +29,6 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
                     IF = new Curva(O + 3, O + 3, 0, 0);
                     VC = new Curva(O, O, 0, 0);
                 }
-                if(T>100) {
-                	VC.OrdenadaFinal = 100;
-                	IF.OrdenadaFinal = 103;
-                }
             } else {
                 if (O >= 160) {
                     IF = new Curva(163, 83, 0.5, 9);
@@ -51,12 +43,9 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
                     IF = new Curva(O + 3, 63, 0.26, 11);
                     VC = new Curva(O, 60, 0.36, 7.5);
                 }
-                if(T>100) {
-                	VC.OrdenadaFinal = 80;
-                	IF.OrdenadaFinal = 83;
-                }
             }
         }
+        return new Curva[] {VC, IF};
     }
 
     public final void AumentarVelocidad(boolean value) {

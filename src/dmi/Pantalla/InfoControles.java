@@ -19,6 +19,7 @@ public class InfoControles extends JPanel {
     JLabel area3;
     Icono IconoLVI;
     Icono IconoPNdesp;
+    Icono IconoPNprot;
     Icono IconoSecAA;
     Icono IconoDesvío;
     Timer TimerLVI;
@@ -36,6 +37,7 @@ public class InfoControles extends JPanel {
         IconoPNdesp = new Icono(false, "PNdesp.png");
         IconoSecAA = new Icono(false, "SecAA.png");
         IconoDesvío = new Icono(true, "Desvío.png");
+        IconoPNprot = new Icono(true, "PNprot.png");
         TimerLVI = new Timer(500, new ActionListener() {
             boolean Displayed = false;
 
@@ -47,17 +49,22 @@ public class InfoControles extends JPanel {
             }
 
         });
-        update(false, false, false, 0);
+        update(false, false, false, false, 0);
     }
     public boolean PNdesp;
     public boolean SecAA;
     public boolean Desv;
     public int LVI;
+	public boolean PNprot;
 
     public void update() {
         if (PNdesp) {
             area1.setIcon(IconoPNdesp.getIcon());
-        } else {
+        }
+        else if(PNprot) {
+        	area1.setIcon(IconoPNprot.getIcon());
+        }
+        else {
             area1.setIcon(null);
         }
         if (Desv) {
@@ -83,8 +90,9 @@ public class InfoControles extends JPanel {
         }
     }
 
-    public void update(boolean PNdesp, boolean Desv, boolean SecAA, int LVI) {
+    public void update(boolean PNdesp, boolean PNprot, boolean Desv, boolean SecAA, int LVI) {
         this.PNdesp = PNdesp;
+        this.PNprot = PNprot;
         this.Desv = Desv;
         this.SecAA = SecAA;
         this.LVI = LVI;

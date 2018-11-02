@@ -34,14 +34,14 @@ public class Sound implements Runnable {
     {
         new Thread(this).start();
     }
-
-    public void Trigger(String s) {
-    	if(activo!=null && activo.equals(s)) return;
+    public void Trigger(String s) {Trigger(s, false);}
+    public void Trigger(String s, boolean basico) {
+    	if(activo!=null && activo.equals(s) && activo.basico == basico) return;
     	Runnable r = () -> {
             clip.stop();
         	clip.flush();
         	clip.close();
-        	Sonido son = new Sonido(s);
+        	Sonido son = new Sonido(s, basico);
         	activo = son;
         	try {
 				clip.open(son.stream);
@@ -113,13 +113,15 @@ class Sonido {
     public boolean loop;
     public double startTime = 0;
     public AudioInputStream stream;
+    public boolean basico;
 
-    public Sonido(String name) {
+    public Sonido(String name, boolean basico) {
         this.name = name;
+        this.basico = basico;
         if(!streams.contains(name))
         {
 			try {
-				streams.put(name, AudioSystem.getAudioInputStream(new File("src/content/Sonido/" + name + ".wav")));
+				streams.put(name, AudioSystem.getAudioInputStream(getClass().getResource("/content/Sonido/" + (basico ? "/Basico/" : "") + name + ".wav")));
 			} catch (UnsupportedAudioFileException | IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

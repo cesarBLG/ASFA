@@ -1,6 +1,8 @@
 package ecp;
 
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import javax.swing.JOptionPane;
 
@@ -16,7 +18,7 @@ class EstadoBotón {
     public boolean iluminado;
     public double startTime = 0;
     Object lector;
-
+    
     public EstadoBotón(boolean p, boolean i) {
         iluminado = i;
         pulsar(p);
@@ -30,7 +32,7 @@ class EstadoBotón {
     }
     public void esperarPulsado(Object detector)
     {
-    	if(lector!=null && (detector.equals(lector) || !flancoPulsado(lector))) return;
+    	if(lector!=null && detector.equals(lector)) return;
     	startTime = 0;
     	lector = detector;
     }
@@ -108,6 +110,14 @@ public class DisplayInterface {
     public boolean pulsado(TipoBotón botón, Object detector) {
         return botones.get(botón).flancoPulsado(detector);
     }
+    public boolean algunoPulsando(Object detector)
+    {
+    	for(EstadoBotón b : botones.values())
+    	{
+    		if(b.startTime != 0 && detector.equals(b.lector)) return true;
+    	}
+    	return false;
+    }
     Hashtable<String, Integer> controles = new Hashtable<String, Integer>();
 
     public void display(String funct, int state) {
@@ -151,6 +161,9 @@ public class DisplayInterface {
                 break;
             case "PN sin protección":
                 write(5, state | 8);
+                break;
+            case "PN protegido":
+                write(5, state | 16);
                 break;
             case "Modo":
             	write(11, state);
