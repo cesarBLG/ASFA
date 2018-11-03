@@ -16,6 +16,7 @@ public abstract class Control {
     public int T;
     public int O;
     public boolean curvasT120;
+    boolean modoRAM;
     ASFA.Modo Modo;
     
     public Control(double t0, double d0, double tv, double dv, TrainParameters param) {
@@ -28,6 +29,7 @@ public abstract class Control {
         O = param.O;
         T = param.T;
         Modo = param.Modo;
+        modoRAM = param.modoRAM;
     }
     abstract Curva[] getCurvas(int O);
     public void Curvas() {

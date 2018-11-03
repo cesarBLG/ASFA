@@ -63,6 +63,47 @@ public class ControlSecuenciaAN_A extends ControlFASF {
                 }
             }
         }
+		if (Modo == ASFA.Modo.AV) {
+            if (!AnteriorAumVel) {
+                if(FirstBalise)
+    			{
+    				if (O >= 100) {
+                        IF = new Curva(103);
+                        VC = new Curva(100);
+                    } else if (O < 100) {
+                        IF = new Curva(O + 3, 83, 0.36, 5);
+                        VC = new Curva(O, 80, 0.46, 3.5);
+                    }
+    			} else {
+    				if (O >= 100) {
+                        IF = new Curva(103);
+                        VC = new Curva(100);
+                    } else if (O < 100) {
+                        IF = new Curva(83);
+                        VC = new Curva(80);
+                    }
+                }
+            } else {
+            	if(FirstBalise)
+    			{
+    				if (O >= 140) {
+                        IF = new Curva(143, 123, 0.5, 5);
+                        VC = new Curva(140, 120, 0.6, 3.5);
+                    } else if (O <= 120) {
+                        IF = new Curva(O + 3);
+                        VC = new Curva(O);
+                    }
+    			} else {
+    				if (O >= 120) {
+                        IF = new Curva(123, 103, 0.5, 5);
+                        VC = new Curva(120, 100, 0.6, 3.5);
+                    } else if (O < 120) {
+                        IF = new Curva(O + 3);
+                        VC = new Curva(O);
+                    }
+                }
+            }
+        }
 		return new Curva[] {VC, IF};
 	}
 }

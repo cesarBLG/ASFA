@@ -45,6 +45,43 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
                 }
             }
         }
+        if (Modo == ASFA.Modo.AV) {
+            if (AumentoVelocidad) {
+                if (O == 200) {
+                    IF = new Curva(203, 163, 0.5, 9);
+                    VC = new Curva(200, 160, 0.6, 7.5);
+                } else if (O == 180) {
+                    IF = new Curva(183, 163, 0.5, 9);
+                    VC = new Curva(180, 160, 0.6, 7.5);
+                } else if (O == 160) {
+                    IF = new Curva(163);
+                    VC = new Curva(160);
+                } else if (O == 140) {
+                    IF = new Curva(143);
+                    VC = new Curva(140);
+                } else if (O <= 120) {
+                    IF = new Curva(O + 3);
+                    VC = new Curva(O);
+                }
+            } else {
+            	if (O == 200) {
+                    IF = new Curva(203, 123, 0.5, 9);
+                    VC = new Curva(200, 120, 0.6, 7.5);
+                } else if (O == 180) {
+                    IF = new Curva(183, 123, 0.5, 9);
+                    VC = new Curva(180, 120, 0.6, 7.5);
+                } else if (O == 160) {
+                    IF = new Curva(163, 123, 0.5, 9);
+                    VC = new Curva(160, 120, 0.6, 7.5);
+                } else if (O == 140) {
+                    IF = new Curva(143, 123, 0.5, 10);
+                    VC = new Curva(140, 120, 0.6, 7.5);
+                } else if (O <= 120) {
+                    IF = new Curva(O + 3);
+                    VC = new Curva(O);
+                }
+            }
+        }
         if(Modo == ASFA.Modo.RAM)
         {
         	if (O == 120) {

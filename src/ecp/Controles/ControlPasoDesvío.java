@@ -8,17 +8,26 @@ public class ControlPasoDesvío extends Control {
 	{
 		Curva VC = null;
 		Curva IF = null;
-        if (AnteriorAumVel) {
-            if (Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BasicoCONV) {
-                IF = new Curva(93, 93, 0, 0);
-                VC = new Curva(90, 90, 0, 0);
-            }
-        } else {
-            if (Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BasicoCONV) {
-                IF = new Curva(63, 63, 0, 0);
-                VC = new Curva(60, 60, 0, 0);
-            }
-        }
+		if(Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BasicoCONV)
+		{
+	        if (AnteriorAumVel) {
+	        	IF = new Curva(93);
+	            VC = new Curva(90);
+	        } else {
+	        	IF = new Curva(63);
+	            VC = new Curva(60);
+	        }
+		}
+		if(Modo == ASFA.Modo.AV || Modo == ASFA.Modo.BasicoAV)
+		{
+	        if (AnteriorAumVel) {
+	        	IF = new Curva(163);
+	            VC = new Curva(160);
+	        } else {
+	        	IF = new Curva(103);
+	            VC = new Curva(100);
+	        }
+		}
         return new Curva[] {VC, IF};
 	}
     public ControlPasoDesvío(TrainParameters param, double time, boolean AnteriorAumVel) {

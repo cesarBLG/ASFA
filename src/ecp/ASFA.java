@@ -30,7 +30,7 @@ public class ASFA {
     public DMI dmi;
     public DIV div;
     int T;
-    int selectorT;
+    public int selectorT = 4;
     boolean curvasT120;
     TrainParameters param = new TrainParameters();
     byte[] divData; //Información del vehículo
@@ -46,7 +46,14 @@ public class ASFA {
     List<ControlLVI> ControlesLVI = new ArrayList<ControlLVI>();
     //Estado
     public boolean Connected;
-    public Modo modo = Modo.CONV;
+    public Modo modo;
+    //Parametros DIV
+    boolean modoCONV;
+    boolean modoAV;
+    boolean modoRAM;
+    boolean modoBTS;
+    int Vbts;
+    int Vmax;
     public Captador captador = new Captador();
     int O;
     double InicioRebase;
@@ -84,19 +91,32 @@ public class ASFA {
 			Thread.sleep(2000);
 		} catch (InterruptedException e1) {
 		}
+        if(selectorT < 1 || selectorT > 8 || divData==null)
+        {
+        	dmi.pantalla.setup(2);
+        	return;
+        }
         Fase2 = (divData[14] & 1) == 1;
-        modo = (divData[16] & 4) == 0 ? (((divData[14] & 16) == 0) ? Modo.AV : Modo.CONV) : Modo.RAM;
-        selectorT = 4;
-        if(modo == Modo.RAM) T = 40 + selectorT * 10;
+        modoCONV = (divData[14] & 16) != 0;
+        modoAV = (divData[14] & 32) != 0;
+        modoRAM = (divData[16] & 4) != 0;
+        modoBTS = (divData[16] & 8) != 0;
+        Vmax = divData[18] & 0xFF;
+        Vbts = divData[38] & 0xFF;
+        modo = modoRAM ? Modo.RAM : (modoCONV ? Modo.CONV : Modo.AV);
+        if(modoRAM) T = 40 + selectorT * 10;
         else T = selectorT<3 ? (70 + selectorT * 10) : (40 + selectorT * 20);
         curvasT120 = T == 100 && (divData[16] & 1) != 0;
-        T = Math.min(T, divData[18] & 0xFF);
+        T = Math.min(T, Vmax);
         Connected = true;
         param.curvasT120 = curvasT120;
         param.T = T;
         param.O = T;
         param.Modo = modo;
-        dmi.pantalla.setup(divData == null/* || divData[0]==0*/ ? 2 : 0);
+        param.modoAV = modoAV;
+        param.modoCONV = modoCONV;
+        param.modoRAM = modoRAM;
+        dmi.pantalla.setup(0);
         display.iluminarTodos(true);
         Sound.Trigger("S2-1", true);
         try {
@@ -153,7 +173,7 @@ public class ASFA {
         	if(MpS.ToKpH(Odometer.getSpeed())<5) {
         		UltimaInfo = Info.Vía_libre;
         		if(modo == Modo.CONV || modo == Modo.AV || modo == Modo.RAM) {
-        			if((divData[16] & 8) == 0)
+        			if(modoBTS)
         			{
                 		modo = Modo.MBRA;
                 		param.Modo = modo;
@@ -169,7 +189,7 @@ public class ASFA {
                 		Controles.clear();
                 		Controles.addAll(ControlesPN);
                 		Controles.addAll(ControlesLVI);
-                		Controles.add(new ControlBTS(param, divData[38] & 0xFF));
+                		Controles.add(new ControlBTS(param, Vbts));
         			}
             	}
             	else if(modo == Modo.BTS) {
@@ -181,7 +201,7 @@ public class ASFA {
                 	Controles.add(new ControlManiobras(param));
             	}
             	else if(modo == Modo.MBRA) {
-            		modo = (divData[16] & 4) == 0 ? (((divData[14] & 16) == 0) ? Modo.AV : Modo.CONV) : Modo.RAM;
+            		modo = modoRAM ? Modo.RAM : (modoCONV ? Modo.CONV : Modo.AV);
             		param.Modo = modo;
                 	Controles.clear();
                 	ControlesPN.clear();
@@ -192,7 +212,7 @@ public class ASFA {
         	}
         	else
         	{
-        		if((divData[14] & 16) != 0 && (divData[14] & 32) != 1)
+        		if(modoAV && modoCONV)
         		{
         			if(modo == Modo.CONV) modo = Modo.AV;
         			else modo = Modo.CONV;
@@ -414,7 +434,7 @@ public class ASFA {
             	if(modo == Modo.RAM) Alarma();
             	else
             	{
-                    if ((divData[18] & 0xFF) > 160) {
+                    if (Vmax > 160) {
                         display.iluminar(TipoBotón.VLCond, true);
                     	display.esperarPulsado(TipoBotón.VLCond, TiempoUltimaRecepcion);
                         Sound.Trigger("S2-1");
@@ -491,9 +511,8 @@ public class ASFA {
                 if (VentanaL11 != -1 && VentanaL11 + 8 > DistanciaUltimaRecepcion) {
                     display.iluminar(TipoBotón.LVI, true);
                     Sound.Trigger("S1-1");
-                    int Vf = 0;
-                    if (modo == Modo.CONV || modo == Modo.AV) Vf = 50;
-                    if(modo == Modo.RAM) Vf = 40;
+                    int Vf = 50;
+                    if(modoRAM) Vf = 40;
                     ControlLVI c = new ControlLVI(param, Vf, modo != Modo.RAM, ControlTransitorio.TiempoInicial);
                     Controles.add(c);
                     ControlesLVI.add(c);
@@ -502,9 +521,8 @@ public class ASFA {
                 } else if (VentanaL10 != -1 && VentanaL10 + 8 > DistanciaUltimaRecepcion) {
                     display.iluminar(TipoBotón.LVI, true);
                     Sound.Trigger("S1-1");
-                    int Vf = 0;
-                    if (modo == Modo.CONV || modo == Modo.AV) Vf = 120;
-                    if(modo == Modo.RAM) Vf = 70;
+                    int Vf = 120;
+                    if(modoRAM) Vf = 70;
                     ControlLVI c = new ControlLVI(param, Vf, false, ControlTransitorio.TiempoInicial);
                     Controles.add(c);
                     ControlesLVI.add(c);
@@ -535,9 +553,8 @@ public class ASFA {
                 } else if (VentanaL10 != -1 && VentanaL10 + 8 > DistanciaUltimaRecepcion) {
                     display.iluminar(TipoBotón.LVI, true);
                     Sound.Trigger("S1-1");
-                    int Vf = 0;
-                    if (modo == Modo.CONV || modo == Modo.AV) Vf = 80;
-                    if(modo == Modo.RAM) Vf = 50;
+                    int Vf = 80;
+                    if(modoRAM) Vf = 50;
                     ControlLVI c = new ControlLVI(param, Vf, modo != Modo.RAM, ControlTransitorio.TiempoInicial);
                     Controles.add(c);
                     ControlesLVI.add(c);
@@ -596,9 +613,9 @@ public class ASFA {
             	VentanaL4 = -1;
             }
     	}
-    	if(modo == Modo.CONV)
+    	if(modo == Modo.CONV || modo == Modo.AV)
     	{
-            if (PrevDist + 450 < Odometer.getDistance() && SigNo == 0) {
+            if (PrevDist + (modo == Modo.AV ? 600 : 450) < Odometer.getDistance() && SigNo == 0) {
                 SigNo = 2;
                 if (ControlSeñal instanceof ControlPreviaSeñalParada) {
                     Urgencias();
@@ -702,6 +719,7 @@ public class ASFA {
                     			}
                     			if(display.pulsado(TipoBotón.PN, RecPNStart))
                     			{
+                                    Sound.Trigger("S2-5");
                     				((ControlPNDesprotegido) c).Rec = true;
                     				RecPNStart = 0;
                         			display.iluminar(TipoBotón.PN, false);
@@ -904,11 +922,11 @@ public class ASFA {
 
     private void EnlaceBalizas() {
         if (UltimaFrecValida == FrecASFA.L7) {
-            if (SigNo == 0) {
+            if (SigNo == 0 && ControlSeñal instanceof ControlPreviaSeñalParada) {
                 if (Odometer.getDistance() - PrevDist < 80) {
                     SigNo = 1;
                 } else {
-                    if(ControlSeñal instanceof ControlPreviaSeñalParada) Urgencias();
+                    Urgencias();
                     SigNo = 0;
                     AnteriorControlSeñal = ControlSeñal;
                 }
@@ -917,11 +935,11 @@ public class ASFA {
                 AnteriorControlSeñal = ControlSeñal;
             }
         }
-        else if (modo == Modo.RAM || UltimaFrecValida == FrecASFA.L8 || (SigNo != 2 && DistanciaUltimaRecepcion - PrevDist < 450)) {
+        else if (modo == Modo.RAM || UltimaFrecValida == FrecASFA.L8 || (SigNo != 2 && DistanciaUltimaRecepcion - PrevDist < (modo == Modo.AV ? 600 : 450))) {
             if (SigNo == 2) {
                 AnteriorControlSeñal = ControlSeñal;
             }
-            SigNo = 2;
+            else SigNo = 2;
         } else {
             SigNo = 0;
             AnteriorControlSeñal = ControlSeñal;
@@ -986,7 +1004,7 @@ public class ASFA {
             InfoSeñalDistinta = true;
         }
         Control c;
-        if ((divData[18] & 0xFF) > 160) {
+        if (Vmax > 160) {
             boolean Fixed = false;
             if (ControlSeñal.getVC(Clock.getSeconds()) <= 160) {
                 Fixed = true;

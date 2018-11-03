@@ -10,7 +10,7 @@ public class ControlPNDesprotegido extends ControlPN {
 	{
 		Curva VC = null;
 		Curva IF = null;
-		if(Modo == ASFA.Modo.RAM)
+		if(modoRAM)
 		{
 			VC = new Curva(30);
 			IF = new Curva(33);

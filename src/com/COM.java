@@ -70,10 +70,10 @@ public interface COM {
             pantalla.controles.update();
         }
         if (functn == 6) pantalla.set();
-        /*if(functn == 7)
+        if(functn == 7)
 		{
-			Main.ASFA.div.add((byte) 5);
-		}*/
+			Main.ASFA.div.add((byte) val);
+		}
         if (functn == 8) Main.ASFA.captador.Recepción = FrecASFA.values()[val];
         if (functn == 9) Odometer.speed = (float) val / 3.6;
         if (functn == 10)
@@ -89,6 +89,10 @@ public interface COM {
         if (functn == 12)
         {
         	pantalla.tipoTren.set(val);
+        }
+        if (functn == 13)
+        {
+    		Main.ASFA.selectorT = (val & 7) + 1;
         }
     }
 }
