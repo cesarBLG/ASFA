@@ -6,8 +6,8 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
 
     public boolean AumentoVelocidad;
     
-    public ControlAnuncioPrecaución(double time, double dist, TrainParameters param) {
-        super(time, dist, 0, param.Modo == ASFA.Modo.RAM ? 200 : 0, param);
+    public ControlAnuncioPrecaución(double time, TrainParameters param) {
+        super(time, 0, 0, param.Modo == ASFA.Modo.RAM ? 200 : 0, param);
         Curvas();
     }
 
@@ -45,6 +45,16 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
                 }
             }
         }
+        if(Modo == ASFA.Modo.RAM)
+        {
+        	if (O == 120) {
+                IF = new Curva(123, 33, 0.36, 12);
+                VC = new Curva(120, 30, 0.46, 7.5);
+            } else if (O <= 100) {
+                IF = new Curva(O + 3, 33, 0.26, 11);
+                VC = new Curva(O, 30, 0.36, 7.5);
+            }
+        }
         return new Curva[] {VC, IF};
     }
 
@@ -54,6 +64,6 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
     }
 
     public final boolean Aumentado() {
-        return AumentoVelocidad;
+        return AumentoVelocidad || Modo == ASFA.Modo.RAM;
     }
 }

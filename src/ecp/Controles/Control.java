@@ -30,7 +30,7 @@ public abstract class Control {
         Modo = param.Modo;
     }
     abstract Curva[] getCurvas(int O);
-    void Curvas() {
+    public void Curvas() {
     	if(O==100 && T==100 && curvasT120)
     	{
     		Curva[] curvasT120 = getCurvas(120);

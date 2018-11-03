@@ -47,6 +47,17 @@ public class ControlAnuncioParada extends ControlFASF {
                 IF = new Curva(205, 103, 0.5, 9);
             }
         }
+        if (Modo == ASFA.Modo.RAM)
+        {
+        	if(O == 120) {
+    			VC = new Curva(120, 30, 0.46, 7.5);
+    			IF = new Curva(123, 33, 0.36, 12);
+    		}
+    		else if(O < 120) {
+    			VC = new Curva(O, 30, 0.36, 7.5);
+    			IF = new Curva(O + 3, 33, 0.26, 11);
+    		}
+        }
         return new Curva[] {VC, IF};
 	}
 }

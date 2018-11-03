@@ -1,6 +1,6 @@
 package ecp.Controles;
 
-public class ControlPNProtegido extends Control {
+public class ControlPNProtegido extends ControlPN {
 
 	Curva[] getCurvas(int O)
 	{

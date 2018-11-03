@@ -45,6 +45,26 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
                 }
             }
         }
+        else if(Modo == ASFA.Modo.RAM)
+        {
+        	if (AumentoVelocidad) {
+                if (O == 120) {
+                    IF = new Curva(123, 53, 0.36, 12);
+                    VC = new Curva(120, 50, 0.46, 7.5);
+                } else if (O < 120) {
+                    IF = new Curva(O + 3, 53, 0, 0);
+                    VC = new Curva(O, 50, 0, 0);
+                }
+            } else {
+                if (O == 120) {
+                    IF = new Curva(123, 33, 0.36, 12);
+                    VC = new Curva(120, 30, 0.46, 7.5);
+                } else if (O < 120) {
+                    IF = new Curva(O + 3, 33, 0.26, 11);
+                    VC = new Curva(O, 30, 0.36, 7.5);
+                }
+            }
+        }
         return new Curva[] {VC, IF};
     }
 

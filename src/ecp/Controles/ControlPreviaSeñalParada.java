@@ -22,7 +22,13 @@ public class ControlPreviaSeñalParada extends ControlFASF {
                 IF = new Curva(43, 18, 0.36, 5.5);
             }
         } else if (Modo == ASFA.Modo.RAM) {
-
+        	if (O > 100) {
+                VC = new Curva(50, 10, 0.6, 1.5);
+                IF = new Curva(53, 13, 0.55, 3.5);
+            } else if (O <= 100) {
+                VC = new Curva(40, 10, 0.36, 2.5);
+                IF = new Curva(43, 13, 0.36, 5.5);
+            }
         }
 		return new Curva[] {VC, IF};
 	}

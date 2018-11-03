@@ -23,6 +23,16 @@ public class ControlSeñalParada extends ControlFASF implements ControlAumentabl
                 IF = new Curva(43);
             }
         }
+        if( Modo == ASFA.Modo.RAM )
+        {
+        	if (AumentoVelocidad) {
+                VC = new Curva(Math.min(T, 70));
+                IF = new Curva(Math.min(T + 3, 73));
+            } else {
+                VC = new Curva(30);
+                IF = new Curva(33);
+            }
+        }
         return new Curva[] {VC, IF};
     }
 
