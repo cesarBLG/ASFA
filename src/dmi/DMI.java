@@ -66,13 +66,18 @@ public class DMI extends JFrame {
                 // TODO Auto-generated method stub
                 if (arg0.getKeyCode() == KeyEvent.VK_ENTER) {
                     String s = jtb.getText();
-                    byte[] data = new byte[2];
-                    String s1 = s.substring(0, s.indexOf(' '));
-                    String s2 = s.substring(s.indexOf(' ') + 1);
-                    data[0] = (byte) Integer.parseUnsignedInt(s1);
-                    data[1] = (byte) Integer.parseUnsignedInt(s2);
+                    String[] sub = s.split(" ");
+                    for(int i=0; i+1<sub.length; i+=2)
+                    {
+                    	COM.parse(new byte[] {(byte) Integer.parseUnsignedInt(sub[i]), (byte) Integer.parseUnsignedInt(sub[i+1])});
+                    	try {
+							Thread.sleep(5);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+                    }
                     jtb.setText("");
-                    COM.parse(data);
                 }
             }
 

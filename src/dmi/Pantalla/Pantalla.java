@@ -45,7 +45,7 @@ public class Pantalla extends JPanel {
         setBackground(Color.black);
     }
 
-    public void setup(int state) {
+    public void setup(int state, String msg) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         JLabel j;
         switch (state) {
@@ -64,6 +64,9 @@ public class Pantalla extends JPanel {
         }
         setBackground(Color.black);
         add(j);
+        JLabel m = new JLabel(msg);
+        m.setForeground(Color.white);
+        add(m);
         Date date = new Date();
         DateFormat df = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
         j = new JLabel(df.format(date));

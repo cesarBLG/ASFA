@@ -36,7 +36,7 @@ public interface COM {
             if (BotNum == Botón.TipoBotón.VLCond.ordinal() && Ilum == 1) Ilum++;
             if (Botón.ListaBotones[BotNum] != null) Botón.ListaBotones[BotNum].iluminar(Ilum);
         }
-        if (functn == 1) pantalla.info.setInfo(Info.values()[val]);
+        if (functn == 1) pantalla.info.setInfo(Info.values()[val>>1], (val & 1) != 0);
         if (functn == 2) pantalla.vreal.setValue(val);
         if (functn == 3) 
         {
@@ -60,13 +60,13 @@ public interface COM {
         }
         if (functn == 5)
         {
-            int control = val >> 1;
-            boolean activate = (val & 1) == 1;
+            int control = val >> 2;
+            int activate = (val & 3);
             if (control == 0) pantalla.controles.Desv = activate;
             if (control == 1) pantalla.controles.SecAA = activate;
-            if ((control & 2) != 0) pantalla.controles.LVI = val & 3;
-            if (control == 4) pantalla.controles.PNdesp = activate;
-            if(control == 8) pantalla.controles.PNprot = activate;
+            if (control == 2) pantalla.controles.LVI = activate;
+            if (control == 3) pantalla.controles.PNdesp = activate;
+            if(control == 4) pantalla.controles.PNprot = activate;
             pantalla.controles.update();
         }
         if (functn == 6) pantalla.set();

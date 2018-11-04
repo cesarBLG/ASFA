@@ -32,6 +32,7 @@ public class ÚltimaInfo extends JPanel {
     Info info;
     JLabel j;
     Timer t;
+    boolean blink;
     Icono[] iconos;
 
     @Override
@@ -48,11 +49,22 @@ public class ÚltimaInfo extends JPanel {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 // TODO Auto-generated method stub
-                if (state) {
-                    j.setIcon(iconos[Info.Vía_libre_condicional.ordinal()].getIcon());
-                } else {
-                    j.setIcon(iconos[Info.Apagado.ordinal()].getIcon());
-                }
+            	if(info == Info.Vía_libre_condicional)
+            	{
+                    if (state) {
+                        j.setIcon(iconos[Info.Vía_libre_condicional.ordinal()].getIcon());
+                    } else {
+                        j.setIcon(iconos[Info.Apagado.ordinal()].getIcon());
+                    }
+            	}
+            	else if(blink)
+            	{
+            		if (state) {
+                        j.setIcon(iconos[info.ordinal()].getIcon());
+                    } else {
+                        j.setIcon(iconos[Info.Vía_libre.ordinal()].getIcon());
+                    }
+            	}
                 state = !state;
             }
         });
@@ -64,7 +76,7 @@ public class ÚltimaInfo extends JPanel {
         for (int i = 0; i < num; i++) {
             iconos[i] = new Icono(true, Info.values()[i].name().concat(".png"));
         }
-        setInfo(Info.Desconocido);
+        setInfo(Info.Desconocido, false);
     }
 
     public void update() {
@@ -76,7 +88,7 @@ public class ÚltimaInfo extends JPanel {
             this.repaint();
         }
         j.setIcon(iconos[info.ordinal()].getIcon());
-        if (info != Info.Vía_libre_condicional) {
+        if (info != Info.Vía_libre_condicional && !blink) {
             if (t.isRunning()) {
                 t.stop();
             }
@@ -90,8 +102,9 @@ public class ÚltimaInfo extends JPanel {
         }
     }
 
-    public void setInfo(Info i) {
+    public void setInfo(Info i, boolean blink) {
         info = i;
+        this.blink = blink;
         update();
     }
 }

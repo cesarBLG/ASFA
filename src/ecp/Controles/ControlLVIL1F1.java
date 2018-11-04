@@ -110,22 +110,43 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
         }
         return new Curva[] {VC, IF};
     }
-
+    int aum = 0;
+    Curva vc0;
+    Curva if0;
     public final void SpeedUp() {
         if (!Reached) {
             return;
         }
-        VC = new Curva(VC.OrdenadaFinal + 20);
-        IF = new Curva(IF.OrdenadaFinal + 20);
+        if(aum == 0)
+        {
+        	vc0 = VC;
+        	if0 = IF;
+        }
+        aum += 20;
+        int val = (int) (vc0.OrdenadaFinal + aum);
+        if(val>T || val > 160)
+        {
+        	aum -= 20;
+        	return;
+        }
+        VC = new Curva(val);
+        IF = new Curva(if0.OrdenadaFinal + aum);
     }
 
     public final void SpeedDown() {
         if (!Reached) {
             return;
         }
-        if(VC.OrdenadaFinal<40) return;
-        VC = new Curva(VC.OrdenadaFinal - 20);
-        IF = new Curva(IF.OrdenadaFinal - 20);
+        if(aum == 0) return;
+        aum -= 20;
+        if(aum<=0)
+        {
+        	VC = vc0;
+        	IF = if0;
+        	return;
+        }
+        VC = new Curva(vc0.OrdenadaFinal + aum);
+        IF = new Curva(if0.OrdenadaFinal + aum);
     }
 
     @Override

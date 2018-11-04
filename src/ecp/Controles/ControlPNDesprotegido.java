@@ -2,7 +2,7 @@ package ecp.Controles;
 
 import ecp.ASFA;
 
-public class ControlPNDesprotegido extends ControlPN {
+public class ControlPNDesprotegido extends ControlPN implements ControlReanudo {
 
 	boolean segundaCurva = false;
 	public boolean Rec = false;
@@ -58,4 +58,22 @@ public class ControlPNDesprotegido extends ControlPN {
         }
         return val;
     }
+    boolean activado = false;
+	@Override
+	public void Activar(boolean val) {
+		activado = val;
+	}
+	@Override
+	public boolean Activado() {
+		return activado;
+	}
+	double distancia = -1;
+	@Override
+	public double UltimaDistancia() {
+		return distancia;
+	}
+	@Override
+	public void ActualizarDistancia(double val) {
+		distancia = val;
+	}
 }

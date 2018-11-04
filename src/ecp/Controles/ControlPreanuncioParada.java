@@ -2,7 +2,7 @@ package ecp.Controles;
 
 import ecp.ASFA;
 
-public class ControlPreanuncioParada extends ControlFASF implements ControlAumentable {
+public class ControlPreanuncioParada extends ControlFASF implements ControlAumentable, ControlReanudo {
 
     public boolean AumentoVelocidad;
 
@@ -91,4 +91,22 @@ public class ControlPreanuncioParada extends ControlFASF implements ControlAumen
     public final boolean Aumentado() {
         return AumentoVelocidad;
     }
+    boolean activado = false;
+	@Override
+	public void Activar(boolean val) {
+		activado = val;
+	}
+	@Override
+	public boolean Activado() {
+		return activado;
+	}
+	double distancia = -1;
+	@Override
+	public double UltimaDistancia() {
+		return distancia;
+	}
+	@Override
+	public void ActualizarDistancia(double val) {
+		distancia = val;
+	}
 }

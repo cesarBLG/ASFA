@@ -2,7 +2,7 @@ package ecp.Controles;
 
 import ecp.ASFA;
 
-public class ControlAnuncioParada extends ControlFASF {
+public class ControlAnuncioParada extends ControlFASF implements ControlReanudo {
     public ControlAnuncioParada(double time, TrainParameters param) {
         super(time, 0, 0, 0, param);
         Curvas();
@@ -59,5 +59,23 @@ public class ControlAnuncioParada extends ControlFASF {
     		}
         }
         return new Curva[] {VC, IF};
+	}
+    boolean activado = false;
+	@Override
+	public void Activar(boolean val) {
+		activado = val;
+	}
+	@Override
+	public boolean Activado() {
+		return activado;
+	}
+	double distancia = -1;
+	@Override
+	public double UltimaDistancia() {
+		return distancia;
+	}
+	@Override
+	public void ActualizarDistancia(double val) {
+		distancia = val;
 	}
 }

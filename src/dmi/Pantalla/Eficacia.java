@@ -16,7 +16,7 @@ public class Eficacia extends JLabel {
 
     int state = 0;
     String Fase;
-    boolean eficacia;
+    boolean eficacia = false;
     Icono[] iconos;
 
     public Eficacia(boolean Fase2) {
@@ -39,7 +39,7 @@ public class Eficacia extends JLabel {
         for (int i = 0; i < 8; i++) {
             iconos[i] = new Icono(true, Fase.concat(Integer.toString(i).concat(".png")));
         }
-        set(true);
+        set(false);
         t.setRepeats(true);
         t.start();
     }
@@ -57,6 +57,7 @@ public class Eficacia extends JLabel {
     }
 
     void switchstate() {
+    	if(!eficacia) return;
         state++;
         state = state % 8;
         setIcon(iconos[state].getIcon());

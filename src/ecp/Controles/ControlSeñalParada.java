@@ -4,10 +4,14 @@ import ecp.ASFA;
 
 public class ControlSeñalParada extends ControlFASF implements ControlAumentable {
 
+	public int recCount = 0;
+	public double recStart = -1;
+	public double lastTimeRec = -1;
+	public double lastDistRec = -1;
     private boolean AumentoVelocidad = false;
 
-    public ControlSeñalParada(TrainParameters param, double time) {
-        super(time, 0, 20, 0, param);
+    public ControlSeñalParada(TrainParameters param, double time, double dist) {
+        super(time, dist, 20, 0, param);
         Curvas();
     }
 

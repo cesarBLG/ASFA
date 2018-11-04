@@ -3,7 +3,7 @@ package ecp.Controles;
 import ecp.ASFA;
 import ecp.ASFA.Modo;
 
-public class ControlPreviaSeñalParada extends ControlFASF {
+public class ControlPreviaSeñalParada extends ControlFASF implements ControlReanudo {
 
 	public ControlPreviaSeñalParada(double time, TrainParameters param) {
         super(time, 0, 0, 0, param);
@@ -31,5 +31,23 @@ public class ControlPreviaSeñalParada extends ControlFASF {
             }
         }
 		return new Curva[] {VC, IF};
+	}
+    boolean activado = false;
+	@Override
+	public void Activar(boolean val) {
+		activado = val;
+	}
+	@Override
+	public boolean Activado() {
+		return activado;
+	}
+	double distancia = -1;
+	@Override
+	public double UltimaDistancia() {
+		return distancia;
+	}
+	@Override
+	public void ActualizarDistancia(double val) {
+		distancia = val;
 	}
 }

@@ -23,6 +23,7 @@ public class InfoControles extends JPanel {
     Icono IconoSecAA;
     Icono IconoDesvío;
     Timer TimerLVI;
+    Timer TimerPN;
 
     public InfoControles() {
         setLayout(new GridLayout(1, 3));
@@ -49,27 +50,43 @@ public class InfoControles extends JPanel {
             }
 
         });
-        update(false, false, false, false, 0);
+        TimerPN = new Timer(500, new ActionListener() {
+            boolean Displayed = false;
+
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                // TODO Auto-generated method stub
+                area1.setVisible(!Displayed);
+                Displayed = !Displayed;
+            }
+
+        });
+        update(0, 0, 0, 0, 0);
     }
-    public boolean PNdesp;
-    public boolean SecAA;
-    public boolean Desv;
+    public int PNdesp;
+    public int SecAA;
+    public int Desv;
     public int LVI;
-	public boolean PNprot;
+	public int PNprot;
 
     public void update() {
-        if (PNdesp) {
+        if (PNdesp == 2) {
+            TimerPN.start();
+            TimerPN.setRepeats(true);
             area1.setIcon(IconoPNdesp.getIcon());
         }
-        else if(PNprot) {
-        	area1.setIcon(IconoPNprot.getIcon());
+        else
+        {
+            TimerPN.stop();
+            TimerPN.setRepeats(false);
+            area1.setVisible(true);
+        	if(PNdesp == 1) area1.setIcon(IconoPNdesp.getIcon());
+        	else if(PNprot == 1) area1.setIcon(IconoPNprot.getIcon());
+        	else area1.setIcon(null);
         }
-        else {
-            area1.setIcon(null);
-        }
-        if (Desv) {
+        if (Desv==1) {
             area2.setIcon(IconoDesvío.getIcon());
-        } else if (SecAA) {
+        } else if (SecAA==1) {
             area2.setIcon(IconoSecAA.getIcon());
         } else {
             area2.setIcon(null);
@@ -90,7 +107,7 @@ public class InfoControles extends JPanel {
         }
     }
 
-    public void update(boolean PNdesp, boolean PNprot, boolean Desv, boolean SecAA, int LVI) {
+    public void update(int PNdesp, int PNprot, int Desv, int SecAA, int LVI) {
         this.PNdesp = PNdesp;
         this.PNprot = PNprot;
         this.Desv = Desv;

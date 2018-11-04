@@ -10,13 +10,13 @@ import ecp.Main;
 
 public class TipoTren extends JLabel {
 
-    String tipo;
+    String tipo = "";
 
     public TipoTren() {
         setHorizontalAlignment(JLabel.CENTER);
         setFont(new Font("Helvetica-Condensed", 1, 15));
         setForeground(Color.white);
-        set(120);
+        update();
     }
 
     public void set(int T) {

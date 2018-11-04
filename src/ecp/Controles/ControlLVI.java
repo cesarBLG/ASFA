@@ -1,6 +1,6 @@
 package ecp.Controles;
 
-public class ControlLVI extends Control {
+public class ControlLVI extends Control implements ControlReanudo {
 
     public boolean Reached = false;
 
@@ -60,4 +60,22 @@ public class ControlLVI extends Control {
     protected ControlLVI(double time, TrainParameters param) {
         super(time, 0, 0, 0, param);
     }
+    boolean activado = false;
+	@Override
+	public void Activar(boolean val) {
+		activado = val;
+	}
+	@Override
+	public boolean Activado() {
+		return activado;
+	}
+	double distancia = -1;
+	@Override
+	public double UltimaDistancia() {
+		return distancia;
+	}
+	@Override
+	public void ActualizarDistancia(double val) {
+		distancia = val;
+	}
 }

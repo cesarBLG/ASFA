@@ -17,6 +17,7 @@ class EstadoBotón {
     public boolean pulsado;
     public boolean iluminado;
     public double startTime = 0;
+    public double tiempoPulsar = 0.5;
     Object lector;
     
     public EstadoBotón(boolean p, boolean i) {
@@ -39,7 +40,7 @@ class EstadoBotón {
     public boolean flancoPulsado(Object detector)
     {
     	if(!detector.equals(lector)) return false;
-    	boolean val = startTime!=0 && Clock.getSeconds() - startTime >= 0.5;
+    	boolean val = startTime!=0 && Clock.getSeconds() - startTime >= tiempoPulsar;
     	if(val)
     	{
     		startTime = 0;
@@ -154,16 +155,16 @@ public class DisplayInterface {
                 write(5, state);
                 break;
             case "Secuencia AA":
-                write(5, state | 2);
+                write(5, state | 1<<2);
                 break;
             case "LVI":
-                write(5, state | 4);
+                write(5, state | 2<<2);
                 break;
             case "PN sin protección":
-                write(5, state | 8);
+                write(5, state | 3<<2);
                 break;
             case "PN protegido":
-                write(5, state | 16);
+                write(5, state | 4<<2);
                 break;
             case "Modo":
             	write(11, state);

@@ -67,6 +67,7 @@ public class Sound implements Runnable {
 
     public void Stop(String s) {
     	if(activo==null || !activo.equals(s)) return;
+    	activo = null;
     	synchronized(tasks)
     	{
     		tasks.add(() -> {clip.stop(); clip.flush();});
@@ -128,7 +129,7 @@ class Sonido {
 			}
 		}
         stream = streams.get(name);
-        loop = name == "S3-1" || name == "S3-2" || name == "S5";
+        loop = name == "S3-1" || name == "S3-2" || name == "S3-4" || name == "S3-5" || name == "S5";
         startTime = Clock.getSeconds();
     }
 
