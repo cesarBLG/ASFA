@@ -38,6 +38,8 @@ public class DIV {
         data[16] = 1;
         data[18] = (byte) 200; 
         data[35] = 100;
+        data[36] = 60;
+        data[37] = 50;
         return data;
         //else return null;
     }

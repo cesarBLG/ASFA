@@ -2,6 +2,7 @@ package com;
 
 import javax.management.modelmbean.ModelMBeanAttributeInfo;
 
+import dmi.Sonidos;
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.TipoBotón;
 import dmi.Pantalla.Pantalla;
@@ -28,7 +29,7 @@ public interface COM {
 
     public static void parse(int functn, int val) 
     {
-    	Pantalla pantalla = Main.ASFA.dmi.pantalla;
+    	Pantalla pantalla = Main.dmi.pantalla;
         if (functn == 0) {
             int BotNum = val >> 2;
             int Ilum = val & 1;
@@ -93,6 +94,20 @@ public interface COM {
         if (functn == 13)
         {
     		Main.ASFA.selectorT = (val & 7) + 1;
+        }
+        if (functn == 14)
+        {
+        	if(val<3) pantalla.setup(val, null);
+        	if(val == 3) pantalla.start();
+        }
+        if (functn == 15)
+        {
+        	boolean basic = (val & 1) != 0;
+        	boolean trig = (val & 2) != 0;
+        	int num = val >> 2;
+        	String name = Sonidos.values()[num].toString().replace('_', '-');
+        	if(trig) Main.dmi.sound.Trigger(name, basic);
+        	else Main.dmi.sound.Stop(name);
         }
     }
 }

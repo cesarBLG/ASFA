@@ -25,7 +25,7 @@ public class TipoTren extends JLabel {
     }
 
     public void update() {
-        setForeground(Main.ASFA.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
+        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
         setText(tipo);
     }
 }

@@ -20,9 +20,9 @@ public class ModeInfo extends JLabel {
 
     public void update(Modo m) {
     	setText(m.name());
-        setForeground(Main.ASFA.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
+        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
     }
     public void update() {
-        setForeground(Main.ASFA.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
+        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
     }
 }

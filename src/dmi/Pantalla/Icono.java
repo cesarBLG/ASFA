@@ -35,7 +35,7 @@ public class Icono {
 
     public ImageIcon getIcon() {
         if (variable) {
-            return iconos[Main.ASFA.dmi.pantalla.modo.ordinal()];
+            return iconos[Main.dmi.pantalla.modo.ordinal()];
         } else {
             return iconos[0];
         }

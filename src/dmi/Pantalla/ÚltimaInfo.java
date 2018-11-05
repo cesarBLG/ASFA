@@ -80,7 +80,7 @@ public class ÚltimaInfo extends JPanel {
     }
 
     public void update() {
-        if (Main.ASFA.dmi.pantalla.modo == ModoDisplay.Noche && info != Info.Vía_libre) {
+        if (Main.dmi.pantalla.modo == ModoDisplay.Noche && info != Info.Vía_libre) {
             setOpaque(true);
             this.repaint();
         } else {

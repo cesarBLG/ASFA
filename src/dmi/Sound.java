@@ -36,6 +36,7 @@ public class Sound implements Runnable {
     }
     public void Trigger(String s) {Trigger(s, false);}
     public void Trigger(String s, boolean basico) {
+    	//System.out.println(s);
     	if(activo!=null && activo.equals(s) && activo.basico == basico) return;
     	Runnable r = () -> {
             clip.stop();

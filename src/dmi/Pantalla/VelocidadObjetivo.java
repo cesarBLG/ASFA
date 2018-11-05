@@ -47,7 +47,7 @@ public class VelocidadObjetivo extends JPanel {
             value.setValue(val);
             value.setVisible(true);
             Rectángulo.setOpaque(true);
-            Rectángulo.setBackground(Main.ASFA.dmi.pantalla.modo == ModoDisplay.Noche ? new Color(221, 221, 221) : Color.black);
+            Rectángulo.setBackground(Main.dmi.pantalla.modo == ModoDisplay.Noche ? new Color(221, 221, 221) : Color.black);
         } else {
             value.setVisible(false);
             Rectángulo.setOpaque(false);

@@ -27,7 +27,7 @@ public class Velocidad extends JLabel {
 
     public void setValue(int val) {
         value = val;
-        setForeground(Main.ASFA.dmi.pantalla.modo == ModoDisplay.Día ? Day : Night);
+        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Day : Night);
         int v1 = value / 100;
         int v2 = (value / 10) % 10;
         int v3 = value % 10;

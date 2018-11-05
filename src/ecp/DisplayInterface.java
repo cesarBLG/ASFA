@@ -9,6 +9,7 @@ import javax.swing.JOptionPane;
 import com.COM;
 import com.Serial;
 
+import dmi.Sonidos;
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.*;
 
@@ -172,6 +173,35 @@ public class DisplayInterface {
             case "Tipo":
             	write(12, state);
                 break;
+            case "Arranque":
+            	write(14, state);
         }
+    }
+    
+    public void start()
+    {
+    	write(14, 3);
+    }
+    public void set(int num, int errno)
+    {
+    	write(14, num);
+    }
+    public void startSound(String num)
+    {
+    	startSound(num, false);
+    }
+    String activo = null;
+    public void startSound(String num, boolean basic)
+    {
+    	String num2 = num + (basic ? "b" : "");
+    	if(activo != null && activo.equals(num2)) return;
+    	activo = num2;
+    	write(15, Sonidos.valueOf(num.replace('-', '_')).ordinal()<<2 | 2 | (basic ? 1 : 0));
+    }
+    public void stopSound(String num)
+    {
+    	if(activo==null || !activo.contains(num)) return;
+    	write(15, Sonidos.valueOf(num.replace('-', '_')).ordinal()<<2);
+    	activo = null;
     }
 }

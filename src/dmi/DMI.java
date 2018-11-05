@@ -34,9 +34,11 @@ public class DMI extends JFrame {
     public Pantalla pantalla;
     public Repetidor repetidor;
     public Pupitre pupitre;
+    public Sound sound;
 
     public DMI() {
-        Main.ASFA.dmi = this;
+    	sound = new Sound();
+        Main.dmi = this;
         setLayout(new GridBagLayout());
         GridBagConstraints g = new GridBagConstraints();
         g.anchor = GridBagConstraints.CENTER;
