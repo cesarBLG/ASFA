@@ -20,6 +20,12 @@ public class Serial implements COM {
     OutputStream Output;
     InputStream Input;
     public boolean Connected = false;
+    int portnum;
+    
+    public Serial(int portnum)
+    {
+    	this.portnum = portnum;
+    }
 
     @Override
     public void start() {
@@ -56,7 +62,7 @@ public class Serial implements COM {
         Enumeration<?> portEnum = CommPortIdentifier.getPortIdentifiers();
         while (portEnum.hasMoreElements()) {
             CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
-            if ("/dev/ttyACM0".equals(currPortId.getName()) || "COM5".equals(currPortId.getName())) {
+            if (("/dev/ttyACM" + (portnum-5)).equals(currPortId.getName()) || ("COM"+portnum).equals(currPortId.getName())) {
                 portId = currPortId;
                 break;
             }

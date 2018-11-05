@@ -53,12 +53,12 @@ class EstadoBotón {
 
 public class DisplayInterface {
 
-    Serial OR = new Serial();
+    Serial OR = new Serial(5);
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
 
     void write(int num, int data) {
         COM.parse(num, data);
-        OR.write(new byte[]{(byte) num, (byte) data, (byte) controlByte(num, data)});
+        OR.write(new byte[]{(byte) num, (byte) data, (byte) 0xFF});
     }
 
     byte controlByte(int n1, int n2) {

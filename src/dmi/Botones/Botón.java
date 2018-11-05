@@ -9,6 +9,7 @@ import java.util.List;
 import javax.swing.*;
 
 import com.COM;
+import com.Serial;
 
 import dmi.DMI;
 import ecp.ASFA;
@@ -41,6 +42,7 @@ public class Botón extends JButton {
 
     Botón(ImageIcon[] icons, int count, TipoBotón tipo) {
         super();
+        if(serial == null && Main.ASFA == null) serial = new Serial(6);
         this.tipo = tipo;
         ListaBotones[tipo.ordinal()] = this;
         if (tipo == tipo.PrePar) {
@@ -78,9 +80,9 @@ public class Botón extends JButton {
                     iluminar(1);
                 }
                 if (arg0.getButton() == MouseEvent.BUTTON1) {
-                	COM.parse(10, (tipo.ordinal()<<1) | 1);
+                	enviarPulsacion(tipo, true);
                     if (tipo == TipoBotón.PrePar) {
-                    	COM.parse(10, (TipoBotón.VLCond.ordinal()<<1) | 1);
+                    	enviarPulsacion(TipoBotón.VLCond, true);
                     }
                 }
             }
@@ -92,15 +94,24 @@ public class Botón extends JButton {
                     iluminar(0);
                 }
                 if (arg0.getButton() == MouseEvent.BUTTON1) {
-                	COM.parse(10, (tipo.ordinal()<<1) | 0);
+                	enviarPulsacion(tipo, false);
                     if (tipo == TipoBotón.PrePar) {
-                    	COM.parse(10, (TipoBotón.VLCond.ordinal()<<1) | 0);
+                    	enviarPulsacion(TipoBotón.VLCond, false);
                     }
                 }
             }
         });
     }
-
+    static Serial serial = null;
+    static void enviarPulsacion(TipoBotón bot, boolean puls)
+    {
+    	byte b = (byte) ((bot.ordinal()<<1) | (puls ? 1 : 0));
+    	COM.parse(10, b);
+    	if(serial!=null)
+    	{
+    		serial.write(new byte[] {10, b, (byte) 0xFF});
+    	}
+    }
     public void iluminar(int num) {
         if (num >= Icons.length) {
             return;
