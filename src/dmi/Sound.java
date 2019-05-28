@@ -36,7 +36,6 @@ public class Sound implements Runnable {
     }
     public void Trigger(String s) {Trigger(s, false);}
     public void Trigger(String s, boolean basico) {
-    	//System.out.println(s);
     	if(activo!=null && activo.equals(s) && activo.basico == basico) return;
     	Runnable r = () -> {
             clip.stop();
@@ -79,6 +78,19 @@ public class Sound implements Runnable {
     @Override
     public void run() {
     	try {
+			Thread.sleep(500);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	try {
+			Runtime.getRuntime().exec("./sound");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	/*return;
+    	try {
 			clip = AudioSystem.getClip();
 		} catch (LineUnavailableException e1) {
 			// TODO Auto-generated catch block
@@ -104,7 +116,7 @@ public class Sound implements Runnable {
 				else r = tasks.poll();
 			}
 			if(r!=null) r.run();
-		}
+		}*/
     }
 }
 

@@ -85,6 +85,7 @@ public interface COM {
             	if(val<3) pantalla.setup(val, null);
             	if(val == 3) pantalla.start();
             }
+            /* Sounds are managed by external program
             if (functn == 15)
             {
             	boolean basic = (val & 1) != 0;
@@ -93,7 +94,7 @@ public interface COM {
             	String name = Sonidos.values()[num].toString().replace('_', '-');
             	if(trig) Main.dmi.sound.Trigger(name, basic);
             	else Main.dmi.sound.Stop(name);
-            }
+            }*/
     	}
     	if(Main.ASFA!=null)
     	{

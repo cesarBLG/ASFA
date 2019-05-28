@@ -8,6 +8,7 @@ import javax.swing.JOptionPane;
 
 import com.COM;
 import com.Serial;
+import com.TCP;
 
 import dmi.Sonidos;
 import dmi.Botones.Botón;
@@ -54,11 +55,14 @@ class EstadoBotón {
 public class DisplayInterface {
 
     Serial OR = new Serial(5);
+    TCP OR2 = new TCP();
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
 
     void write(int num, int data) {
         COM.parse(num, data);
-        OR.write(new byte[]{(byte) num, (byte) data, (byte) 0xFF});
+        byte[] b = new byte[]{(byte) num, (byte) data, (byte) 0xFF};
+        OR.write(b);
+        OR2.write(b);
     }
 
     byte controlByte(int n1, int n2) {
@@ -73,6 +77,7 @@ public class DisplayInterface {
 
     public DisplayInterface() {
         OR.start();
+    	OR2.initialize();
     }
 
     public void iluminar(TipoBotón botón, boolean state) {
@@ -194,7 +199,13 @@ public class DisplayInterface {
     public void startSound(String num, boolean basic)
     {
     	String num2 = num + (basic ? "b" : "");
-    	if(activo != null && activo.equals(num2)) return;
+    	if(activo != null && activo.equals(num2))
+    	{
+    		if(activo.contains("S3-1") || activo.contains("S3-2") || activo.contains("S3-4") || activo.contains("S3-5") || activo.contains("S5"))
+    		{
+    			return;
+    		}
+    	}
     	activo = num2;
     	write(15, Sonidos.valueOf(num.replace('-', '_')).ordinal()<<2 | 2 | (basic ? 1 : 0));
     }

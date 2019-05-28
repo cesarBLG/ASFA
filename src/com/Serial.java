@@ -38,6 +38,7 @@ public class Serial implements COM {
             try {
                 Output.write(b);
             } catch (IOException e) {
+            	e.printStackTrace();
             }
         }
     }
@@ -62,21 +63,22 @@ public class Serial implements COM {
         Enumeration<?> portEnum = CommPortIdentifier.getPortIdentifiers();
         while (portEnum.hasMoreElements()) {
             CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
-            if (("/dev/ttyACM" + (portnum-5)).equals(currPortId.getName()) || ("COM"+portnum).equals(currPortId.getName())) {
+            if (("/dev/ttyACM" + (portnum)).equals(currPortId.getName()) || ("COM"+portnum).equals(currPortId.getName())) {
                 portId = currPortId;
                 break;
             }
         }
+        System.out.println(portId);
         if (portId == null) {
             return;
         }
         try {
             sp = (SerialPort) portId.open("CTC", 2000);
-            sp.setSerialPortParams(
+            /*sp.setSerialPortParams(
                     BaudRate,
                     SerialPort.DATABITS_8,
                     SerialPort.STOPBITS_1,
-                    SerialPort.PARITY_NONE);
+                    SerialPort.PARITY_NONE);*/
             sp.setDTR(true);
             Output = sp.getOutputStream();
             Input = sp.getInputStream();
@@ -87,6 +89,7 @@ public class Serial implements COM {
             });
             sp.notifyOnDataAvailable(true);
         } catch (Exception e) {
+        	e.printStackTrace();
             return;
         }
         Connected = true;

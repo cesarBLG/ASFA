@@ -29,7 +29,7 @@ public class ASFA {
     }
     public DIV div;
     int T;
-    public int selectorT = 4;
+    public int selectorT = 3;
     boolean curvasT120;
     TrainParameters param = new TrainParameters();
     byte[] divData; //Información del vehículo
@@ -400,7 +400,7 @@ public class ASFA {
             }
             if (frecRecibida == last) {
                 if (AlarmaStart == 0 && Odometer.getSpeed() > 1 && UltimaFP + 0.5 < Clock.getSeconds()) {
-                    Alarma();
+                    //Alarma();
                 }
                 return;
             }
@@ -870,7 +870,7 @@ public class ASFA {
     	if(c2 == null) return c1;
     	if(c1.getVC(Clock.getSeconds()) < c2.getVC(Clock.getSeconds())) return c1;
     	if(c1.getVC(Clock.getSeconds()) > c2.getVC(Clock.getSeconds())) return c2;
-    	if(c1.VC.OrdenadaFinal < c2.VC.OrdenadaFinal) return c2;
+    	if(c1.VC.OrdenadaFinal < c2.VC.OrdenadaFinal) return c1;
     	if(c1.VC.OrdenadaFinal > c2.VC.OrdenadaFinal) return c2;
     	if(c1 instanceof ControlPasoDesvío) return c1;
     	if(c2 instanceof ControlPasoDesvío) return c2;
@@ -1018,7 +1018,7 @@ public class ASFA {
         display.display("Modo", modo.ordinal());
         display.display("Velocidad Objetivo", ControlActivo instanceof ControlPreviaSeñalParada ? 0 : (int) target);
         display.display("EstadoVobj", targetdisplay);
-        display.display("Velocidad", (int) Math.ceil(MpS.ToKpH(Odometer.getSpeed())));
+        display.display("Velocidad", (int) Math.ceil(MpS.ToKpH(Odometer.getSpeed())-0.000001f));
         display.display("Info", UltimaInfo.ordinal()<<1 | (parpInfo ? 1 : 0));
     }
 
