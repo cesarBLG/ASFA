@@ -14,7 +14,7 @@ public class TipoTren extends JLabel {
 
     public TipoTren() {
         setHorizontalAlignment(JLabel.CENTER);
-        setFont(new Font("Helvetica-Condensed", 1, 15));
+        setFont(new Font("Helvetica-Condensed", 1, Main.dmi.pantalla.getScale(15)));
         setForeground(Color.white);
         update();
     }

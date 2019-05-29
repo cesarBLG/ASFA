@@ -4,6 +4,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import ecp.Main;
+
 public class Intervención extends JPanel {
 
     JLabel Frenado1;
@@ -17,9 +19,9 @@ public class Intervención extends JPanel {
         Frenado1 = new JLabel();
         Frenado2 = new JLabel();
         Urgencia = new JLabel();
-        Urgencia.setBounds(16, 12, 74, 31);
-        Frenado2.setBounds(16, 12, 47, 47);
-        Frenado1.setBounds(16, 12, 28, 28);
+        Urgencia.setBounds(Main.dmi.pantalla.getScale(16), Main.dmi.pantalla.getScale(12), Main.dmi.pantalla.getScale(74), Main.dmi.pantalla.getScale(31));
+        Frenado2.setBounds(Main.dmi.pantalla.getScale(16), Main.dmi.pantalla.getScale(12), Main.dmi.pantalla.getScale(47), Main.dmi.pantalla.getScale(47));
+        Frenado1.setBounds(Main.dmi.pantalla.getScale(16), Main.dmi.pantalla.getScale(12), Main.dmi.pantalla.getScale(28), Main.dmi.pantalla.getScale(28));
         setOpaque(false);
         setLayout(null);
         add(Frenado1);

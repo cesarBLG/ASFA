@@ -36,12 +36,17 @@ public class Pantalla extends JPanel {
     public ModeInfo ModoASFA;
     JLabel linea;
     public TipoTren tipoTren;
+    public float scale = 1.25f /*1.2f*/;
 
+    public int getScale(int val) {
+    	
+    	return Main.dmi.singleScreen ? (int)(val*scale) : val;
+    }
     public Pantalla() {
-        setSize(350, 263);
-        setMinimumSize(new Dimension(350, 263));
-        setMaximumSize(new Dimension(350, 263));
-        setPreferredSize(new Dimension(350, 263));
+        setSize(getScale(350), getScale(263));
+        setMinimumSize(new Dimension(getScale(350), getScale(263)));
+        setMaximumSize(new Dimension(getScale(350), getScale(263)));
+        setPreferredSize(new Dimension(getScale(350), getScale(263)));
         setBackground(Color.black);
     }
 
@@ -80,33 +85,33 @@ public class Pantalla extends JPanel {
         removeAll();
         setLayout(null);
         info = new ÚltimaInfo();
-        info.setBounds(271, 0, 79, 263);
+        info.setBounds(getScale(271), getScale(0), getScale(79), getScale(263));
         add(info);
         vreal = new Velocidad(Color.black, Color.white);
-        vreal.setBounds(16, 42, 75, 31);
+        vreal.setBounds(getScale(16), getScale(42), getScale(75), getScale(31));
         add(vreal);
         vtarget = new VelocidadObjetivo();
-        vtarget.setBounds(106, 39, 165, 72);
+        vtarget.setBounds(getScale(106), getScale(39), getScale(165), getScale(72));
         add(vtarget);
         linea = new JLabel();
         linea.setOpaque(true);
         linea.setBackground(Color.white);
-        linea.setBounds(16, 73, 213, 3);
+        linea.setBounds(getScale(16), getScale(73), getScale(213), getScale(3));
         add(linea);
         eficacia = new Eficacia(false);
-        eficacia.setBounds(16, 202, 19, 19);
+        eficacia.setBounds(getScale(16), getScale(202), getScale(19), getScale(19));
         add(eficacia);
         tipoTren = new TipoTren();
-        tipoTren.setBounds(32, 179, 51, 16);
+        tipoTren.setBounds(getScale(32), getScale(179), getScale(51), getScale(16));
         add(tipoTren);
         ModoASFA = new ModeInfo();
-        ModoASFA.setBounds(32, 202, 51, 16);
+        ModoASFA.setBounds(getScale(32), getScale(202), getScale(51), getScale(16));
         add(ModoASFA);
         controles = new InfoControles();
-        controles.setBounds(106, 140, 165, 98);
+        controles.setBounds(getScale(106), getScale(140), getScale(165), getScale(98));
         add(controles);
         intervención = new Intervención();
-        intervención.setBounds(0, 76, 106, 59);
+        intervención.setBounds(getScale(0), getScale(76), getScale(106), getScale(59));
         add(intervención);
         set(ModoDisplay.Noche);
         repaint();
@@ -128,4 +133,5 @@ public class Pantalla extends JPanel {
     public void set() {
         set(modo == ModoDisplay.Día ? ModoDisplay.Noche : ModoDisplay.Día);
     }
+    
 }

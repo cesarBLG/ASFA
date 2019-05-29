@@ -35,15 +35,21 @@ public class DMI extends JFrame {
     public Repetidor repetidor;
     public Pupitre pupitre;
     public Sound sound;
+    public boolean singleScreen = false;
 
     public DMI() {
-    	sound = new Sound();
+    	if(singleScreen)
+    	{
+    		setUndecorated(true);
+        	//setExtendedState(JFrame.MAXIMIZED_BOTH);
+    	}
         Main.dmi = this;
         setLayout(new GridBagLayout());
         GridBagConstraints g = new GridBagConstraints();
         g.anchor = GridBagConstraints.CENTER;
         g.gridx = g.gridy = 0;
-        g.insets = new Insets(50, 50, 20, 50);
+        if(singleScreen) g.insets = new Insets(0, 0, 0, 0);
+        else g.insets = new Insets(50, 50, 20, 50);
         pantalla = new Pantalla();
         add(pantalla, g);
         g.gridy++;
@@ -52,14 +58,14 @@ public class DMI extends JFrame {
         modonoche.addActionListener((ActionEvent) -> {
         	COM.parse(new byte[] {6,0});
         }); 
-        add(modonoche, g);
+        if(!singleScreen) add(modonoche, g);
         g.gridy++;
         g.insets = new Insets(5, 5, 5, 5);
         repetidor = new Repetidor();
-        add(repetidor, g);
+        if(!singleScreen) add(repetidor, g);
         g.gridy++;
         pupitre = new Pupitre();
-        add(pupitre, g);
+        if(!singleScreen) add(pupitre, g);
         JTextField jtb = new JTextField();
         jtb.addKeyListener(new KeyListener() {
 
@@ -97,10 +103,11 @@ public class DMI extends JFrame {
         });
         g.gridy++;
         jtb.setPreferredSize(new Dimension(300, 50));
-        add(jtb, g);
+        if(!singleScreen) add(jtb, g);
         getContentPane().setBackground(Color.blue);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         setVisible(true);
+    	sound = new Sound();
     }
 }

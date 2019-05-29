@@ -19,7 +19,7 @@ public class Velocidad extends JLabel {
         setBorder(null);
         Night = night;
         Day = day;
-        Font f = new Font("Comic Sans MS", 0, 35);
+        Font f = new Font("Comic Sans MS", 0, Main.dmi.pantalla.getScale(35));
         setFont(f);
         setHorizontalAlignment(CENTER);
         setValue(0);

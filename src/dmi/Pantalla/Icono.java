@@ -1,5 +1,6 @@
 package dmi.Pantalla;
 
+import java.awt.Image;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
@@ -11,7 +12,15 @@ public class Icono {
 
     ImageIcon[] iconos;
     boolean variable;
-
+    
+    public ImageIcon createScaledIcon(URL location)
+    {
+    	ImageIcon ic = new ImageIcon(location);
+    	Image img = ic.getImage();
+    	Image newimg = img.getScaledInstance(Main.dmi.pantalla.getScale(img.getWidth(ic.getImageObserver())), Main.dmi.pantalla.getScale(img.getHeight(ic.getImageObserver())), java.awt.Image.SCALE_SMOOTH);
+    	return new ImageIcon(newimg);
+    }
+    
     public Icono(boolean var, String halfroute) {
         variable = var;
         String route = "/content/Display/";
@@ -21,7 +30,7 @@ public class Icono {
                 try {
                     URL arg0 = getClass().getResource(route.concat(ModoDisplay.values()[i].name()).concat("/").concat(halfroute));
                     if (arg0 != null) {
-                        iconos[i] = new ImageIcon(arg0);
+                        iconos[i] = createScaledIcon(arg0);
                     }
                 } catch (Exception e) {
                     iconos[i] = null;
@@ -29,7 +38,7 @@ public class Icono {
             }
         } else {
             iconos = new ImageIcon[1];
-            iconos[0] = new ImageIcon(getClass().getResource(route.concat(halfroute)));
+            iconos[0] = createScaledIcon(getClass().getResource(route.concat(halfroute)));
         }
     }
 

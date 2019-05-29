@@ -24,13 +24,13 @@ public class VelocidadObjetivo extends JPanel {
         setOpaque(false);
         setBorder(null);
         value = new Velocidad(Color.white, Color.black);
-        value.setBounds(45, 3, 75, 31);
+        value.setBounds(Main.dmi.pantalla.getScale(45), Main.dmi.pantalla.getScale(3), Main.dmi.pantalla.getScale(75), Main.dmi.pantalla.getScale(31));
         add(value);
         Rectángulo = new JLabel();
-        Rectángulo.setBounds(42, 0, 81, 37);
+        Rectángulo.setBounds(Main.dmi.pantalla.getScale(42), Main.dmi.pantalla.getScale(0), Main.dmi.pantalla.getScale(81), Main.dmi.pantalla.getScale(37));
         add(Rectángulo);
         Triángulo = new JLabel();
-        Triángulo.setBounds(0, 0, 165, 72);
+        Triángulo.setBounds(Main.dmi.pantalla.getScale(0), Main.dmi.pantalla.getScale(0), Main.dmi.pantalla.getScale(165), Main.dmi.pantalla.getScale(72));
         add(Triángulo);
         IconoTriángulo = new Icono(true, "Triángulo.png");
         set(0, 0);
