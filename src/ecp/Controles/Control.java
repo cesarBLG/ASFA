@@ -14,7 +14,7 @@ public abstract class Control {
     public double TiempoVAlcanzada = 0;
     public double TiempoRec = 0;
     public int T;
-    public int O;
+    public int speed;
     public boolean curvasT120;
     boolean modoRAM;
     ASFA.Modo Modo;
@@ -26,13 +26,29 @@ public abstract class Control {
         DistanciaVigencia = dv;
         TiempoRec = Clock.getSeconds();
         curvasT120 = param.curvasT120;
-        O = param.O;
+        speed = param.Speed;
         T = param.T;
         Modo = param.Modo;
         modoRAM = param.modoRAM;
     }
     abstract Curva[] getCurvas(int O);
     public void Curvas() {
+        int O = (int) Math.min(speed + 5, T);
+		if (O <= 50) O = 50;
+		else if (O <= 60) O = 60;
+		else if (O <= 70) O = 70;
+		else if (O <= 80) O = 80;
+		else if (O <= 90) O = 90;
+		else if (O <= 100) O = 100;
+		else if (O <= 120) O = 120;
+		else if (O <= 140) O = 140;
+		else if (O <= 160) O = 160;
+		else if (O <= 180) O = 180;
+		else O = 200;
+		Curvas(O);
+    }
+    public void Curvas(int O)
+    {
     	if(O==100 && T==100 && curvasT120)
     	{
     		Curva[] curvasT120 = getCurvas(120);
@@ -50,8 +66,18 @@ public abstract class Control {
     	Curva[] curvasT = getCurvas(curvasT120 ? 120 : T);
     	if(VC.OrdenadaFinal<curvasT[0].OrdenadaFinal)
     	{
-    		VC.OrdenadaFinal = curvasT[0].OrdenadaFinal;
-    		IF.OrdenadaFinal = curvasT[1].OrdenadaFinal;
+    		if (O == 50) O = 60;
+    		else if (O == 60) O = 70;
+    		else if (O == 70) O = 80;
+    		else if (O == 80) O = 90;
+    		else if (O == 90) O = 100;
+    		else if (O == 100) O = 120;
+    		else if (O == 120) O = 140;
+    		else if (O == 140) O = 160;
+    		else if (O == 160) O = 180;
+    		else O = 200;
+    		if(O>T) return;
+    		Curvas(O);
     	}
     }
     public double getIF(double T) {

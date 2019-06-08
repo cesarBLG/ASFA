@@ -10,14 +10,13 @@ public class DIV {
     byte[] data = new byte[64];
 
     public byte[] getData() {
-        DIV d = this;
         Timer t = new Timer(1000, new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 // TODO Auto-generated method stub
-                synchronized (d) {
-                    d.notify();
+                synchronized (DIV.this) {
+                    DIV.this.notify();
                 }
             }
 
@@ -36,7 +35,7 @@ public class DIV {
         data[38] = (byte) 140;
         data[14] = 16 | 32;
         data[16] = 1;
-        data[18] = (byte) 200; 
+        data[18] = (byte) 160; 
         data[35] = 100;
         data[36] = 60;
         data[37] = 50;

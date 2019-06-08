@@ -7,6 +7,7 @@ import java.util.Queue;
 import javax.swing.JOptionPane;
 
 import com.COM;
+import com.OR_Client;
 import com.Serial;
 import com.TCP;
 
@@ -56,6 +57,7 @@ public class DisplayInterface {
 
     Serial OR = new Serial(5);
     TCP OR2 = new TCP();
+    OR_Client orclient = new OR_Client();
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
 
     void write(int num, int data) {
@@ -63,6 +65,7 @@ public class DisplayInterface {
         byte[] b = new byte[]{(byte) num, (byte) data, (byte) 0xFF};
         OR.write(b);
         OR2.write(b);
+        orclient.send(num, data);
     }
 
     byte controlByte(int n1, int n2) {

@@ -29,7 +29,7 @@ public class ASFA {
     }
     public DIV div;
     int T;
-    public int selectorT = 3;
+    public int selectorT = 4;
     boolean curvasT120;
     TrainParameters param = new TrainParameters();
     byte[] divData; //Información del vehículo
@@ -118,7 +118,7 @@ public class ASFA {
         Connected = true;
         param.curvasT120 = curvasT120;
         param.T = T;
-        param.O = T;
+        param.Speed = 0;
         param.Modo = modo;
         param.modoAV = modoAV;
         param.modoCONV = modoCONV;
@@ -162,20 +162,7 @@ public class ASFA {
             modo = Modo.EXT;
             Eficacia = false;
         }
-
-        O = (int) Math.min(MpS.ToKpH(Odometer.getSpeed()) + 5, T);
-		if (O <= 50) O = 50;
-		else if (O <= 60) O = 60;
-		else if (O <= 70) O = 70;
-		else if (O <= 80) O = 80;
-		else if (O <= 90) O = 90;
-		else if (O <= 100) O = 100;
-		else if (O <= 120) O = 120;
-		else if (O <= 140) O = 140;
-		else if (O <= 160) O = 160;
-		else if (O <= 180) O = 180;
-		else O = 200;
-        param.O = O;
+		param.Speed = (int)MpS.ToKpH(Odometer.getSpeed());
 		param.Modo = modo;
         
         display.esperarPulsado(TipoBotón.Modo, modo);
@@ -808,9 +795,9 @@ public class ASFA {
         	if (c instanceof ControlSeñalParada)
         	{
         		ControlSeñalParada csp = (ControlSeñalParada) c;
-        		if((modo == Modo.CONV && csp.recCount<2) || (modo == Modo.AV && csp.recCount<3))
+        		if(csp.TiempoVAlcanzada==0 && ((modo == Modo.CONV && csp.recCount<2) || (modo == Modo.AV && csp.recCount<3)))
         		{
-        			if((csp.recCount == 0 && csp.DistanciaInicial + 200 < Odometer.getDistance()) || (csp.recCount > 0 && (csp.lastDistRec + distanciaRecParada < Odometer.getDistance()) || (csp.lastTimeRec + tiempoRecParada < Clock.getSeconds())))
+        			if((csp.recCount == 0 && csp.DistanciaInicial + 200 < Odometer.getDistance()) || (csp.recCount > 0 && ((csp.lastDistRec + distanciaRecParada < Odometer.getDistance()) || (csp.lastTimeRec + tiempoRecParada < Clock.getSeconds()))))
         			{
         				if(csp.recStart==-1)
         				{
@@ -902,6 +889,7 @@ public class ASFA {
             display.stopSound("S3-1");
             Urgencias();
             display.display("Urgencia", FE ? 1 : 0);
+            display.display("Sobrevelocidad", 0);
         } else if (vreal >= overspeed2) {
             display.stopSound("S3-1");
             display.startSound("S3-2");
@@ -988,7 +976,7 @@ public class ASFA {
             if(c instanceof ControlReanudo)
             {
             	ControlReanudo cr = (ControlReanudo)c;
-            	if(Odometer.getSpeed() >= 1 && cr.Activado() && (cr.UltimaDistancia()==-1 || cr.UltimaDistancia() + 500 < Odometer.getDistance()))
+            	if(Odometer.getSpeed() >= 1 && cr.Activado() && (cr.UltimaDistancia()==-1 || cr.UltimaDistancia() + distReanudo < Odometer.getDistance()))
             	{
             		if(c instanceof ControlPNDesprotegido) parpPN = true;
             		if(c instanceof ControlFASF) parpInfo = true;
@@ -1123,6 +1111,12 @@ public class ASFA {
                 else {
                     Caducados.add(control);
                 }
+            }
+            if(control instanceof ControlSeñalParada)
+            {
+            	display.botones.get(TipoBotón.Rebase).lector = null;
+            	display.stopSound("S3-5");
+				display.iluminar(TipoBotón.Rebase, false);
             }
             if(control instanceof ControlSecuenciaAA || control instanceof ControlSecuenciaAN_A || control instanceof ControlPasoDesvío) Caducados.add(control);
         }
