@@ -12,11 +12,11 @@ import dmi.Botones.Botón;
 import dmi.Pantalla.ÚltimaInfo.Info;
 import ecp.ASFA;
 import ecp.Main;
-import gnu.io.*;
+//import gnu.io.*;
 
 public class Serial implements COM {
 
-    private SerialPort sp;
+    //private SerialPort sp;
     OutputStream Output;
     InputStream Input;
     public boolean Connected = false;
@@ -34,22 +34,22 @@ public class Serial implements COM {
 
     @Override
     public void write(byte[] b) {
-        if (Connected) {
+        /*if (Connected) {
             try {
                 Output.write(b);
             } catch (IOException e) {
             	e.printStackTrace();
             }
-        }
+        }*/
     }
 
     @Override
     public String read(int count) {
         byte[] data = new byte[count];
-        try {
+        /*try {
             Input.read(data, 0, count);
         } catch (IOException e) {
-        }
+        }*/
         return data.toString();
     }
 
@@ -59,7 +59,7 @@ public class Serial implements COM {
     }
 
     void begin(int BaudRate) {
-        CommPortIdentifier portId = null;
+        /*CommPortIdentifier portId = null;
         Enumeration<?> portEnum = CommPortIdentifier.getPortIdentifiers();
         while (portEnum.hasMoreElements()) {
             CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
@@ -74,11 +74,11 @@ public class Serial implements COM {
         }
         try {
             sp = (SerialPort) portId.open("CTC", 2000);
-            /*sp.setSerialPortParams(
+            sp.setSerialPortParams(
                     BaudRate,
                     SerialPort.DATABITS_8,
                     SerialPort.STOPBITS_1,
-                    SerialPort.PARITY_NONE);*/
+                    SerialPort.PARITY_NONE);
             sp.setDTR(true);
             Output = sp.getOutputStream();
             Input = sp.getInputStream();
@@ -91,12 +91,12 @@ public class Serial implements COM {
         } catch (Exception e) {
         	e.printStackTrace();
             return;
-        }
+        }*/
         Connected = true;
     }
     boolean Missed = false;
     void Receive() {
-        try {
+        /*try {
         	if(Missed)
         	{
         		while(Input.read() != 0xFF) {}
@@ -112,6 +112,6 @@ public class Serial implements COM {
                 COM.parse(data);
             }
         } catch (IOException e) {
-        }
+        }*/
     }
 }

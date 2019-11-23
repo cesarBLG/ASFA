@@ -1,5 +1,6 @@
 package ecp;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class ASFA {
     }
     public DIV div;
     int T;
-    public int selectorT = 4;
+    public int selectorT = 3;
     boolean curvasT120;
     TrainParameters param = new TrainParameters();
     byte[] divData; //Información del vehículo
@@ -337,8 +338,8 @@ public class ASFA {
                 	RecEnd = Clock.getSeconds() + 0.5;
                 }
             }
-        	if(display.botones.get(TipoBotón.Rebase).lector==null) display.esperarPulsado(TipoBotón.Rebase, RebaseAuto);
-            if (display.pulsado(TipoBotón.Rebase,RebaseAuto) && !RebaseAuto) {
+        	if(!RebaseAuto && display.botones.get(TipoBotón.Rebase).lector==null) display.esperarPulsado(TipoBotón.Rebase, RebaseAuto);
+            if (display.pulsado(TipoBotón.Rebase, RebaseAuto) && !RebaseAuto) {
                 display.startSound("S4");
                 RebaseAuto = true;
                 InicioRebase = Clock.getSeconds();
@@ -799,7 +800,7 @@ public class ASFA {
         		{
         			if((csp.recCount == 0 && csp.DistanciaInicial + 200 < Odometer.getDistance()) || (csp.recCount > 0 && ((csp.lastDistRec + distanciaRecParada < Odometer.getDistance()) || (csp.lastTimeRec + tiempoRecParada < Clock.getSeconds()))))
         			{
-        				if(csp.recStart==-1)
+        				if(csp.recStart < 0)
         				{
         					csp.lastTimeRec = Clock.getSeconds();
         					csp.recStart = Clock.getSeconds();
@@ -807,7 +808,7 @@ public class ASFA {
         				}
         				display.startSound("S3-5");
         			}
-        			if(csp.recStart != -1)
+        			if(csp.recStart >= 0)
         			{
         				display.esperarPulsado(TipoBotón.Rebase, csp);
         				display.iluminar(TipoBotón.Rebase, true);
@@ -903,7 +904,7 @@ public class ASFA {
             display.stopSound("S3-2");
             display.display("Sobrevelocidad", 0);
         }
-        if (FE && vreal < 5) {
+        if (FE && vreal < 5 &&   AlarmaStart == 0) {
             display.esperarPulsado(TipoBotón.Rearme, FE);
             display.iluminar(TipoBotón.Rearme, true);
             if (display.pulsado(TipoBotón.Rearme, FE)) {
@@ -1096,13 +1097,13 @@ public class ASFA {
     private void addControlSeñal(Control c) {
         ArrayList<Control> Caducados = new ArrayList<Control>();
         for (Control control : Controles) {
-            if (InfoSeñalDistinta && control instanceof ControlFASF) {
-                if (control instanceof ControlSeñalParada) {
+            if(control instanceof ControlFASF) {
+            	if (InfoSeñalDistinta && control instanceof ControlSeñalParada && !(c instanceof ControlPreviaSeñalParada)) {
                     if (control.TiempoVAlcanzada == 0) {
                         control.TiempoVAlcanzada = TiempoUltimaRecepcion;
                     }
                 }
-                else if (control instanceof ControlAnuncioPrecaución && modo == Modo.RAM)
+                else if (InfoSeñalDistinta && control instanceof ControlAnuncioPrecaución && modo == Modo.RAM)
                 {
                 	if (control.DistanciaInicial == 0) {
                         control.DistanciaInicial = DistanciaUltimaRecepcion;
@@ -1111,14 +1112,14 @@ public class ASFA {
                 else {
                     Caducados.add(control);
                 }
+                if(control instanceof ControlSeñalParada)
+                {
+                	display.botones.get(TipoBotón.Rebase).lector = null;
+                	display.stopSound("S3-5");
+    				display.iluminar(TipoBotón.Rebase, false);
+                }
             }
-            if(control instanceof ControlSeñalParada)
-            {
-            	display.botones.get(TipoBotón.Rebase).lector = null;
-            	display.stopSound("S3-5");
-				display.iluminar(TipoBotón.Rebase, false);
-            }
-            if(control instanceof ControlSecuenciaAA || control instanceof ControlSecuenciaAN_A || control instanceof ControlPasoDesvío) Caducados.add(control);
+            if(control instanceof ControlSecuenciaAA || control instanceof ControlPasoDesvío) Caducados.add(control);
         }
         Controles.removeAll(Caducados);
         if (modo != Modo.RAM && AnteriorControlSeñal instanceof ControlPreanuncioParada && c instanceof ControlAnuncioParada) {
@@ -1138,7 +1139,7 @@ public class ASFA {
             if (AnteriorControlSeñal instanceof ControlAnuncioPrecaución) {
                 Controles.add(new ControlPasoDesvío(param, Clock.getSeconds(), ((ControlAnuncioPrecaución) ((AnteriorControlSeñal instanceof ControlAnuncioPrecaución) ? AnteriorControlSeñal : null)).AumentoVelocidad));
             }
-            if (AnteriorControlSeñal instanceof ControlAnuncioParada && ControlSeñal instanceof ControlAnuncioParada) {
+            if ((AnteriorControlSeñal instanceof ControlAnuncioParada || AnteriorControlSeñal instanceof ControlSecuenciaAN_A) && ControlSeñal instanceof ControlAnuncioParada) {
                 Controles.add(new ControlSecuenciaAA(Clock.getSeconds(), param));
             }
         }
@@ -1162,7 +1163,7 @@ public class ASFA {
         Control c;
         if (Vmax > 160) {
             boolean Fixed = false;
-            if (ControlSeñal.getVC(Clock.getSeconds()) <= 160) {
+            if (ControlSeñal != null && ControlSeñal.getVC(Clock.getSeconds()) <= 160) {
                 Fixed = true;
             }
             if (SigNo != 0 && !Fixed) {
@@ -1248,7 +1249,13 @@ public class ASFA {
         Control c;
         if (SigNo != 0 && ControlSeñal != null) {
             if (ControlSeñal instanceof ControlPreanuncioParada) {
-                c = ControlSeñal;
+                ControlPreanuncioParada cs = (ControlPreanuncioParada) ControlSeñal;
+                c = cs;
+                if(cs.Aumentado())
+                {
+                	cs.AumentarVelocidad(false);
+                	cs.TiempoInicial = TiempoUltimaRecepcion;
+                }
             } else {
                 c = new ControlPreanuncioParada(ControlSeñal.TiempoInicial, param);
             }

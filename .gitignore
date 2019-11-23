@@ -1,5 +1,6 @@
 *.dll
 *.jar
+*.exe
 *.directory
 dist/
 bin/

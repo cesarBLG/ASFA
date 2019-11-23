@@ -35,7 +35,7 @@ public class DIV {
         data[38] = (byte) 140;
         data[14] = 16 | 32;
         data[16] = 1;
-        data[18] = (byte) 160; 
+        data[18] = (byte) 180; 
         data[35] = 100;
         data[36] = 60;
         data[37] = 50;
