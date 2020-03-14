@@ -18,16 +18,16 @@ import javax.swing.JPanel;
 public class ÚltimaInfo extends JPanel {
 
     public enum Info {
-        Vía_libre,
-        Vía_libre_condicional,
+        Apagado,
+        Desconocido,
+        Parada,
+        Rebase,
         Anuncio_parada,
         Anuncio_precaución,
         Preanuncio,
         Preanuncio_AV,
-        Parada,
-        Rebase,
-        Desconocido,
-        Apagado
+        Vía_libre_condicional,
+        Vía_libre
     }
     Info info;
     JLabel j;

@@ -57,7 +57,7 @@ public class DisplayInterface {
 
     Serial OR = new Serial(5);
     TCP OR2 = new TCP();
-    OR_Client orclient = new OR_Client();
+    OR_Client orclient;
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
 
     void write(int num, int data) {
@@ -81,6 +81,7 @@ public class DisplayInterface {
     public DisplayInterface() {
         OR.start();
     	OR2.initialize();
+    	orclient = new OR_Client();
     }
 
     public void iluminar(TipoBotón botón, boolean state) {

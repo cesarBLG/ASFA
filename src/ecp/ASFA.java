@@ -350,6 +350,8 @@ public class ASFA {
                 RebaseAuto = false;
             }
             if (AlarmaStart != 0) {
+            	display.esperarPulsado(TipoBotón.Alarma, AlarmaStart);
+                display.iluminar(TipoBotón.Alarma, true);
             	if(Eficacia && display.botones.get(TipoBotón.Alarma).pulsado)
             	{
             		if(AlarmaEnd-AlarmaStart<=3) AlarmaEnd = Clock.getSeconds() + 0.5;
@@ -597,8 +599,6 @@ public class ASFA {
     void Alarma() {
         AlarmaStart = UltimaFP;
         AlarmaEnd = AlarmaStart + 3;
-    	display.esperarPulsado(TipoBotón.Alarma, AlarmaStart);
-        display.iluminar(TipoBotón.Alarma, true);
         display.startSound("S5");
     }
     double RecPNStart = 0;
@@ -904,7 +904,7 @@ public class ASFA {
             display.stopSound("S3-2");
             display.display("Sobrevelocidad", 0);
         }
-        if (FE && vreal < 5 &&   AlarmaStart == 0) {
+        if (FE && vreal < 5 && AlarmaStart == 0) {
             display.esperarPulsado(TipoBotón.Rearme, FE);
             display.iluminar(TipoBotón.Rearme, true);
             if (display.pulsado(TipoBotón.Rearme, FE)) {

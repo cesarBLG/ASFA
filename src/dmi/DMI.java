@@ -103,6 +103,7 @@ public class DMI extends JFrame {
         });
         g.gridy++;
         jtb.setPreferredSize(new Dimension(300, 50));
+        jtb.setMinimumSize(new Dimension(300, 50));
         if(!singleScreen) add(jtb, g);
         getContentPane().setBackground(Color.blue);
         setDefaultCloseOperation(EXIT_ON_CLOSE);

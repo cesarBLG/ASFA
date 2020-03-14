@@ -20,6 +20,8 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import ecp.Clock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,7 +34,7 @@ public class Sound implements Runnable {
 
     public Sound()
     {
-        new Thread(this).start();
+    	SwingUtilities.invokeLater(() -> new Thread(this).start());
     }
     public void Trigger(String s) {Trigger(s, false);}
     public void Trigger(String s, boolean basico) {

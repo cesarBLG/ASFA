@@ -8,6 +8,7 @@ import java.net.Socket;
 
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.TipoBotón;
+import dmi.Pantalla.ÚltimaInfo.Info;
 import ecp.Clock;
 import ecp.FrecASFA;
 import ecp.Main;
@@ -28,6 +29,7 @@ public class OR_Client {
 				}
 				catch (IOException e)
 				{
+					e.printStackTrace();
 				}
 			}
 			while(!s.isConnected()) 
@@ -87,6 +89,7 @@ public class OR_Client {
 							break;
 						}
 					}
+					if (tb == null) break;
 	                Main.ASFA.display.pulsar(tb, Integer.parseInt(val)==1);
 	                if(tb==TipoBotón.PrePar) Main.ASFA.display.pulsar(TipoBotón.VLCond, Integer.parseInt(val)==1);
 				}
@@ -124,9 +127,30 @@ public class OR_Client {
 	        int Ilum = val & 1;
 	        if ((val & 2) != 0) return;
 	        String name = Botón.TipoBotón.values()[BotNum].name().toLowerCase();
+			if(name.equals("aumvel")) name = "aumento";
+			else if(name.equals("ocultación")) name = "ocultacion";
 	        sendData("asfa_ilumpuls_"+name+"="+(Ilum==1 ? "1" : "0"));
 	    }
-		if(funct == 4 && val<2) sendData("asfa_emergency=" + (val==1 ? '1' : '0'));
-        if (funct == 3 && (val & 1) != 1) sendData("asfa_target_speed="+(((int) (val >> 1) & 0xFF) * 5));
+		if (funct == 1) sendData("asfa_last_info="+Info.values()[val>>1].ordinal());
+		if (funct == 4) 
+        {
+            if (val < 2) sendData("asfa_emergency=" + (val==1 ? '1' : '0'));
+            if ((val & 4) != 0) sendData("asfa_indicador_frenado="+(int)(val & 3));
+        }
+        if (funct == 3)
+        {
+        	if((val & 1) != 1) sendData("asfa_target_speed="+(((int) (val >> 1) & 0xFF) * 5));
+        	else sendData("asfa_target_state="+(int)((val >> 1) & 0xFF));
+        }
+        if (funct == 5) {
+            int control = val >> 2;
+            String activ = (val & 3)==0?"0":"1";
+            
+            if (control == 0) sendData("asfa_control_desvio="+activ);
+            if (control == 1) sendData("asfa_secuencia_aa="+activ);
+            if (control == 2) sendData("asfa_indicador_lvi="+(int)(val&3));
+            if (control == 3) sendData("asfa_indicador_pndesp="+(int)(val&3));
+            if(control == 4) sendData("asfa_indicador_pnprot="+(int)(val&3));
+        }
 	}
 }

@@ -9,7 +9,6 @@ import java.util.List;
 import javax.swing.*;
 
 import com.COM;
-import com.Serial;
 
 import dmi.DMI;
 import ecp.ASFA;
@@ -42,7 +41,6 @@ public class Botón extends JButton {
 
     Botón(ImageIcon[] icons, int count, TipoBotón tipo) {
         super();
-        if(serial == null && Main.ASFA == null) serial = new Serial(6);
         this.tipo = tipo;
         ListaBotones[tipo.ordinal()] = this;
         if (tipo == tipo.PrePar) {
@@ -102,15 +100,10 @@ public class Botón extends JButton {
             }
         });
     }
-    static Serial serial = null;
     static void enviarPulsacion(TipoBotón bot, boolean puls)
     {
     	byte b = (byte) ((bot.ordinal()<<1) | (puls ? 1 : 0));
     	COM.parse(10, b);
-    	if(serial!=null)
-    	{
-    		serial.write(new byte[] {10, b, (byte) 0xFF});
-    	}
     }
     public void iluminar(int num) {
         if (num >= Icons.length) {

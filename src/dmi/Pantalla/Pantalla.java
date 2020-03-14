@@ -26,7 +26,7 @@ enum ModoDisplay {
 
 public class Pantalla extends JPanel {
 
-    public ModoDisplay modo = ModoDisplay.Noche;
+    public ModoDisplay modo = ModoDisplay.Día;
     public Velocidad vreal;
     public ÚltimaInfo info;
     public VelocidadObjetivo vtarget;
@@ -36,7 +36,7 @@ public class Pantalla extends JPanel {
     public ModeInfo ModoASFA;
     JLabel linea;
     public TipoTren tipoTren;
-    public float scale = 1.25f /*1.2f*/;
+    public float scale = 1.95f /*1.2f*/;
 
     public int getScale(int val) {
     	
