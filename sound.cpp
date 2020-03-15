@@ -1,6 +1,7 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <stdio.h>
+#include <mutex>
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -114,30 +115,33 @@ int main(int argc, char** argv)
         }
     }
 }
+std::mutex mtx;
 Uint32 warnLength;
 Uint8 *warnBuffer;
 Uint32 refill(Uint32 interval, void *param)
 {
-    if(warnBuffer != NULL && SDL_GetQueuedAudioSize(deviceId) < 3*warnLength) SDL_QueueAudio(deviceId, warnBuffer, warnLength);
-    if(warnBuffer == NULL) return 0;
+    std::unique_lock<std::mutex> lck(mtx);
+    if(warnBuffer != nullptr && SDL_GetQueuedAudioSize(deviceId) < 3*warnLength) SDL_QueueAudio(deviceId, warnBuffer, warnLength);
+    if(warnBuffer == nullptr) return 0;
     return interval;
 }
 void play(sdlsounddata d, bool loop)
 {
-    if(warnBuffer != NULL) stop();
-    
+    std::unique_lock<std::mutex> lck(mtx);
+    if(warnBuffer != nullptr) stop();
     SDL_ClearQueuedAudio(deviceId);
     int success = SDL_QueueAudio(deviceId, d.wavBuffer, d.wavLength);
     SDL_PauseAudioDevice(deviceId, 0);
     if(loop)
     {
-        warnBuffer = d.wavBuffer;
         warnLength = d.wavLength;
-        SDL_AddTimer(50, refill, NULL);
+        warnBuffer = d.wavBuffer;
+        SDL_AddTimer(50, refill, nullptr);
     }
 }
 void stop()
 {
+    std::unique_lock<std::mutex> lck(mtx);
     SDL_ClearQueuedAudio(deviceId);
     warnBuffer = nullptr;
     SDL_PauseAudioDevice(deviceId, 1);

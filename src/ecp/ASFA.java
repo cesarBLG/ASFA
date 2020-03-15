@@ -63,6 +63,7 @@ public class ASFA {
     boolean Eficacia;
     boolean RebaseAuto;
     boolean Fase2;
+    int ASFA_version=2;
     
     boolean primerRearme = false;
 
@@ -124,6 +125,7 @@ public class ASFA {
         param.modoAV = modoAV;
         param.modoCONV = modoCONV;
         param.modoRAM = modoRAM;
+        param.ASFA_version = ASFA_version;
         display.set(0, 0);
         display.iluminarTodos(true);
         display.startSound("S2-1", true);
@@ -280,7 +282,7 @@ public class ASFA {
                     if (!Fase2) {
                         if (display.pulsado(TipoBotón.PN, RecStart)) {
                             display.startSound("S1-1");
-                            PNProtegido();
+                            if(ASFA_version >= 3) PNProtegido();
                             RecStart = 0;
                         }
                     }
@@ -469,7 +471,7 @@ public class ASFA {
             if (frecRecibida == FrecASFA.L4) {
                 if (VentanaL4 == -1) {
                     display.startSound("S1-1");
-                    ControlTransitorio = new ControlPNProtegido(param, TiempoUltimaRecepcion, DistanciaUltimaRecepcion);
+                    if(ASFA_version >= 3) ControlTransitorio = new ControlPNProtegido(param, TiempoUltimaRecepcion, DistanciaUltimaRecepcion);
                     VentanaL4 = DistanciaUltimaRecepcion;
                 } else {
                     //ControlCambioInfraestructura
@@ -495,7 +497,7 @@ public class ASFA {
             }
             if (frecRecibida == FrecASFA.L7) {
                 display.startSound("S6");
-                StartRec(TiempoUltimaRecepcion + 1);
+                if (ASFA_version >= 3) StartRec(TiempoUltimaRecepcion + 1);
                 PreviaParada();
             }
             if (frecRecibida == FrecASFA.L8) {
@@ -765,7 +767,7 @@ public class ASFA {
         boolean some = false;
         for (Control c : Controles)
         {
-            if(c instanceof ControlReanudo)
+            if(c instanceof ControlReanudo && ASFA_version >= 3)
             {
             	ControlReanudo cr = (ControlReanudo)c;
             	if(Odometer.getSpeed() < 1) cr.Activar(true);
@@ -793,7 +795,7 @@ public class ASFA {
         }
         for(Control c : Controles)
         {
-        	if (c instanceof ControlSeñalParada)
+        	if (c instanceof ControlSeñalParada && ASFA_version >= 3)
         	{
         		ControlSeñalParada csp = (ControlSeñalParada) c;
         		if(csp.TiempoVAlcanzada==0 && ((modo == Modo.CONV && csp.recCount<2) || (modo == Modo.AV && csp.recCount<3)))
@@ -969,7 +971,7 @@ public class ASFA {
             if (c instanceof ControlPasoDesvío) {
                 Desv = true;
             }
-            if (c instanceof ControlSecuenciaAA || c instanceof ControlSecuenciaAN_A) {
+            if (c instanceof ControlSecuenciaAA) {
                 SecAA = true;
             }
             if(c instanceof ControlPNProtegido && ControlesPN.contains(c)) PNprot = true;
@@ -1038,7 +1040,7 @@ public class ASFA {
             desactivarControlTransitorio();
         }
         if (frec == FrecASFA.L3) {
-            ViaLibre();
+        	desactivarControlTransitorio();
         }
         else if (frec == FrecASFA.L8)
         {
@@ -1169,8 +1171,10 @@ public class ASFA {
             if (SigNo != 0 && !Fixed) {
                 if (ControlSeñal instanceof ControlViaLibreCondicional) {
                     c = ControlSeñal;
-                } else {
+                } else if (ASFA_version >= 3){
                     c = new ControlViaLibreCondicional(ControlSeñal.TiempoInicial, param, false);
+                } else {
+                	c = new ControlViaLibreCondicional(TiempoUltimaRecepcion, param, Fixed);
                 }
             } else {
                 c = new ControlViaLibreCondicional(TiempoUltimaRecepcion, param, Fixed);
@@ -1197,8 +1201,10 @@ public class ASFA {
             if (SigNo != 0 && ControlSeñal != null) {
                 if (ControlSeñal instanceof ControlAnuncioParada) {
                     c = ControlSeñal;
-                } else {
+                } else if (ASFA_version >= 3){
                     c = new ControlAnuncioParada(ControlSeñal.TiempoInicial, param);
+                } else {
+                    c = new ControlAnuncioParada(TiempoUltimaRecepcion, param);
                 }
             } else {
                 c = new ControlAnuncioParada(TiempoUltimaRecepcion, param);
@@ -1230,8 +1236,10 @@ public class ASFA {
                     	cs.AumentarVelocidad(false);
                     	cs.TiempoInicial = TiempoUltimaRecepcion;
                     }
-                } else {
+                } else if (ASFA_version >= 3){
                     c = new ControlAnuncioPrecaución((ControlSeñal instanceof ControlAumentable && ((ControlAumentable) ControlSeñal).Aumentado()) ? TiempoUltimaRecepcion : ControlSeñal.TiempoInicial, param);
+                } else {
+                    c = new ControlAnuncioPrecaución(TiempoUltimaRecepcion, param);
                 }
             } else {
                 c = new ControlAnuncioPrecaución(TiempoUltimaRecepcion, param);
@@ -1256,8 +1264,10 @@ public class ASFA {
                 	cs.AumentarVelocidad(false);
                 	cs.TiempoInicial = TiempoUltimaRecepcion;
                 }
-            } else {
+            } else if (ASFA_version >= 3){
                 c = new ControlPreanuncioParada(ControlSeñal.TiempoInicial, param);
+            } else {
+                c = new ControlPreanuncioParada(TiempoUltimaRecepcion, param);
             }
         } else {
             c = new ControlPreanuncioParada(TiempoUltimaRecepcion, param);
@@ -1281,7 +1291,6 @@ public class ASFA {
     }
 
     private void ZonaLimiteParada() {
-        EnlaceBalizas();
         if (!(ControlSeñal instanceof ControlZonaLimiteParada)) {
             InfoSeñalDistinta = true;
         }

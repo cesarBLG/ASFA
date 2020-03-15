@@ -16,6 +16,7 @@ public abstract class Control {
     public int T;
     public int speed;
     public boolean curvasT120;
+    public int ASFA_version;
     boolean modoRAM;
     ASFA.Modo Modo;
     
@@ -30,21 +31,26 @@ public abstract class Control {
         T = param.T;
         Modo = param.Modo;
         modoRAM = param.modoRAM;
+        ASFA_version = param.ASFA_version;
     }
     abstract Curva[] getCurvas(int O);
     public void Curvas() {
-        int O = (int) Math.min(speed + 5, T);
-		if (O <= 50) O = 50;
-		else if (O <= 60) O = 60;
-		else if (O <= 70) O = 70;
-		else if (O <= 80) O = 80;
-		else if (O <= 90) O = 90;
-		else if (O <= 100) O = 100;
-		else if (O <= 120) O = 120;
-		else if (O <= 140) O = 140;
-		else if (O <= 160) O = 160;
-		else if (O <= 180) O = 180;
-		else O = 200;
+    	int O = T;
+    	if (ASFA_version >= 3)
+    	{
+            O = (int) Math.min(speed + 5, T);
+    		if (O <= 50) O = 50;
+    		else if (O <= 60) O = 60;
+    		else if (O <= 70) O = 70;
+    		else if (O <= 80) O = 80;
+    		else if (O <= 90) O = 90;
+    		else if (O <= 100) O = 100;
+    		else if (O <= 120) O = 120;
+    		else if (O <= 140) O = 140;
+    		else if (O <= 160) O = 160;
+    		else if (O <= 180) O = 180;
+    		else O = 200;
+    	}
 		Curvas(O);
     }
     public void Curvas(int O)
