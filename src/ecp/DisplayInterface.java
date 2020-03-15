@@ -8,7 +8,6 @@ import javax.swing.JOptionPane;
 
 import com.COM;
 import com.OR_Client;
-import com.Serial;
 import com.TCP;
 
 import dmi.Sonidos;
@@ -54,8 +53,6 @@ class EstadoBotón {
 }
 
 public class DisplayInterface {
-
-    Serial OR = new Serial(5);
     TCP OR2 = new TCP();
     OR_Client orclient;
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
@@ -63,7 +60,6 @@ public class DisplayInterface {
     void write(int num, int data) {
         COM.parse(num, data);
         byte[] b = new byte[]{(byte) num, (byte) data, (byte) 0xFF};
-        OR.write(b);
         OR2.write(b);
         orclient.send(num, data);
     }
@@ -79,7 +75,6 @@ public class DisplayInterface {
     }
 
     public DisplayInterface() {
-        OR.start();
     	OR2.initialize();
     	orclient = new OR_Client();
     }

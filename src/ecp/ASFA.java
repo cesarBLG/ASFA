@@ -1153,7 +1153,7 @@ public class ASFA {
         Controles.add(c);
         if(modo != Modo.RAM)
         {
-            if (AnteriorControlSeñal instanceof ControlAnuncioPrecaución) {
+            if (AnteriorControlSeñal instanceof ControlAnuncioPrecaución/* || DistControlDesv > DistanciaUltimaRecepcion*/) {
                 Controles.add(new ControlPasoDesvío(param, Clock.getSeconds(), ((ControlAnuncioPrecaución) ((AnteriorControlSeñal instanceof ControlAnuncioPrecaución) ? AnteriorControlSeñal : null)).AumentoVelocidad));
             }
             if ((AnteriorControlSeñal instanceof ControlAnuncioParada || AnteriorControlSeñal instanceof ControlSecuenciaAN_A) && ControlSeñal instanceof ControlAnuncioParada) {

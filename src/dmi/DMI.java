@@ -17,7 +17,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import com.COM;
-import com.Serial;
 
 import dmi.Botones.Botón;
 import dmi.Botones.Pupitre;
