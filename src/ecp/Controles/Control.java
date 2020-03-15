@@ -18,7 +18,7 @@ public abstract class Control {
     public boolean curvasT120;
     public int ASFA_version;
     boolean modoRAM;
-    ASFA.Modo Modo;
+    public ASFA.Modo Modo;
     
     public Control(double t0, double d0, double tv, double dv, TrainParameters param) {
         TiempoInicial = t0;

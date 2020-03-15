@@ -30,7 +30,7 @@ public class ASFA {
     }
     public DIV div;
     int T;
-    public int selectorT = 3;
+    public int selectorT = 8;
     boolean curvasT120;
     TrainParameters param = new TrainParameters();
     byte[] divData; //Información del vehículo
@@ -185,12 +185,25 @@ public class ASFA {
         			}
         			else
         			{
-                		modo = Modo.BTS;
-                		param.Modo = modo;
-                		Controles.clear();
-                		Controles.addAll(ControlesPN);
-                		Controles.addAll(ControlesLVI);
-                		Controles.add(new ControlBTS(param, Vbts));
+        				if (modo == Modo.CONV && modoAV)
+	        			{
+        					modo = Modo.AV;
+        					display.iluminar(TipoBotón.Modo, modo == Modo.AV);
+	            			for(Control c : Controles)
+	            			{
+	            				c.Modo = modo;
+	            				c.Curvas();
+	            			}
+        				}
+        				else
+        				{
+                    		modo = Modo.BTS;
+                    		param.Modo = modo;
+                    		Controles.clear();
+                    		Controles.addAll(ControlesPN);
+                    		Controles.addAll(ControlesLVI);
+                    		Controles.add(new ControlBTS(param, Vbts));
+        				}
         			}
             	}
             	else if(modo == Modo.BTS) {
@@ -203,6 +216,7 @@ public class ASFA {
             	}
             	else if(modo == Modo.MBRA) {
             		modo = modoRAM ? Modo.RAM : (modoCONV ? Modo.CONV : Modo.AV);
+        			display.iluminar(TipoBotón.Modo, modo == Modo.AV);
             		param.Modo = modo;
                 	Controles.clear();
                 	ControlesPN.clear();
@@ -220,6 +234,7 @@ public class ASFA {
         			display.iluminar(TipoBotón.Modo, modo == Modo.AV);
         			for(Control c : Controles)
         			{
+        				c.Modo = modo;
         				c.Curvas();
         			}
         		}
@@ -1040,7 +1055,7 @@ public class ASFA {
             desactivarControlTransitorio();
         }
         if (frec == FrecASFA.L3) {
-        	desactivarControlTransitorio();
+        	ViaLibre();
         }
         else if (frec == FrecASFA.L8)
         {

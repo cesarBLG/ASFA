@@ -128,8 +128,13 @@ Uint32 refill(Uint32 interval, void *param)
 void play(sdlsounddata d, bool loop)
 {
     std::unique_lock<std::mutex> lck(mtx);
-    if(warnBuffer != nullptr) stop();
-    SDL_ClearQueuedAudio(deviceId);
+    if(warnBuffer != nullptr)
+    {
+        lck.unlock();
+        stop();
+        lck.lock();
+    }
+    else SDL_ClearQueuedAudio(deviceId);
     int success = SDL_QueueAudio(deviceId, d.wavBuffer, d.wavLength);
     SDL_PauseAudioDevice(deviceId, 0);
     if(loop)

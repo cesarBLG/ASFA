@@ -34,8 +34,8 @@ public class DIV {
         /*if(dataCount == 64) */
         data[38] = (byte) 140;
         data[14] = 16 | 32;
-        data[16] = 1;
-        data[18] = (byte) 180; 
+        data[16] = 0; //1 para curvas de T120 en T100
+        data[18] = (byte) 200; 
         data[35] = 100;
         data[36] = 60;
         data[37] = 50;
