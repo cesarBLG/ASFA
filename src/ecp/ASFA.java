@@ -30,7 +30,7 @@ public class ASFA {
     }
     public DIV div;
     int T;
-    public int selectorT = 8;
+    public int selectorT = 3;
     boolean curvasT120;
     TrainParameters param = new TrainParameters();
     byte[] divData; //Información del vehículo

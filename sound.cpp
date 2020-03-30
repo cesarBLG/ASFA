@@ -53,6 +53,7 @@ std::map<soundid, sdlsounddata> sndbuf;
 void play(sdlsounddata d, bool loop=false);
 void stop();
 SDL_AudioDeviceID deviceId;
+Uint32 refill(Uint32 interval, void *param);
 int main(int argc, char** argv)
 {
 #ifdef WIN32
@@ -127,6 +128,7 @@ Uint32 refill(Uint32 interval, void *param)
 }
 void play(sdlsounddata d, bool loop)
 {
+    int ind = d.
     std::unique_lock<std::mutex> lck(mtx);
     if(warnBuffer != nullptr)
     {

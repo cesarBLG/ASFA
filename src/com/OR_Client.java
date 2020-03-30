@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import dmi.Sonidos;
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.TipoBotón;
 import dmi.Pantalla.ÚltimaInfo.Info;
@@ -61,6 +62,7 @@ public class OR_Client {
 			sendData("register(asfa_pulsador_ocultacion)");
 			sendData("register(asfa_pulsador_lvi)");
 			sendData("register(asfa_pulsador_pn)");
+			sendData("register(simulator_time)");
 			while(true)
 			{
 				String s = readData();
@@ -92,6 +94,10 @@ public class OR_Client {
 					if (tb == null) break;
 	                Main.ASFA.display.pulsar(tb, Integer.parseInt(val)==1);
 	                if(tb==TipoBotón.PrePar) Main.ASFA.display.pulsar(TipoBotón.VLCond, Integer.parseInt(val)==1);
+				}
+				else if(s.startsWith("simulator_time="))
+				{
+					Clock.set_external_time(Double.parseDouble(val.replace(',','.')));
 				}
 			}
 		}).start();
@@ -144,13 +150,21 @@ public class OR_Client {
         }
         if (funct == 5) {
             int control = val >> 2;
-            String activ = (val & 3)==0?"0":"1";
             
-            if (control == 0) sendData("asfa_control_desvio="+activ);
-            if (control == 1) sendData("asfa_secuencia_aa="+activ);
+            if (control == 0) sendData("asfa_control_desvio="+(int)(val&3));
+            if (control == 1) sendData("asfa_secuencia_aa="+(int)(val&3));
             if (control == 2) sendData("asfa_indicador_lvi="+(int)(val&3));
             if (control == 3) sendData("asfa_indicador_pndesp="+(int)(val&3));
             if(control == 4) sendData("asfa_indicador_pnprot="+(int)(val&3));
         }
+        /*if (funct == 15)
+        {
+        	boolean basic = (val & 1) != 0;
+        	boolean trig = (val & 2) != 0;
+        	int num = val >> 2;
+        	String name = Sonidos.values()[num].toString().replace('_', '-');
+        	if(trig) sendData("asfa_sound_trigger="+name+","+(basic ? "1" : "0"));
+        	else sendData("asfa_sound_stop="+name+","+(basic ? "1" : "0"));
+        }*/
 	}
 }
