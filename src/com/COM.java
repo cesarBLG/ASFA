@@ -27,7 +27,7 @@ public interface COM {
 
     public static void parse(int functn, int val) 
     {
-    	if(Main.dmi!=null)
+    	if(Main.dmi!=null && Main.dmi.pantalla != null)
     	{
 
         	Pantalla pantalla = Main.dmi.pantalla;
@@ -113,6 +113,11 @@ public interface COM {
             if (functn == 13)
             {
         		Main.ASFA.selectorT = (val & 7) + 1;
+            }
+            if (functn == 16)
+            {
+            	if (val == 0) Main.ASFA.Connected = false;
+            	else new Thread(() -> {Main.ASFA.Conex();}).start();
             }
     	}
     }

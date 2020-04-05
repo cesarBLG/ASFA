@@ -10,7 +10,7 @@ public class DIV {
     byte[] data = new byte[64];
 
     public byte[] getData() {
-        Timer t = new Timer(1000, new ActionListener() {
+        /*Timer t = new Timer(1000, new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent arg0) {
@@ -31,16 +31,8 @@ public class DIV {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        /*if(dataCount == 64) */
-        data[38] = (byte) 140;
-        data[14] = 16 | 32;
-        data[16] = 0; //1 para curvas de T120 en T100
-        data[18] = (byte) 200; 
-        data[35] = 100;
-        data[36] = 60;
-        data[37] = 50;
-        return data;
-        //else return null;
+        if(dataCount == 64) return data;
+        else */return null;
     }
     int dataCount = 0;
 

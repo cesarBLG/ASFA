@@ -79,6 +79,18 @@ public class DisplayInterface {
     	orclient = new OR_Client();
     }
 
+    void reset()
+    {
+    	TipoBotón[] t = TipoBotón.values();
+        for (int i = 0; i < t.length; i++) {
+            EstadoBotón e = botones.get(t[i]);
+            if (e == null) continue;
+            e.iluminado = false;
+            e.lector = null;
+        }
+        controles.clear();
+    }
+    
     public void iluminar(TipoBotón botón, boolean state) {
         if (!botones.containsKey(botón)) {
             botones.put(botón, new EstadoBotón(false, state));
@@ -127,6 +139,7 @@ public class DisplayInterface {
     Hashtable<String, Integer> controles = new Hashtable<String, Integer>();
 
     public void display(String funct, int state) {
+    	if (Main.ASFA.basico) return;
         if (!controles.containsKey(funct)) {
             controles.put(funct, state);
         } else if (controles.get(funct) == state) {
@@ -184,20 +197,22 @@ public class DisplayInterface {
     
     public void start()
     {
+    	if (Main.ASFA.basico) return;
     	write(14, 3);
     }
     public void set(int num, int errno)
     {
+    	if (Main.ASFA.basico) return;
     	write(14, num);
     }
     public void startSound(String num)
     {
-    	startSound(num, false);
+    	startSound(num, Main.ASFA.basico);
     }
     String activo = null;
     public void startSound(String num, boolean basic)
     {
-    	String num2 = num + (basic ? "b" : "");
+    	/*String num2 = num + (basic ? "b" : "");
     	if(activo != null && activo.equals(num2))
     	{
     		if(activo.contains("S3-1") || activo.contains("S3-2") || activo.contains("S3-4") || activo.contains("S3-5") || activo.contains("S5"))
@@ -205,13 +220,13 @@ public class DisplayInterface {
     			return;
     		}
     	}
-    	activo = num2;
+    	activo = num2;*/
     	write(15, Sonidos.valueOf(num.replace('-', '_')).ordinal()<<2 | 2 | (basic ? 1 : 0));
     }
     public void stopSound(String num)
     {
-    	if(activo==null || !activo.contains(num)) return;
+    	//if(activo==null || !activo.contains(num)) return;
     	write(15, Sonidos.valueOf(num.replace('-', '_')).ordinal()<<2);
-    	activo = null;
+    	//activo = null;
     }
 }

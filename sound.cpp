@@ -50,10 +50,13 @@ struct sdlsounddata
     Uint32 wavLength;
 };
 std::map<soundid, sdlsounddata> sndbuf;
-void play(sdlsounddata d, bool loop=false);
-void stop();
-SDL_AudioDeviceID deviceId;
+void play(sdlsounddata d, int channel, bool loop=false);
+void stop(int i);
+#define NCHANNELS 8
+SDL_AudioDeviceID deviceId[NCHANNELS];
 Uint32 refill(Uint32 interval, void *param);
+Uint32 updateVolume(Uint32 interval, void *param);
+int numactivo[NCHANNELS];
 int main(int argc, char** argv)
 {
 #ifdef WIN32
@@ -78,7 +81,7 @@ int main(int argc, char** argv)
             strcat(s, ".wav");
             sdlsounddata d;
             SDL_LoadWAV(s, &d.wavSpec, &d.wavBuffer, &d.wavLength);
-            if(i==0) deviceId = SDL_OpenAudioDevice(NULL, 0, &d.wavSpec, NULL, 0);
+            if(i<NCHANNELS) deviceId[i] = SDL_OpenAudioDevice(NULL, 0, &d.wavSpec, NULL, 0);
             sndbuf[soundid({sonidos[i],false})] = d;
             
         }
@@ -94,6 +97,7 @@ int main(int argc, char** argv)
             sndbuf[soundid({sonidos[i],true})] = d;
         }
     }
+    //SDL_AddTimer(100, updateVolume, nullptr);
     while(1)
     {
         char buff[3];
@@ -106,50 +110,103 @@ int main(int argc, char** argv)
             int basic = (val & 1) != 0;
             int trig = (val & 2) != 0;
             int num = val >> 2;
+            if (basic)
+            {
+                if ((num > 1 && num <7) || num == 8) continue;
+            }
             sdlsounddata d = sndbuf[soundid({sonidos[num],basic!=0})];
+            int i=0;
+            switch(num)
+            {
+                case 13:
+                    i = 0;
+                    break;
+                case 0:
+                case 1:
+                case 14:
+                    i = 1;
+                    break;
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                    i = 2;
+                    break;
+                case 9:
+                    i = 3;
+                    break;
+                case 11:
+                    i = 4;
+                    break;
+                case 10:
+                    i = 5;
+                    break;
+                case 7:
+                case 8:
+                    i = 6;
+                    break;
+                case 12:
+                    i = 7;
+                    break;
+            }
             if(trig)
             {
-                if(num == 7 || num == 8 || num == 10 || num == 11 || num == 13) play(d,true);
-                else play(d);
+                bool loop = (num == 7 || num == 8 || num == 10 || num == 11 || num == 13);
+                if (!loop || numactivo[i] != num) play(d,i,loop);
+                numactivo[i] = num;
             }
-            else stop();
+            else if(numactivo[i] == num)
+            {
+                stop(i);
+                numactivo[i] = -1;
+            }
         }
     }
 }
-std::mutex mtx;
-Uint32 warnLength;
-Uint8 *warnBuffer;
-Uint32 refill(Uint32 interval, void *param)
+Uint32 updateVolume(Uint32 interval, void *param)
 {
-    std::unique_lock<std::mutex> lck(mtx);
-    if(warnBuffer != nullptr && SDL_GetQueuedAudioSize(deviceId) < 3*warnLength) SDL_QueueAudio(deviceId, warnBuffer, warnLength);
-    if(warnBuffer == nullptr) return 0;
+    bool mute = false;
+    for (int i=0; i<NCHANNELS; i++)
+    {
+        if (SDL_GetAudioDeviceStatus(deviceId[i]) == SDL_AUDIO_PLAYING) mute = true;
+    }
     return interval;
 }
-void play(sdlsounddata d, bool loop)
+std::mutex mtx[NCHANNELS];
+Uint32 warnLength[NCHANNELS];
+Uint8 *warnBuffer[NCHANNELS];
+Uint32 refill(Uint32 interval, void *param)
 {
-    int ind = d.
-    std::unique_lock<std::mutex> lck(mtx);
-    if(warnBuffer != nullptr)
+    int i = *((int*)(&param));
+    std::unique_lock<std::mutex> lck(mtx[i]);
+    if(warnBuffer[i] != nullptr && SDL_GetQueuedAudioSize(deviceId[i]) < 3*warnLength[i]) SDL_QueueAudio(deviceId[i], warnBuffer[i], warnLength[i]);
+    if(warnBuffer[i] == nullptr) return 0;
+    return interval;
+}
+void play(sdlsounddata d, int i, bool loop)
+{
+    std::unique_lock<std::mutex> lck(mtx[i]);
+    if(warnBuffer[i] != nullptr)
     {
         lck.unlock();
-        stop();
+        stop(i);
         lck.lock();
     }
-    else SDL_ClearQueuedAudio(deviceId);
-    int success = SDL_QueueAudio(deviceId, d.wavBuffer, d.wavLength);
-    SDL_PauseAudioDevice(deviceId, 0);
+    else SDL_ClearQueuedAudio(deviceId[i]);
+    int success = SDL_QueueAudio(deviceId[i], d.wavBuffer, d.wavLength);
+    SDL_PauseAudioDevice(deviceId[i], 0);
     if(loop)
     {
-        warnLength = d.wavLength;
-        warnBuffer = d.wavBuffer;
-        SDL_AddTimer(50, refill, nullptr);
+        warnLength[i] = d.wavLength;
+        warnBuffer[i] = d.wavBuffer;
+        SDL_AddTimer(50, refill, (void*)i);
     }
 }
-void stop()
+void stop(int i)
 {
-    std::unique_lock<std::mutex> lck(mtx);
-    SDL_ClearQueuedAudio(deviceId);
-    warnBuffer = nullptr;
-    SDL_PauseAudioDevice(deviceId, 1);
+    std::unique_lock<std::mutex> lck(mtx[i]);
+    SDL_ClearQueuedAudio(deviceId[i]);
+    warnBuffer[i] = nullptr;
+    SDL_PauseAudioDevice(deviceId[i], 1);
 }

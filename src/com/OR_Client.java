@@ -62,6 +62,7 @@ public class OR_Client {
 			sendData("register(asfa_pulsador_ocultacion)");
 			sendData("register(asfa_pulsador_lvi)");
 			sendData("register(asfa_pulsador_pn)");
+			sendData("register(asfa_pulsador_conex)");
 			sendData("register(simulator_time)");
 			while(true)
 			{
@@ -80,6 +81,11 @@ public class OR_Client {
 				else if(s.startsWith("asfa_pulsador_"))
 				{
 					String pul = s.substring(14, s.indexOf('='));
+					if(pul.equals("conex"))
+					{
+						COM.parse(16, val.equals("1") ? 1 : 0);
+						continue;
+					}
 					TipoBotón tb = null;
 					if(pul.equals("aumento")) tb = TipoBotón.AumVel;
 					else if(pul.equals("ocultacion")) tb = TipoBotón.Ocultación;

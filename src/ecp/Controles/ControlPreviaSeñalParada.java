@@ -13,7 +13,7 @@ public class ControlPreviaSeñalParada extends ControlFASF implements ControlRea
 	Curva[] getCurvas(int O) {
 		Curva VC = null;
 		Curva IF = null;
-        if (Modo == ASFA.Modo.AV || Modo == ASFA.Modo.BasicoAV || Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BasicoCONV) {
+        if (Modo == ASFA.Modo.AV || Modo == ASFA.Modo.CONV) {
             if (ASFA_version < 3)
             {
             	if (O > 100) {

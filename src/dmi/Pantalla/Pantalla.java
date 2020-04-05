@@ -25,7 +25,6 @@ enum ModoDisplay {
 }
 
 public class Pantalla extends JPanel {
-
     public ModoDisplay modo = ModoDisplay.Día;
     public Velocidad vreal;
     public ÚltimaInfo info;
@@ -50,7 +49,16 @@ public class Pantalla extends JPanel {
         setBackground(Color.black);
     }
 
+    public void poweroff()
+    {
+    	Main.dmi.activo = false;
+        removeAll();
+        validate();
+        repaint();
+    }
+    
     public void setup(int state, String msg) {
+        removeAll();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         JLabel j;
         switch (state) {
@@ -82,12 +90,14 @@ public class Pantalla extends JPanel {
     }
 
     public void start() {
+    	Main.dmi.activo = true;
         removeAll();
         setLayout(null);
         info = new ÚltimaInfo();
         info.setBounds(getScale(271), getScale(0), getScale(79), getScale(263));
         add(info);
         vreal = new Velocidad(Color.black, Color.white);
+        vreal.LeadingZeros = true;
         vreal.setBounds(getScale(16), getScale(42), getScale(75), getScale(31));
         add(vreal);
         vtarget = new VelocidadObjetivo();

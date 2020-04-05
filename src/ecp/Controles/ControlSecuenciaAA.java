@@ -13,10 +13,10 @@ public class ControlSecuenciaAA extends Control {
 	Curva[] getCurvas(int O) {
 		Curva VC = null;
 		Curva IF = null;
-        if (Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BasicoCONV) {
+        if (Modo == ASFA.Modo.CONV) {
             VC = new Curva(60);
             IF = new Curva(63);
-        } else if (Modo == ASFA.Modo.AV || Modo == ASFA.Modo.BasicoAV) {
+        } else if (Modo == ASFA.Modo.AV) {
             VC = new Curva(100);
             IF = new Curva(103);
         }

@@ -18,7 +18,7 @@ public class ControlSeñalParada extends ControlFASF implements ControlAumentabl
     Curva[] getCurvas(int O) {
     	Curva VC = null;
     	Curva IF = null;
-        if (Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BasicoCONV || Modo == ASFA.Modo.AV || Modo == ASFA.Modo.BasicoAV) {
+        if (Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.AV) {
             if (AumentoVelocidad) {
                 VC = new Curva(Math.min(T, 100));
                 IF = new Curva(Math.min(T + 3, 103));

@@ -15,11 +15,13 @@ public class Velocidad extends JLabel {
     Color Night;
     Color Day;
 
+    boolean LeadingZeros=false;
+    
     public Velocidad(Color day, Color night) {
         setBorder(null);
         Night = night;
         Day = day;
-        Font f = new Font("Comic Sans MS", 0, Main.dmi.pantalla.getScale(35));
+        Font f = new Font("ASFA", 0, Main.dmi.pantalla.getScale(35));
         setFont(f);
         setHorizontalAlignment(CENTER);
         setValue(0);
@@ -32,10 +34,10 @@ public class Velocidad extends JLabel {
         int v2 = (value / 10) % 10;
         int v3 = value % 10;
         String text = new String("");
-        if (v1 != 0) {
+        if (v1 != 0 || LeadingZeros) {
             text = text.concat(Integer.toString(v1))/*.concat(" ")*/;
         }
-        if (v1 != 0 || v2 != 0) {
+        if (v1 != 0 || v2 != 0 || LeadingZeros) {
             text = text.concat(Integer.toString(v2))/*.concat(" ")*/;
         }
         text = text.concat(Integer.toString(v3));

@@ -3,6 +3,7 @@ package ecp;
 import java.io.IOException;
 
 import dmi.DMI;
+import dmi.Sound;
 
 public class Main {
 
@@ -19,7 +20,8 @@ public class Main {
 			e.printStackTrace();
 		}
     	if(args.length!=0) num = Integer.parseInt(args[0]);
-    	if(num!=1) dmi = new DMI();
         if(num!=2) ASFA = new ASFA();
+    	if(num!=1) dmi = new DMI();
+    	Sound sound = new Sound();
     }
 }

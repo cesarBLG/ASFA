@@ -7,10 +7,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import com.COM;
+
+import ecp.Main;
+
 public class Repetidor extends JPanel {
 
     public Botón Modo, Rearme, Rebase, AumVel, Alarma, Ocultación, LVI, PN;
-
+    
     public Repetidor() {
         ImageIcon[] iconos = new ImageIcon[2];
         iconos[0] = new ImageIcon(getClass().getResource("/content/Botones/Modo.png"));
@@ -47,6 +51,11 @@ public class Repetidor extends JPanel {
         setLayout(new GridLayout(2, 5));
         setBackground(Color.blue);
         JButton Conex = new JButton("Conex");
+        Conex.addActionListener((arg0) -> 
+        {
+        	if (Main.dmi.activo) Main.dmi.pantalla.poweroff();
+        	COM.parse(16, Main.dmi.activo ? 0 : 1);
+        });
         add(Conex);
         add(Modo);
         add(Rearme);

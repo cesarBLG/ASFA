@@ -8,7 +8,7 @@ public class ControlPasoDesvío extends Control {
 	{
 		Curva VC = null;
 		Curva IF = null;
-		if(Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BasicoCONV)
+		if(Modo == ASFA.Modo.CONV)
 		{
 	        if (AnteriorAumVel) {
 	        	IF = new Curva(93);
@@ -18,7 +18,7 @@ public class ControlPasoDesvío extends Control {
 	            VC = new Curva(60);
 	        }
 		}
-		if(Modo == ASFA.Modo.AV || Modo == ASFA.Modo.BasicoAV)
+		if(Modo == ASFA.Modo.AV)
 		{
 	        if (AnteriorAumVel) {
 	        	IF = new Curva(163);

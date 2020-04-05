@@ -33,16 +33,16 @@ public class DMI extends JFrame {
     public Pantalla pantalla;
     public Repetidor repetidor;
     public Pupitre pupitre;
-    public Sound sound;
     public boolean singleScreen = false;
+    public boolean activo=false;
 
     public DMI() {
+        Main.dmi = this;
     	if(singleScreen)
     	{
     		setUndecorated(true);
         	//setExtendedState(JFrame.MAXIMIZED_BOTH);
     	}
-        Main.dmi = this;
         setLayout(new GridBagLayout());
         GridBagConstraints g = new GridBagConstraints();
         g.anchor = GridBagConstraints.CENTER;
@@ -108,6 +108,9 @@ public class DMI extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         setVisible(true);
-    	sound = new Sound();
+    	try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e1) {
+		}
     }
 }
