@@ -63,6 +63,8 @@ public class OR_Client {
 			sendData("register(asfa_pulsador_lvi)");
 			sendData("register(asfa_pulsador_pn)");
 			sendData("register(asfa_pulsador_conex)");
+			sendData("register(asfa_div)");
+			sendData("register(asfa_selector_tipo)");
 			sendData("register(simulator_time)");
 			while(true)
 			{
@@ -81,11 +83,6 @@ public class OR_Client {
 				else if(s.startsWith("asfa_pulsador_"))
 				{
 					String pul = s.substring(14, s.indexOf('='));
-					if(pul.equals("conex"))
-					{
-						COM.parse(16, val.equals("1") ? 1 : 0);
-						continue;
-					}
 					TipoBotón tb = null;
 					if(pul.equals("aumento")) tb = TipoBotón.AumVel;
 					else if(pul.equals("ocultacion")) tb = TipoBotón.Ocultación;
@@ -104,6 +101,28 @@ public class OR_Client {
 				else if(s.startsWith("simulator_time="))
 				{
 					Clock.set_external_time(Double.parseDouble(val.replace(',','.')));
+				}
+				else if(s.startsWith("asfa_div="))
+				{
+					for(int i=0; i<64; i++)
+					{
+						byte b = Integer.decode("0x"+val.substring(2*i, 2*i+2)).byteValue();
+						Main.ASFA.div.add(b);
+					}
+				}
+				else if(s.startsWith("asfa_selector_tipo="))
+				{
+					int speed = Integer.parseInt(val);
+					int selectorT=0;
+					if (speed > 180) selectorT = 8;
+					else if (speed > 160) selectorT = 7;
+					else if (speed > 140) selectorT = 6;
+					else if (speed > 120) selectorT = 5;
+					else if (speed > 100) selectorT = 4;
+					else if (speed > 90) selectorT = 3;
+					else if (speed > 80) selectorT = 2;
+					else if (speed > 0) selectorT = 1;
+					Main.ASFA.selectorT = selectorT;
 				}
 			}
 		}).start();

@@ -114,11 +114,6 @@ public interface COM {
             {
         		Main.ASFA.selectorT = (val & 7) + 1;
             }
-            if (functn == 16)
-            {
-            	if (val == 0) Main.ASFA.Connected = false;
-            	else new Thread(() -> {Main.ASFA.Conex();}).start();
-            }
     	}
     }
 }

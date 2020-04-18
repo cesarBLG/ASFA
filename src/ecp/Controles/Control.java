@@ -19,6 +19,7 @@ public abstract class Control {
     public int ASFA_version;
     boolean modoRAM;
     public ASFA.Modo Modo;
+    boolean basico = false;
     public boolean Velado = false;
     
     public Control(double t0, double d0, double tv, double dv, TrainParameters param) {
@@ -32,6 +33,7 @@ public abstract class Control {
         T = param.T;
         Modo = param.Modo;
         modoRAM = param.modoRAM;
+        basico = param.basico;
         ASFA_version = param.ASFA_version;
     }
     abstract Curva[] getCurvas(int O);
@@ -97,5 +99,13 @@ public abstract class Control {
             TiempoVAlcanzada = T;
         }
         return v;
+    }
+    public boolean equals(Control c)
+    {	
+    	if (c == null) return false;
+    	if (this != c) return false;
+    	if (c instanceof ControlAumentable && this instanceof ControlAumentable
+    			&& (((ControlAumentable) c).Aumentado() != ((ControlAumentable) this).Aumentado())) return false;
+    	return true;
     }
 }

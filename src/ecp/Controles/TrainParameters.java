@@ -11,4 +11,5 @@ public class TrainParameters {
 	public boolean curvasT120;
 	public ASFA.Modo Modo;
 	public int ASFA_version;
+	public boolean basico;
 }

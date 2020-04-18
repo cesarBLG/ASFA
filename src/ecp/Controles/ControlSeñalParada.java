@@ -9,8 +9,9 @@ public class ControlSeñalParada extends ControlFASF implements ControlAumentabl
 	public double lastTimeRec = -1;
 	public double lastDistRec = -1;
     private boolean AumentoVelocidad = false;
+    public boolean conRebase = false;
 
-    public ControlSeñalParada(TrainParameters param, double time, double dist) {
+    public ControlSeñalParada(TrainParameters param, double time, double dist, boolean conRebase) {
         super(time, dist, 20, 0, param);
         Curvas();
     }
@@ -48,6 +49,9 @@ public class ControlSeñalParada extends ControlFASF implements ControlAumentabl
 
     public final boolean Aumentado() {
         return AumentoVelocidad;
+    }
+    public final boolean Aumentable() {
+    	return !AumentoVelocidad;
     }
 
     @Override

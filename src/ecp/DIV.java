@@ -10,13 +10,13 @@ public class DIV {
     byte[] data = new byte[64];
 
     public byte[] getData() {
-        /*Timer t = new Timer(1000, new ActionListener() {
+        Timer t = new Timer(1000, new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 // TODO Auto-generated method stub
                 synchronized (DIV.this) {
-                    DIV.this.notify();
+                    DIV.this.notifyAll();
                 }
             }
 
@@ -31,16 +31,24 @@ public class DIV {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        if(dataCount == 64) return data;
-        else */return null;
+        if(dataCount == 64)
+        {
+        	dataCount = 0;
+        	return data;
+        }
+        else
+        {
+        	dataCount = 0;
+        	return null;
+        }
     }
     int dataCount = 0;
 
     public void add(byte b) {
-        data[dataCount++] = b;
+        if(dataCount<64) data[dataCount++] = b;
         if (dataCount == 64) {
             synchronized (this) {
-                notify();
+                notifyAll();
             }
         }
     }

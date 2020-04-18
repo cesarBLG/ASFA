@@ -9,6 +9,7 @@ import javax.swing.JPanel;
 
 import com.COM;
 
+import dmi.Botones.Botón.TipoBotón;
 import ecp.Main;
 
 public class Repetidor extends JPanel {
@@ -53,8 +54,8 @@ public class Repetidor extends JPanel {
         JButton Conex = new JButton("Conex");
         Conex.addActionListener((arg0) -> 
         {
-        	if (Main.dmi.activo) Main.dmi.pantalla.poweroff();
-        	COM.parse(16, Main.dmi.activo ? 0 : 1);
+        	Botón.enviarPulsacion(TipoBotón.Conex, !Main.dmi.activo);
+        	if(Main.dmi.activo) Main.dmi.pantalla.poweroff();
         });
         add(Conex);
         add(Modo);

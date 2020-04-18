@@ -91,6 +91,9 @@ public class ControlPreanuncioParada extends ControlFASF implements ControlAumen
     public final boolean Aumentado() {
         return AumentoVelocidad;
     }
+    public final boolean Aumentable() {
+    	return !basico && !AumentoVelocidad;
+    }
     boolean activado = false;
 	@Override
 	public void Activar(boolean val) {
