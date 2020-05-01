@@ -12,5 +12,6 @@ public enum FrecASFA {
     L8,
     L9,
     L10,
-    L11
+    L11,
+    AL
 }

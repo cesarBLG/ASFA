@@ -47,6 +47,7 @@ public class Botón extends JButton {
             ListaBotones[TipoBotón.VLCond.ordinal()] = this;
         }
         setBorderPainted(false);
+        setBorder(null);
         this.setBackground(Color.BLUE);
         Botón b = this;
         Icons = icons;
@@ -109,8 +110,13 @@ public class Botón extends JButton {
         if (num >= Icons.length) {
             return;
         }
-        Iluminado = num;
-        setIcon(Icons[num]);
+        if (tipo == TipoBotón.PrePar)
+        {
+        	if (num>1) Iluminado = (Iluminado&1) + (num-2)*2;
+        	else Iluminado = (Iluminado&2) + num;
+        }
+        else Iluminado = num;
+        setIcon(Icons[Iluminado]);
     }
 
     public static void apagar() {

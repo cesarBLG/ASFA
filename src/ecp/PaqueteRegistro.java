@@ -93,6 +93,8 @@ public class PaqueteRegistro
 			codigos.put(0xFF20,"Freno de emergencia");
 			codigos.put(0xFFF0,"Baliza recibida");
 			codigos.put(0xFFF1,"Control activo");
+			codigos.put(0xFF50,"Interruptor ASFA básico cab 1");
+			codigos.put(0xFF51,"Interruptor ASFA básico cab 2");
 			codigos.put(0xFF52,"Pulsador anuncio parada cab 1");
 			codigos.put(0xFF53,"Pulsador anuncio parada cab 2");
 			codigos.put(0xFF54,"Pulsador anuncio precaución cab 1");
@@ -336,6 +338,9 @@ public class PaqueteRegistro
 				break;
 			case Conex:
 				num = 0xFF68;
+				break;
+			case ASFA_básico:
+				num = 0xFF50;
 				break;
 		}
 		if(display == 2) num++;

@@ -46,18 +46,24 @@ public class DMI extends JFrame {
         setLayout(new GridBagLayout());
         GridBagConstraints g = new GridBagConstraints();
         g.anchor = GridBagConstraints.CENTER;
-        g.gridx = g.gridy = 0;
+        g.gridy = 0;
+        g.gridx = 1;
         if(singleScreen) g.insets = new Insets(0, 0, 0, 0);
-        else g.insets = new Insets(50, 50, 20, 50);
+        else g.insets = new Insets(50, 5, 20, 70);
         pantalla = new Pantalla();
         add(pantalla, g);
-        g.gridy++;
         g.insets = new Insets(0, 0, 10, 0);
         JButton modonoche = new JButton("D/N");
         modonoche.addActionListener((ActionEvent) -> {
         	COM.parse(new byte[] {6,0});
         }); 
-        if(!singleScreen) add(modonoche, g);
+        if(!singleScreen)
+        {
+        	g.insets = new Insets(0, 5, 0, 0);
+        	g.gridx = 0;
+        	add(modonoche, g);
+        	g.gridwidth = 2;
+        }
         g.gridy++;
         g.insets = new Insets(5, 5, 5, 5);
         repetidor = new Repetidor();

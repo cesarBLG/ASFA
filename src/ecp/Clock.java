@@ -4,6 +4,7 @@ import java.util.Calendar;
 
 public class Clock {
     static double external_time=0;
+    static double passedRef = 0;
     
     public static void set_external_time(double time)
     {
@@ -20,11 +21,19 @@ public class Clock {
     		PaqueteRegistro.cambio_hora(prevTime);
     	}
     	else external_time = time + date.getTimeInMillis()/1000.0;
+    	passedRef = System.currentTimeMillis();
+    }
+    
+    public static void reset_local_time()
+    {
+		double prevTime = getSeconds();
+		external_time = 0;
+		PaqueteRegistro.cambio_hora(prevTime);
     }
     
     public static double getSeconds() {
     	if (external_time != 0)
-    		return external_time;
+    		return external_time + (Math.min(System.currentTimeMillis()-passedRef, 500))/1000.0;
         return System.currentTimeMillis()/1000.0;
     }
 }

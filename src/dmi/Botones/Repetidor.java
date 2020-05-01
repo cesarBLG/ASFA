@@ -1,10 +1,14 @@
 package dmi.Botones;
 
 import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.COM;
@@ -16,10 +20,12 @@ public class Repetidor extends JPanel {
 
     public Botón Modo, Rearme, Rebase, AumVel, Alarma, Ocultación, LVI, PN;
     
+    public Luces luces_basico;
+    
     public Repetidor() {
         ImageIcon[] iconos = new ImageIcon[2];
         iconos[0] = new ImageIcon(getClass().getResource("/content/Botones/Modo.png"));
-        iconos[1] = iconos[0];
+        iconos[1] = new ImageIcon(getClass().getResource("/content/Botones/ModoIluminado.png"));
         Modo = new Botón(iconos, 2, Botón.TipoBotón.Modo);
         iconos = new ImageIcon[2];
         iconos[0] = new ImageIcon(getClass().getResource("/content/Botones/Rearme.png"));
@@ -49,23 +55,76 @@ public class Repetidor extends JPanel {
         iconos[0] = new ImageIcon(getClass().getResource("/content/Botones/PN.png"));
         iconos[1] = new ImageIcon(getClass().getResource("/content/Botones/PNIluminado.png"));
         PN = new Botón(iconos, 2, Botón.TipoBotón.PN);
-        setLayout(new GridLayout(2, 5));
         setBackground(Color.blue);
-        JButton Conex = new JButton("Conex");
+        JButton Conex = new JButton();
         Conex.addActionListener((arg0) -> 
         {
         	Botón.enviarPulsacion(TipoBotón.Conex, !Main.dmi.activo);
-        	if(Main.dmi.activo) Main.dmi.pantalla.poweroff();
+        	if(Main.dmi.activo)
+        	{
+        		Main.dmi.pantalla.poweroff();
+        		Main.dmi.activo = false;
+        	}
         });
-        add(Conex);
-        add(Modo);
-        add(Rearme);
-        add(Rebase);
-        add(AumVel);
-        add(new JButton("ASFA "));
-        add(Alarma);
-        add(Ocultación);
-        add(LVI);
-        add(PN);
+        Conex.setIcon(new ImageIcon(getClass().getResource("/content/Botones/Conex.png")));
+        Conex.setOpaque(false);
+        Conex.setContentAreaFilled(false);
+        Conex.setBorderPainted(false);
+        JButton basico = new JButton();
+        basico.addActionListener((arg0) -> {
+        	basico.setSelected(!basico.isSelected());
+        	if (basico.isSelected())
+        	{
+        		Botón.enviarPulsacion(TipoBotón.ASFA_básico, true);
+        		Main.dmi.pantalla.poweroff();
+        	}
+        	else
+        	{
+        		Botón.enviarPulsacion(TipoBotón.ASFA_básico, false);
+        	}
+        });
+        basico.setIcon(new ImageIcon(getClass().getResource("/content/Botones/Basico.png")));
+        basico.setSelectedIcon(new ImageIcon(getClass().getResource("/content/Botones/BasicoIluminado.png")));
+        basico.setOpaque(false);
+        basico.setContentAreaFilled(false);
+        basico.setBorderPainted(false);
+        
+        luces_basico = new Luces();
+        
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = gbc.gridy = 0;
+        gbc.insets = new Insets(0,0,0,0);
+        add(Conex, gbc);
+        gbc.gridx++;
+        gbc.gridheight = 2;
+        gbc.fill = GridBagConstraints.BOTH;
+        add(luces_basico, gbc);
+        gbc.gridheight = 1;
+        gbc.gridx++;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.insets = new Insets(5,5,5,5);
+        add(Modo, gbc);
+        gbc.gridx++;
+        add(Rearme, gbc);
+        gbc.gridx++;
+        add(Rebase, gbc);
+        gbc.gridx++;
+        add(AumVel, gbc);
+        gbc.gridx=0;
+        gbc.gridy++;
+        gbc.insets = new Insets(0,0,0,0);
+        add(basico, gbc);
+        gbc.insets = new Insets(5,5,5,5);
+        gbc.gridx++;
+        gbc.gridx++;
+        add(Alarma, gbc);
+        gbc.gridx++;
+        add(Ocultación, gbc);
+        gbc.gridx++;
+        add(LVI, gbc);
+        gbc.gridx++;
+        add(PN, gbc);
+        gbc.gridx++;
     }
 }

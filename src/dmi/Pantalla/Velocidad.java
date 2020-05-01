@@ -2,6 +2,9 @@ package dmi.Pantalla;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontFormatException;
+import java.io.File;
+import java.io.IOException;
 
 import javax.swing.JLabel;
 
@@ -16,14 +19,23 @@ public class Velocidad extends JLabel {
     Color Day;
 
     boolean LeadingZeros=false;
-    
+    static Font font = null;
     public Velocidad(Color day, Color night) {
+    	if (font == null)
+    	{
+    		try {
+				font = Font.createFont(Font.TRUETYPE_FONT, new File("ASFA.ttf")).deriveFont((float)Main.dmi.pantalla.getScale(35));
+			} catch (FontFormatException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
         setBorder(null);
         Night = night;
         Day = day;
-        Font f = new Font("ASFA", 0, Main.dmi.pantalla.getScale(35));
-        setFont(f);
-        setHorizontalAlignment(CENTER);
+        //Font f = new Font("ASFASans", 0, Main.dmi.pantalla.getScale(35));
+        setFont(font);
+        setHorizontalAlignment(RIGHT);
         setValue(0);
     }
 

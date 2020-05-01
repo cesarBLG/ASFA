@@ -49,40 +49,39 @@ public class OR_Client {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			sendData("register(asfa_baliza)");
-			sendData("register(speed)");
-			sendData("register(asfa_pulsador_anpar)");
-			sendData("register(asfa_pulsador_anpre)");
-			sendData("register(asfa_pulsador_prepar)");
-			sendData("register(asfa_pulsador_modo)");
-			sendData("register(asfa_pulsador_rearme)");
-			sendData("register(asfa_pulsador_rebase)");
-			sendData("register(asfa_pulsador_aumento)");
-			sendData("register(asfa_pulsador_alarma)");
-			sendData("register(asfa_pulsador_ocultacion)");
-			sendData("register(asfa_pulsador_lvi)");
-			sendData("register(asfa_pulsador_pn)");
-			sendData("register(asfa_pulsador_conex)");
-			sendData("register(asfa_div)");
-			sendData("register(asfa_selector_tipo)");
-			sendData("register(simulator_time)");
+			subscribe("asfa::frecuencia");
+			subscribe("asfa::div");
+			subscribe("asfa::selector_tipo");
+			subscribe("asfa::pulsador::*");
+			subscribe("speed");
+			subscribe("simulator_time");
 			while(true)
 			{
 				String s = readData();
 				if(s==null) return;
-				String val = s.substring(s.indexOf('=')+1);
-				if(s.startsWith("asfa_baliza="))
+				int index = s.indexOf('=');
+				if (index < 0) continue;
+				String[] topics = s.substring(0, index).split("::");
+				String val = s.substring(index+1);
+				if(s.startsWith("asfa::frecuencia="))
 				{
-					FrecASFA f = FrecASFA.valueOf(val);
+					FrecASFA f = FrecASFA.AL;
+					try
+					{
+						 f = FrecASFA.valueOf(val);
+					}
+					catch(IllegalArgumentException e)
+					{
+					}
 					COM.parse(8, f.ordinal());
 				}
 				else if(s.startsWith("speed="))
 				{
 					Odometer.speed = (float) Float.parseFloat(val.replace(',', '.')) / 3.6;
 				}
-				else if(s.startsWith("asfa_pulsador_"))
+				else if(s.startsWith("asfa::pulsador::"))
 				{
-					String pul = s.substring(14, s.indexOf('='));
+					String pul = topics[2];
 					TipoBotón tb = null;
 					if(pul.equals("aumento")) tb = TipoBotón.AumVel;
 					else if(pul.equals("ocultacion")) tb = TipoBotón.Ocultación;
@@ -94,15 +93,15 @@ public class OR_Client {
 							break;
 						}
 					}
-					if (tb == null) break;
-	                Main.ASFA.display.pulsar(tb, Integer.parseInt(val)==1);
-	                if(tb==TipoBotón.PrePar) Main.ASFA.display.pulsar(TipoBotón.VLCond, Integer.parseInt(val)==1);
+					if (tb == null) continue;
+		            Main.ASFA.display.pulsar(tb, Integer.parseInt(val)==1);
+		            if(tb==TipoBotón.PrePar) Main.ASFA.display.pulsar(TipoBotón.VLCond, Integer.parseInt(val)==1);
 				}
 				else if(s.startsWith("simulator_time="))
 				{
 					Clock.set_external_time(Double.parseDouble(val.replace(',','.')));
 				}
-				else if(s.startsWith("asfa_div="))
+				else if(s.startsWith("asfa::div="))
 				{
 					for(int i=0; i<64; i++)
 					{
@@ -110,7 +109,7 @@ public class OR_Client {
 						Main.ASFA.div.add(b);
 					}
 				}
-				else if(s.startsWith("asfa_selector_tipo="))
+				else if(s.startsWith("asfa::selector_tipo="))
 				{
 					int speed = Integer.parseInt(val);
 					int selectorT=0;
@@ -126,6 +125,10 @@ public class OR_Client {
 				}
 			}
 		}).start();
+	}
+	void subscribe(String topic)
+	{
+		sendData("register("+topic+")");
 	}
 	void sendData(String s)
 	{
@@ -160,27 +163,27 @@ public class OR_Client {
 	        String name = Botón.TipoBotón.values()[BotNum].name().toLowerCase();
 			if(name.equals("aumvel")) name = "aumento";
 			else if(name.equals("ocultación")) name = "ocultacion";
-	        sendData("asfa_ilumpuls_"+name+"="+(Ilum==1 ? "1" : "0"));
+	        sendData("asfa::pulsador::ilum::"+name+"="+(Ilum==1 ? "1" : "0"));
 	    }
-		if (funct == 1) sendData("asfa_last_info="+Info.values()[val>>1].ordinal());
+		if (funct == 1) sendData("asfa::indicador::ultima_info="+Info.values()[val>>1].ordinal());
 		if (funct == 4) 
         {
-            if (val < 2) sendData("asfa_emergency=" + (val==1 ? '1' : '0'));
-            if ((val & 4) != 0) sendData("asfa_indicador_frenado="+(int)(val & 3));
+            if (val < 2) sendData("asfa::emergency=" + (val==1 ? '1' : '0'));
+            if ((val & 4) != 0) sendData("asfa::indicador::frenado="+(int)(val & 3));
         }
         if (funct == 3)
         {
-        	if((val & 1) != 1) sendData("asfa_target_speed="+(((int) (val >> 1) & 0xFF) * 5));
-        	else sendData("asfa_target_state="+(int)((val >> 1) & 0xFF));
+        	if((val & 1) != 1) sendData("asfa::indicador::v_control="+(((int) (val >> 1) & 0xFF) * 5));
+        	else sendData("asfa::indicador::estado_vcontrol="+(int)((val >> 1) & 0xFF));
         }
         if (funct == 5) {
             int control = val >> 2;
             
-            if (control == 0) sendData("asfa_control_desvio="+(int)(val&3));
-            if (control == 1) sendData("asfa_secuencia_aa="+(int)(val&3));
-            if (control == 2) sendData("asfa_indicador_lvi="+(int)(val&3));
-            if (control == 3) sendData("asfa_indicador_pndesp="+(int)(val&3));
-            if(control == 4) sendData("asfa_indicador_pnprot="+(int)(val&3));
+            if (control == 0) sendData("asfa::indicador::control_desvio="+(int)(val&3));
+            if (control == 1) sendData("asfa::indicador::secuencia_aa="+(int)(val&3));
+            if (control == 2) sendData("asfa::indicador::lvi="+(int)(val&3));
+            if (control == 3) sendData("asfa::indicador::pndesp="+(int)(val&3));
+            if(control == 4) sendData("asfa::indicador::pnprot="+(int)(val&3));
         }
         /*if (funct == 15)
         {
@@ -188,8 +191,8 @@ public class OR_Client {
         	boolean trig = (val & 2) != 0;
         	int num = val >> 2;
         	String name = Sonidos.values()[num].toString().replace('_', '-');
-        	if(trig) sendData("asfa_sound_trigger="+name+","+(basic ? "1" : "0"));
-        	else sendData("asfa_sound_stop="+name+","+(basic ? "1" : "0"));
+        	if(trig) sendData("asfa::sonido::iniciar="+name+","+(basic ? "1" : "0"));
+        	else sendData("asfa::sonido::detener="+name+","+(basic ? "1" : "0"));
         }*/
 	}
 }

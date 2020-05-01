@@ -32,6 +32,7 @@ public class ASFA {
     }
     public DIV div;
     int T;
+    int O;
     public int selectorT = 0;
     boolean curvasT120;
     TrainParameters param = new TrainParameters();
@@ -57,17 +58,26 @@ public class ASFA {
     boolean modoBTS;
     int Vbts;
     int Vmax;
+    int Vbasico;
     int distReanudo;
     int tiempoRecParada;
     int distanciaRecParada;
     boolean recMultipleBasico;
     boolean curvasBasicoDigital;
+    
+    //Lectura balizas
     public Captador captador = new Captador();
-    int O;
-    double InicioRebase;
     boolean Eficacia;
+    boolean EficaciaIrrecuperable = false;
+    double TiempoValidarFrecuencia = 0.001;
+    double TiempoValidarFP = 0.05;
+    double TiempoPerdidaFP = 0.05;
+    double TiempoAlarmaFrecNormal = 1; //Debería ser igual al tiempo de pérdida FP, se deja así por compatibilidad con simulador
+
+    double InicioRebase;
     boolean RebaseAuto;
     boolean Fase2;
+    
     int ASFA_version=2;
     
     int estadoInicio = 0;
@@ -80,13 +90,19 @@ public class ASFA {
             public void run() {
                 // TODO Auto-generated method stub
                 while (true) {
-                    Update();
-                    try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+                    synchronized(this)
+                    {
+                    	Update();
+	                    if (UltimaFrecProcesada == frecRecibida)
+	                    {
+	                        try {
+	                        	wait(10);
+	    					} catch (InterruptedException e) {
+	    						// TODO Auto-generated catch block
+	    						e.printStackTrace();
+	    					}
+	                    }
+	                }
                 }
             }
         });
@@ -104,6 +120,7 @@ public class ASFA {
         ControlSeñal = null;
         AnteriorControlSeñal = null;
         UltimaFrecValida = FrecASFA.FP;
+        UltimaFrecProcesada = FrecASFA.FP;
         frecRecibida = FrecASFA.FP;
         TiempoUltimaRecepcion = 0;
         DistanciaUltimaRecepcion = 0;
@@ -112,6 +129,7 @@ public class ASFA {
         VentanaL11 = -1;
         VentanaIgnoreL9 = -1;
         UltimaFP = 0;
+        EficaciaIrrecuperable = false;
         AlarmaStart = 0;
         AlarmaEnd = 0;
         RecPNStart = 0;
@@ -132,8 +150,10 @@ public class ASFA {
         display.reset();
     }
     
+    public boolean averia = false;
+    
     public synchronized void Conex() {
-    	if (Connected) return;
+    	if (Connected || averia) return;
     	Initialize();
     	int defaultSelectorT;
     	try
@@ -182,7 +202,11 @@ public class ASFA {
 				e.printStackTrace();
 			}
         }
-        else estadoInicio = 2;
+        else
+        {
+        	averia = true;
+        	estadoInicio = 2;
+        }
         display.startSound("S1-1",false);
         try {
 			Thread.sleep(2000);
@@ -204,6 +228,7 @@ public class ASFA {
         modoRAM = (divData[17] & 4) != 0;
         modoBTS = (divData[17] & 8) != 0;
         Vmax = divData[18] & 0xFF;
+        Vbasico = divData[19] & 0xFF;
         Vbts = divData[38] & 0xFF;
         distReanudo = 10*(divData[35] & 0xFF);
         tiempoRecParada = divData[36] & 0xFF;
@@ -211,6 +236,7 @@ public class ASFA {
         recMultipleBasico = (divData[14]&64)!=0;
         curvasBasicoDigital = (divData[14]&128)!=0;
         modo = modoRAM ? Modo.RAM : (modoCONV ? Modo.CONV : Modo.AV);
+        basico = display.pressed(TipoBotón.ASFA_básico);
         if(modoRAM) T = 40 + selectorT * 10;
         else T = selectorT<3 ? (70 + selectorT * 10) : (40 + selectorT * 20);
         curvasT120 = T == 100 && (divData[17] & 1) != 0;
@@ -225,15 +251,27 @@ public class ASFA {
         param.ASFA_version = ASFA_version;
         param.basico = basico && !curvasBasicoDigital;
         display.set(estadoInicio == 2 ? 1 : 0, 0);
-        display.iluminarTodos(true);
-        display.startSound("S2-1", true);
         try {
-            Thread.sleep(3000);
+            display.iluminarTodos(true);
+            display.startSound("S2-1", true);
+            display.led_basico(0, 1);
+            display.led_basico(1, 1);
+            display.led_basico(2, 4);
+            Thread.sleep(2000);
+            display.stopSound("S2-1");
+            display.led_basico(2, 0);
+            Thread.sleep(1000);
+            display.startSound("S2-1", false);
+            display.led_basico(2, 1);
+            Thread.sleep(2000);
+            display.stopSound("S2-1");
+            display.iluminarTodos(false);
+            display.led_basico(0, 0);
+            display.led_basico(1, 0);
+            display.led_basico(2, 0);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        display.startSound("S2-1", false);
-        display.iluminarTodos(false);
         
         Controles.add(new ControlArranque(param));
 
@@ -245,7 +283,28 @@ public class ASFA {
     }
     public void Desconex()
     {
+    	display.stopSound("S1-1");
+    	display.stopSound("S2-1");
+    	display.stopSound("S2-2");
+    	display.stopSound("S2-3");
+    	display.stopSound("S2-4");
+    	display.stopSound("S2-5");
+    	display.stopSound("S2-6");
+    	display.stopSound("S3-1");
+    	display.stopSound("S3-2");
+    	display.stopSound("S3-3");
+    	display.stopSound("S3-4");
+    	display.stopSound("S3-5");
+    	display.stopSound("S4");
+    	display.stopSound("S5");
+    	display.stopSound("S6");
+    	display.iluminarTodos(false);
+    	for (TipoBotón b : TipoBotón.values())
+    	{
+    		display.botones.get(b).lector = null;
+    	}
     	Connected = false;
+    	averia = false;
     	PaqueteRegistro.apagado();
     }
     private Control ControlTransitorio;
@@ -261,7 +320,29 @@ public class ASFA {
     private double VentanaIgnoreL9 = -1;
 
     private boolean prevFE=false;
-    public synchronized void Update() {
+    
+    private class ControlesGuardados
+    {
+    	Modo modo;
+    	List<Control> Controles;
+        List<Control> ControlesPN;
+        List<ControlLVI> ControlesLVI;
+        Info UltimaInfo;
+    }
+    private ControlesGuardados ControlesGuardados;
+    void GuardarControles()
+    {
+    	ControlesGuardados = new ControlesGuardados();
+    	ControlesGuardados.Controles = Controles;
+    	ControlesGuardados.ControlesPN = ControlesPN;
+    	ControlesGuardados.ControlesLVI = ControlesLVI;
+    	ControlesGuardados.UltimaInfo = UltimaInfo;
+    	Controles = new ArrayList<>();
+    	ControlesPN = new ArrayList<>();
+    	ControlesLVI = new ArrayList<>();
+    	ControlesGuardados.modo = modo;
+    }
+    public void Update() {
     	display.esperarPulsado(TipoBotón.Conex, this);
     	if (display.botones.get(TipoBotón.Conex).pulsado && !Connected) Conex();
     	if (!display.botones.get(TipoBotón.Conex).pulsado && Connected) Desconex();
@@ -279,22 +360,59 @@ public class ASFA {
         } else if (AKT && !CON && modo != Modo.EXT) {
             FE = false;
             modo = Modo.EXT;
-            Eficacia = false;
             PaqueteRegistro.modo();
         }
 		param.Speed = (int)MpS.ToKpH(Odometer.getSpeed());
 		param.Modo = modo;
-        
+
+        if (modo == Modo.EXT) {
+        	UltimaFrecProcesada = frecRecibida = captador.getData();
+        	Eficacia = frecRecibida != FrecASFA.FP;
+            display.iluminar(TipoBotón.Alarma, !Eficacia);
+            return;
+        }
+		
+		if (Odometer.getSpeed() < 5/3.6f && basico != display.pressed(TipoBotón.ASFA_básico))
+		{
+			basico = !basico;
+	        param.basico = basico && !curvasBasicoDigital;
+	        display.controles.clear();
+	        if (basico)
+	        {
+	        	Controles.add(new ControlBasico(param, Vbasico));
+	        }
+	        else
+	        {
+	        	display.start();
+	        	display.led_basico(0, 0);
+	        	display.led_basico(1, 0);
+	        	display.led_basico(2, 0);
+	        	Control bas = null;
+	        	for (Control c : Controles)
+	        	{
+	        		if (c instanceof ControlBasico)
+	        		{
+	        			bas = c;
+	        			break;
+	        		}
+	        	}
+	        	if (bas != null) Controles.remove(bas);
+	        }
+		}
+		if (!basico) display.iluminar(TipoBotón.Modo, MpS.ToKpH(Odometer.getSpeed())<5);
+		else display.iluminar(TipoBotón.Modo, modo == Modo.AV);
+		
+		if (Odometer.getSpeed() >= 5/3.6f)
+			ControlesGuardados = null;
         display.esperarPulsado(TipoBotón.Modo, modo);
         display.botones.get(TipoBotón.Modo).tiempoPulsar = 3;
         if(display.pulsado(TipoBotón.Modo, modo)) {
-        	if(MpS.ToKpH(Odometer.getSpeed())<5) {
-        		UltimaInfo = Info.Vía_libre;
+        	if(MpS.ToKpH(Odometer.getSpeed())<5/3.6f) {
+				if (!basico) display.iluminar(TipoBotón.Modo, true);
         		if(modo == Modo.CONV || modo == Modo.AV || modo == Modo.RAM) {
         			if (modo == Modo.CONV && modoAV)
         			{
     					modo = Modo.AV;
-    					display.iluminar(TipoBotón.Modo, true);
             			for(Control c : Controles)
             			{
             				c.Modo = modo;
@@ -303,54 +421,75 @@ public class ASFA {
     				}
         			else if(modoBTS)
         			{
-        				display.iluminar(TipoBotón.Modo, false);
+                		if (ControlesGuardados == null) GuardarControles();
                 		modo = Modo.BTS;
                 		param.Modo = modo;
+                		UltimaInfo = Info.Vía_libre;
                 		Controles.clear();
+                		ControlesLVI = ControlesGuardados.ControlesLVI;
+                		ControlesPN = ControlesGuardados.ControlesPN;
                 		Controles.addAll(ControlesPN);
                 		Controles.addAll(ControlesLVI);
                 		Controles.add(new ControlBTS(param, Vbts));
     				}
         			else
         			{
-        				display.iluminar(TipoBotón.Modo, false);
+                		if (ControlesGuardados == null) GuardarControles();
+                		UltimaInfo = Info.Vía_libre;
                 		modo = Modo.MBRA;
                 		param.Modo = modo;
-                    	Controles.clear();
-                    	ControlesPN.clear();
-                    	ControlesLVI.clear();
+                		Controles.clear();
                     	Controles.add(new ControlManiobras(param));
         			}
                     PaqueteRegistro.modo();
             	}
             	else if(modo == Modo.BTS) {
+            		if (ControlesGuardados == null) GuardarControles();
+            		UltimaInfo = Info.Vía_libre;
             		modo = Modo.MBRA;
             		param.Modo = modo;
-                	Controles.clear();
-                	ControlesPN.clear();
-                	ControlesLVI.clear();
+            		Controles.clear();
                 	Controles.add(new ControlManiobras(param));
                     PaqueteRegistro.modo();
             	}
             	else if(modo == Modo.MBRA) {
+            		if (ControlesGuardados == null) GuardarControles();
+            		display.iluminar(TipoBotón.Alarma, AlarmaStart != 0);
             		modo = modoRAM ? Modo.RAM : (modoCONV ? Modo.CONV : Modo.AV);
-        			display.iluminar(TipoBotón.Modo, modo == Modo.AV);
             		param.Modo = modo;
-                	Controles.clear();
-                	ControlesPN.clear();
-                	ControlesLVI.clear();
-                	Controles.add(new ControlArranque(param));
-            		UltimaInfo = Info.Desconocido;
+            		Controles.clear();
+            		Controles.addAll(ControlesGuardados.Controles);
+            		ControlesPN = ControlesGuardados.ControlesPN;
+            		ControlesLVI = ControlesGuardados.ControlesLVI;
+            		List<Control> bad = new ArrayList<>();
+            		for(Control c : Controles)
+            		{
+            			if (c instanceof ControlBTS || c instanceof ControlManiobras)
+            			{
+            				bad.add(c);
+            			}
+            			else 
+            			{
+                			c.Modo = modo;
+                			c.Curvas();
+            			}
+            		}
+            		Controles.removeAll(bad);
+            		if (ControlesGuardados.modo != Modo.CONV && ControlesGuardados.modo != Modo.AV && ControlesGuardados.modo != Modo.RAM)
+            		{
+            			Controles.add(new ControlArranque(param));
+            			UltimaInfo = Info.Desconocido;
+            		}
+            		else UltimaInfo = ControlesGuardados.UltimaInfo;
                     PaqueteRegistro.modo();
             	}
         	}
         	else
         	{
-        		if(modoAV && modoCONV)
+        		if(modoAV && modoCONV && (modo == Modo.AV || modo == Modo.CONV))
         		{
         			if(modo == Modo.CONV) modo = Modo.AV;
         			else modo = Modo.CONV;
-        			display.iluminar(TipoBotón.Modo, modo == Modo.AV);
         			for(Control c : Controles)
         			{
         				c.Modo = modo;
@@ -360,10 +499,12 @@ public class ASFA {
         		}
         	}
         }
-        if (modo == Modo.EXT) {
-            return;
+        if(modo == Modo.MBRA)
+        {
+        	Eficacia = false;
+        	UltimaFrecProcesada = frecRecibida = captador.getData();
+            display.iluminar(TipoBotón.Alarma, frecRecibida != FrecASFA.FP);
         }
-        if(modo == Modo.MBRA) Eficacia = false;
         else {
             RecepciónBaliza();
             if (RecStart != 0 && RecStart < Clock.getSeconds()) {
@@ -445,7 +586,7 @@ public class ASFA {
                 }
                 if (UltimaFrecValida == FrecASFA.L7) {
                     display.iluminar(TipoBotón.Alarma, true);
-                	display.esperarPulsado(TipoBotón.Alarma, RecStart);
+                    if (AlarmaStart == 0) display.esperarPulsado(TipoBotón.Alarma, RecStart);
                     if (display.pulsado(TipoBotón.Alarma, RecStart)) {
                         RecStart = 0;
                     }
@@ -489,7 +630,7 @@ public class ASFA {
             }
         	if(!RebaseAuto && display.botones.get(TipoBotón.Rebase).lector==null) display.esperarPulsado(TipoBotón.Rebase, RebaseAuto);
             if (display.pulsado(TipoBotón.Rebase, RebaseAuto) && !RebaseAuto) {
-                display.startSound("S4");
+                if (!basico) display.startSound("S4");
                 RebaseAuto = true;
                 InicioRebase = Clock.getSeconds();
                 display.iluminar(TipoBotón.Rebase, true);
@@ -499,18 +640,20 @@ public class ASFA {
                 RebaseAuto = false;
             }
             if (AlarmaStart != 0) {
-            	display.esperarPulsado(TipoBotón.Alarma, AlarmaStart);
                 display.iluminar(TipoBotón.Alarma, true);
-            	if(Eficacia && display.botones.get(TipoBotón.Alarma).pulsado)
+            	if(Eficacia)
             	{
-            		if(AlarmaEnd-AlarmaStart<=3) AlarmaEnd = Clock.getSeconds() + 0.5;
+            		display.esperarPulsado(TipoBotón.Alarma, AlarmaStart);
+            		if (display.botones.get(TipoBotón.Alarma).pulsado && AlarmaEnd-AlarmaStart<=3) AlarmaEnd = Clock.getSeconds() + 0.5;
+            		if (display.pulsado(TipoBotón.Alarma, AlarmaStart))
+            		{
+                        AlarmaStart = 0;
+                        display.iluminar(TipoBotón.Alarma, false);
+                        display.stopSound("S5");
+                        if (UltimaFrecValida == FrecASFA.L7)
+                        	RecStart = 0;
+            		}
             	}
-                if (Eficacia && display.pulsado(TipoBotón.Alarma, AlarmaStart)) {
-                    AlarmaStart = 0;
-                    display.iluminar(TipoBotón.Alarma, false);
-                    display.stopSound("S5");
-                }
-                else display.iluminar(TipoBotón.Alarma, true);
             }
         }
         actualizarControles();
@@ -520,22 +663,46 @@ public class ASFA {
             if (display.pulsado(TipoBotón.Rearme, FE)) {
                 FE = false;
                 estadoInicio = 0;
-                display.display("Tipo", T);
+                if(!basico) display.display("Tipo", T);
                 display.iluminar(TipoBotón.Rearme, false);
             }
+        }
+        if(display.botones.get(TipoBotón.Ocultación).lector==null) display.esperarPulsado(TipoBotón.Ocultación, VeloActivo);
+        if(display.pulsado(TipoBotón.Ocultación, VeloActivo))
+        {
+        	if (VeloActivo && VeloEliminable)
+        	{
+        		VeloActivo = false;
+        	}
+        	else Velo();
         }
         actualizarEstado();
     }
     double UltimaFP = 0;
+    double UltimoCambio = 0;
+
+    FrecASFA UltimaFrecProcesada;
 
     void RecepciónBaliza() {
         InfoSeñalDistinta = false;
         FrecASFA last = frecRecibida;
         frecRecibida = captador.getData();
+        if (frecRecibida != last) UltimoCambio = Clock.getSeconds();
         if (frecRecibida == FrecASFA.FP) {
-            Eficacia = true;
-            UltimaFP = Clock.getSeconds();
-        } else {
+        	if (UltimoCambio + TiempoValidarFP < Clock.getSeconds())
+        	{
+                if (!EficaciaIrrecuperable) Eficacia = true;
+                UltimaFP = Clock.getSeconds();
+                UltimaFrecProcesada = frecRecibida;
+        	}
+        } 
+        else if (frecRecibida == FrecASFA.AL) {
+            if (AlarmaStart == 0 && UltimaFP + TiempoPerdidaFP < Clock.getSeconds()) {
+            	Eficacia = false;
+                Alarma();
+                UltimaFrecProcesada = frecRecibida;
+            }
+        } else if (UltimoCambio + TiempoValidarFrecuencia < Clock.getSeconds()) {
         	if (ASFA_version > 2) {
             	if(finParada != -1) {
             		finParada = -1;
@@ -554,30 +721,36 @@ public class ASFA {
                 	}
                 }
         	}
-            Eficacia = false;
-            if (frecRecibida != last) {
-                PaqueteRegistro.baliza_recibida(frecRecibida);
-                if (AlarmaStart == 0 && UltimaFP + 0.5 < Clock.getSeconds()) {
+            if (frecRecibida != UltimaFrecProcesada && UltimaFrecProcesada != FrecASFA.FP) {
+                if (AlarmaStart == 0 && UltimoCambio + 0.5 < Clock.getSeconds()) {
+                    Eficacia = false;
+                    EficaciaIrrecuperable = true;
                     Alarma();
                 }
+                return;
             }
-            if (frecRecibida == last) {
-                if (AlarmaStart == 0 && Odometer.getSpeed() > 1 && UltimaFP + 0.5 < Clock.getSeconds()) {
-                    //Alarma();
+            if (frecRecibida == UltimaFrecProcesada) {
+                if (AlarmaStart == 0 && Odometer.getSpeed() > 5/3.6 && UltimoCambio + TiempoAlarmaFrecNormal < Clock.getSeconds()) {
+                    Eficacia = false;
+                    Alarma();
                 }
                 return;
             }
-            if (frecRecibida == FrecASFA.L9 && VentanaIgnoreL9 != -1 && VentanaIgnoreL9 + 35 > DistanciaUltimaRecepcion) {
-                return;
+            if (frecRecibida == FrecASFA.L9 && VentanaIgnoreL9 != -1 && VentanaIgnoreL9 + 35 > Odometer.getDistance()) {
+                UltimaFrecProcesada = frecRecibida;
+            	return;
             }
-            if(modo == Modo.BTS && frecRecibida != FrecASFA.L4 && frecRecibida != FrecASFA.L9 && frecRecibida != FrecASFA.L10&& frecRecibida != FrecASFA.L9) {
+            if(modo == Modo.BTS && frecRecibida != FrecASFA.L4 && frecRecibida != FrecASFA.L9 && frecRecibida != FrecASFA.L10 && frecRecibida != FrecASFA.L11) {
+            	UltimaFrecProcesada = frecRecibida;
             	return;
             }
             if (RecStart != 0 && UltimaFrecValida != FrecASFA.L3) {
-                if ((frecRecibida != FrecASFA.L10 && frecRecibida != FrecASFA.L11) || (VentanaL10 == -1 && VentanaL11 == -1)) {
+                if ((frecRecibida != FrecASFA.L4 || VentanaL4 == -1) && ((frecRecibida != FrecASFA.L10 && frecRecibida != FrecASFA.L11) || (VentanaL10 == -1 && VentanaL11 == -1))) {
                     notRec(UltimaFrecValida);
+                    Velo();
                 }
             }
+            PaqueteRegistro.baliza_recibida(frecRecibida);
             UltimaFrecValida = frecRecibida;
             TiempoUltimaRecepcion = Clock.getSeconds();
             DistanciaUltimaRecepcion = Odometer.getDistance();
@@ -651,8 +824,26 @@ public class ASFA {
                     if(ASFA_version >= 3) ControlTransitorio = new ControlPNProtegido(param, TiempoUltimaRecepcion, DistanciaUltimaRecepcion);
                     VentanaL4 = DistanciaUltimaRecepcion;
                 } else {
-                    //ControlCambioInfraestructura
                     desactivarControlTransitorio();
+                	if (modo == Modo.AV)
+                	{
+                		Urgencias();
+                		if (modoCONV)
+                		{
+                			modo = Modo.CONV;
+                			for(Control c : Controles)
+                			{
+                				c.Modo = modo;
+                				c.Curvas();
+                			}
+                            PaqueteRegistro.modo();
+                		}
+                		else
+                		{
+                            Eficacia = false;
+                            EficaciaIrrecuperable = true;
+                		}
+                	}
                 }
             }
             if (frecRecibida == FrecASFA.L5) {
@@ -770,12 +961,17 @@ public class ASFA {
                 }*/
                 Controles.add(ControlTransitorio);
             }
+            UltimaFrecProcesada = frecRecibida;
         }
     }
     double AlarmaStart = 0;
     double AlarmaEnd = 0;
 
     void Alarma() {
+    	if (UltimaFP == 0)
+    	{
+    		UltimaFP = Clock.getSeconds();
+    	}
         AlarmaStart = UltimaFP;
         AlarmaEnd = AlarmaStart + 3;
         display.startSound("S5");
@@ -810,7 +1006,7 @@ public class ASFA {
                 if (ControlSeñal instanceof ControlPreviaSeñalParada) {
                     Urgencias();
                     UltimaInfo = Info.Anuncio_parada;
-                    Velo(false);
+                    Velo();
                     addControlSeñal(new ControlAnuncioParada(0, param));
                 }
                 for (Control c : Controles) {
@@ -855,14 +1051,14 @@ public class ASFA {
                     display.iluminar(TipoBotón.LVI, false);
                     Caducados.add(lvi);
                 }
-                if (lvi instanceof ControlLVIL1F1 && lvi.TiempoInicial + 5 < Clock.getSeconds()) {
+                if (lvi instanceof ControlLVIL1F1 && lvi.TiempoInicial + 5 < Clock.getSeconds() && ASFA_version >= 3) {
                     ControlLVIL1F1 control = (ControlLVIL1F1) ((lvi instanceof ControlLVIL1F1) ? lvi : null);
                     if(display.botones.get(TipoBotón.AumVel).lector == null) display.esperarPulsado(TipoBotón.AumVel, lvi);
                     if (display.pulsado(TipoBotón.AumVel, lvi)) {
                         control.SpeedUp();
                     }
                     Object obj = display.botones.get(TipoBotón.Ocultación).lector;
-                    if(obj != ControlReanudo.class && (obj == null || obj.equals(finParada))) display.esperarPulsado(TipoBotón.Ocultación, lvi);
+                    if(obj != ControlReanudo.class && (obj == null || obj.equals(finParada) || obj.equals(VeloActivo))) display.esperarPulsado(TipoBotón.Ocultación, lvi);
                     if (display.pulsado(TipoBotón.Ocultación, lvi)) {
                         control.SpeedDown();
                     }
@@ -953,7 +1149,7 @@ public class ASFA {
             	if(Odometer.getSpeed() < 1) cr.Activar(true);
             	else if(cr.Activado())
             	{
-            		if(cr.UltimaDistancia()==-1 || cr.UltimaDistancia() + distReanudo < Odometer.getDistance())
+            		if(cr.UltimaDistancia()==-1 || (distReanudo > 0 && cr.UltimaDistancia() + distReanudo < Odometer.getDistance()))
             		{
             			display.startSound("S3-4");
             			some = true;
@@ -970,7 +1166,7 @@ public class ASFA {
         }
         if(!some)
         {
-        	display.stopSound("S3-4");
+        	if (finParada == -1) display.stopSound("S3-4");
         	if(display.botones.get(TipoBotón.Ocultación).lector == ControlReanudo.class) display.botones.get(TipoBotón.Ocultación).lector = null;
         }
         for(Control c : Controles)
@@ -980,7 +1176,7 @@ public class ASFA {
         		ControlSeñalParada csp = (ControlSeñalParada) c;
         		if(csp.TiempoVAlcanzada==0 && ((modo == Modo.CONV && csp.recCount<2) || (modo == Modo.AV && csp.recCount<3)))
         		{
-        			if((csp.recCount == 0 && csp.DistanciaInicial + 200 < Odometer.getDistance()) || (csp.recCount > 0 && ((csp.lastDistRec + distanciaRecParada < Odometer.getDistance()) || (csp.lastTimeRec + tiempoRecParada < Clock.getSeconds()))))
+        			if((csp.recCount == 0 && csp.DistanciaInicial + 200 < Odometer.getDistance()) || (csp.recCount > 0 && ((distanciaRecParada > 0 && csp.lastDistRec + distanciaRecParada < Odometer.getDistance()) || (tiempoRecParada > 0 && csp.lastTimeRec + tiempoRecParada < Clock.getSeconds()))))
         			{
         				if(csp.recStart < 0)
         				{
@@ -1058,18 +1254,19 @@ public class ASFA {
     
     boolean VeloActivo = false;
     boolean VeloEliminable = false;
-    private void Velo(boolean manual)
+    private void Velo()
     {
     	Object obj = display.botones.get(TipoBotón.Ocultación).lector;
     	if (obj!=null && obj.equals(VeloActivo)) display.botones.get(TipoBotón.Ocultación).lector = null;
     	VeloEliminable = false;
     	for (Control c : Controles)
     	{
-    		if (manual || c instanceof ControlFASF)
+    		if (c instanceof ControlFASF)
     		{
     			c.Velado = true;
     		}
     	}
+    	VeloActivo = true;
     	UltimaInfo = Info.Vía_libre;
     }
     
@@ -1079,6 +1276,7 @@ public class ASFA {
     private boolean sobre2=false;
     private double prevVreal=0;
     private double prevVC=0;
+    int sobrevelocidad=0;
     private void actualizarEstado() {
         double max = ControlActivo.getIF(Clock.getSeconds());
         double control = ControlActivo.getVC(Clock.getSeconds());
@@ -1105,6 +1303,7 @@ public class ASFA {
         		sobre1=false;
                 display.stopSound("S3-1");
         	}
+            sobrevelocidad = 0;
         } else if (vreal >= max && !FE) {
         	if(sobre2)
         	{
@@ -1117,8 +1316,7 @@ public class ASFA {
                 display.stopSound("S3-1");
         	}
             Urgencias();
-            display.display("Urgencia", FE ? 1 : 0);
-            display.display("Sobrevelocidad", 0);
+            sobrevelocidad = 0;
         } else if (vreal >= overspeed2 && !basico) {
         	if(!sobre2)
         	{
@@ -1130,7 +1328,7 @@ public class ASFA {
         		sobre1=false;
                 display.stopSound("S3-1");
         	}
-            display.display("Sobrevelocidad", 2);
+            sobrevelocidad = 2;
         } else if (vreal >= overspeed1) {
         	if(!sobre1)
         	{
@@ -1142,7 +1340,7 @@ public class ASFA {
         		sobre2=false;
                 display.stopSound("S3-2");
         	}
-            display.display("Sobrevelocidad", 1);
+            sobrevelocidad = 1;
         } else if (vreal <= control - 3) {
         	if(sobre2)
         	{
@@ -1154,10 +1352,9 @@ public class ASFA {
         		sobre1=false;
                 display.stopSound("S3-1");
         	}
-            display.display("Sobrevelocidad", 0);
+            sobrevelocidad = 0;
         }
-        display.display("Urgencia", FE ? 1 : 0);
-        if(modo == Modo.CONV || modo == Modo.AV || modo == Modo.RAM)
+        if((modo == Modo.CONV || modo == Modo.AV || modo == Modo.RAM) && ASFA_version >= 3)
         {
         	if(vreal < 1)
             {
@@ -1172,7 +1369,7 @@ public class ASFA {
             			finParada = -1;
             		}
             	}
-            	else if(inicioParada + 500 < Clock.getSeconds()) finParada = Clock.getSeconds();
+            	else if(inicioParada + 5*60 < Clock.getSeconds()) finParada = Clock.getSeconds();
             }
             else inicioParada = -1;
             if(vreal > 1 && finParada != -1)
@@ -1189,15 +1386,30 @@ public class ASFA {
             	}
             }
         }
-        if(display.botones.get(TipoBotón.Ocultación).lector==null) display.esperarPulsado(TipoBotón.Ocultación, VeloActivo);
-        if(display.pulsado(TipoBotón.Ocultación, VeloActivo))
+        if (basico)
         {
-        	if (VeloActivo && VeloEliminable)
-        	{
-        		VeloActivo = false;
-        	}
-        	else Velo(true);
+        	boolean csp = false;
+        	boolean cpp = false;
+            for (Control c : Controles) {
+            	if (c instanceof ControlSeñalParada)
+            		csp = true;
+            	if (c instanceof ControlPreviaSeñalParada)
+            		cpp = true;
+            }
+            boolean c1 = ControlActivo instanceof ControlPasoDesvío || ControlActivo instanceof ControlSecuenciaAA;
+            if (ControlActivo instanceof ControlPNDesprotegido && !((ControlPNDesprotegido)ControlActivo).segundaCurva)
+            	c1 = true;
+            boolean c2 = ControlActivo instanceof ControlAnuncioParada || ControlActivo instanceof ControlAnuncioPrecaución ||
+            		ControlActivo instanceof ControlPreanuncioParada || ControlActivo instanceof ControlLVI || ControlActivo instanceof ControlPNDesprotegido;
+            if (csp)
+            	c2 = false;
+        	display.led_basico(0, Eficacia ? (estadoInicio == 2 ? 2 : 1) : 0);
+        	display.led_basico(1, c1 ? 2 : (c2 ? 1 : 0));
+        	display.led_basico(2, csp ? 4 : (cpp ? 3 : (ControlActivo instanceof ControlViaLibreCondicional ? 2 : 0)));
+        	return;
         }
+        display.display("Sobrevelocidad", sobrevelocidad);
+        display.display("Urgencia", FE ? 1 : 0);
         if(estadoInicio != 0)
         {
             display.display("Eficacia", Eficacia ? 1 : 0);
@@ -1205,7 +1417,7 @@ public class ASFA {
         	return;
         }
         int targetdisplay;
-        if (ControlActivo instanceof ControlViaLibre) {
+        if (ControlActivo instanceof ControlViaLibre || modo == Modo.MBRA) {
             targetdisplay = 0;
         } else if (ControlActivo instanceof ControlPreviaSeñalParada || target == control) {
             targetdisplay = 1;
@@ -1264,6 +1476,7 @@ public class ASFA {
         display.display("EstadoVobj", targetdisplay);
         display.display("Velocidad", (int) Math.ceil(MpS.ToKpH(Odometer.getSpeed())-0.000001f));
         display.display("Info", UltimaInfo.ordinal()<<1 | (parpInfo ? 1 : 0));
+        display.display("Velo", VeloActivo ? 1 : 0);
     }
 
     void desactivarControlTransitorio() {
@@ -1302,7 +1515,6 @@ public class ASFA {
         }
         else {
             Urgencias();
-            Velo(false);
             if (frec == FrecASFA.L1) {
                 AnuncioParada();
             }

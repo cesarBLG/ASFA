@@ -4,7 +4,7 @@ import ecp.ASFA;
 
 public class ControlPNDesprotegido extends ControlPN implements ControlReanudo {
 
-	boolean segundaCurva = false;
+	public boolean segundaCurva = false;
 	public boolean Rec = false;
 	Curva[] getCurvas(int O)
 	{

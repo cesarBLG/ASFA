@@ -147,7 +147,6 @@ public class DisplayInterface {
     Hashtable<String, Integer> controles = new Hashtable<String, Integer>();
 
     public void display(String funct, int state) {
-    	if (Main.ASFA.basico) return;
         if (!controles.containsKey(funct)) {
             controles.put(funct, state);
         } else if (controles.get(funct) == state) {
@@ -200,7 +199,20 @@ public class DisplayInterface {
                 break;
             case "Arranque":
             	write(14, state);
+            case "Velo":
+            	write(16, state);
+            	break;
         }
+    }
+    
+    int leds[] = new int[3];
+    public void led_basico(int led, int state)
+    {
+    	if (leds[led]!=state)
+    	{
+    		leds[led] = state;
+    		write(18, (led<<3) | state);
+    	}
     }
     
     public void start()

@@ -2,6 +2,9 @@ package dmi.Pantalla;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontFormatException;
+import java.io.File;
+import java.io.IOException;
 
 import javax.swing.JLabel;
 
@@ -13,7 +16,10 @@ public class ModeInfo extends JLabel {
 
     public ModeInfo() {
         setHorizontalAlignment(JLabel.CENTER);
-        setFont(new Font("Helvetica-Condensed", 1, 15));
+        try {
+            setFont(Font.createFont(Font.TRUETYPE_FONT, new File("HelveticaCdBd.ttf")).deriveFont((float)Main.dmi.pantalla.getScale(15)));
+        } catch(FontFormatException | IOException e) {
+        }
         setForeground(Color.white);
         update(Modo.CONV);
     }
