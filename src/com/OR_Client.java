@@ -185,14 +185,14 @@ public class OR_Client {
             if (control == 3) sendData("asfa::indicador::pndesp="+(int)(val&3));
             if(control == 4) sendData("asfa::indicador::pnprot="+(int)(val&3));
         }
-        /*if (funct == 15)
+        if (funct == 15)
         {
         	boolean basic = (val & 1) != 0;
         	boolean trig = (val & 2) != 0;
         	int num = val >> 2;
         	String name = Sonidos.values()[num].toString().replace('_', '-');
-        	if(trig) sendData("asfa::sonido::iniciar="+name+","+(basic ? "1" : "0"));
-        	else sendData("asfa::sonido::detener="+name+","+(basic ? "1" : "0"));
-        }*/
+        	if(trig) sendData("noretain(asfa::sonido::iniciar="+name+","+(basic ? "1" : "0")+")");
+        	else sendData("noretain(asfa::sonido::detener="+name+","+(basic ? "1" : "0")+")");
+        }
 	}
 }

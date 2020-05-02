@@ -51,8 +51,13 @@ public class ControlLVI extends Control implements ControlReanudo {
 
     public void AumentarVelocidad() {
         if (Aumentable) {
-            IF.OrdenadaFinal = Math.min(IF.OrdenadaFinal + 20, IF.valor(0));
-            VC.OrdenadaFinal = Math.min(VC.OrdenadaFinal + 20, VC.valor(0));
+        	int velAum = 0;
+        	if (VC.OrdenadaFinal == 30) velAum = 10;
+        	else if (VC.OrdenadaFinal == 50) velAum = 20;
+        	else if (VC.OrdenadaFinal == 80) velAum = 30;
+        	else if (VC.OrdenadaFinal == 120) velAum = 30;
+            IF.OrdenadaFinal = Math.min(IF.OrdenadaFinal + velAum, IF.valor(0));
+            VC.OrdenadaFinal = Math.min(VC.OrdenadaFinal + velAum, VC.valor(0));
             Aumentable = false;
         }
     }

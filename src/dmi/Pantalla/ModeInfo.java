@@ -15,17 +15,25 @@ import ecp.Main;
 public class ModeInfo extends JLabel {
 
     public ModeInfo() {
-        setHorizontalAlignment(JLabel.CENTER);
+        setHorizontalAlignment(JLabel.LEFT);
         try {
             setFont(Font.createFont(Font.TRUETYPE_FONT, new File("HelveticaCdBd.ttf")).deriveFont((float)Main.dmi.pantalla.getScale(15)));
         } catch(FontFormatException | IOException e) {
+        	setFont(new Font("Arial Narrow", 1, Main.dmi.pantalla.getScale(15)));
         }
         setForeground(Color.white);
         update(Modo.CONV);
     }
 
     public void update(Modo m) {
-    	setText(m.name());
+        String t = "";
+        String mod = m.name();
+        for (int i=0; i<mod.length(); i++)
+        {
+        	t += mod.charAt(i);
+        	if (mod.length()>i+1) t += " ";
+        }
+        setText(t);
         setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
     }
     public void update() {

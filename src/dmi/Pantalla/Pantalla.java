@@ -120,10 +120,10 @@ public class Pantalla extends JPanel {
         eficacia.setBounds(getScale(16), getScale(202), getScale(19), getScale(19));
         pane.add(eficacia);
         tipoTren = new TipoTren();
-        tipoTren.setBounds(getScale(32), getScale(179), getScale(51), getScale(16));
+        tipoTren.setBounds(getScale(39), getScale(186), getScale(51), getScale(16));
         pane.add(tipoTren);
         ModoASFA = new ModeInfo();
-        ModoASFA.setBounds(getScale(32), getScale(202), getScale(51), getScale(16));
+        ModoASFA.setBounds(getScale(39), getScale(208), getScale(51), getScale(16));
         pane.add(ModoASFA);
         controles = new InfoControles();
         controles.setBounds(getScale(106), getScale(140), getScale(165), getScale(98));

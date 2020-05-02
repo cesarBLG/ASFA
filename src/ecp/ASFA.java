@@ -72,7 +72,7 @@ public class ASFA {
     double TiempoValidarFrecuencia = 0.001;
     double TiempoValidarFP = 0.05;
     double TiempoPerdidaFP = 0.05;
-    double TiempoAlarmaFrecNormal = 1; //Debería ser igual al tiempo de pérdida FP, se deja así por compatibilidad con simulador
+    double TiempoAlarmaFrecNormal = 2; //Debería ser igual al tiempo de pérdida FP, se deja así por compatibilidad con simulador
 
     double InicioRebase;
     boolean RebaseAuto;
@@ -93,15 +93,12 @@ public class ASFA {
                     synchronized(this)
                     {
                     	Update();
-	                    if (UltimaFrecProcesada == frecRecibida)
-	                    {
-	                        try {
-	                        	wait(10);
-	    					} catch (InterruptedException e) {
-	    						// TODO Auto-generated catch block
-	    						e.printStackTrace();
-	    					}
-	                    }
+                    	try {
+                        	wait(frecRecibida == UltimaFrecProcesada ? 20 : 1);
+    					} catch (InterruptedException e) {
+    						// TODO Auto-generated catch block
+    						e.printStackTrace();
+    					}
 	                }
                 }
             }
@@ -512,7 +509,6 @@ public class ASFA {
                     if (display.pulsado(TipoBotón.AnPar, RecStart)) {
                         display.stopSound("S2-1");
                         display.startSound("S2-2");
-                        display.stopSound("S2-1");
                         AnuncioParada();
                         RecStart = 0;
                     }
@@ -987,10 +983,12 @@ public class ASFA {
             if (VentanaL10 != -1 && VentanaL10 + 8 < Odometer.getDistance()) {
                 ControlTransitorio = null;
                 VentanaL10 = -1;
+                Urgencias();
             }
             if (VentanaL11 != -1 && VentanaL11 + 8 < Odometer.getDistance()) {
                 ControlTransitorio = null;
                 VentanaL11 = -1;
+                Urgencias();
             }
             if(VentanaL4 != -1 && VentanaL4 + 35 < Odometer.getDistance())
             {
@@ -1341,7 +1339,16 @@ public class ASFA {
                 display.stopSound("S3-2");
         	}
             sobrevelocidad = 1;
-        } else if (vreal <= control - 3) {
+        } else if (vreal > control - 3) {
+        	if(sobre2)
+        	{
+        		sobre2=false;
+                display.stopSound("S3-2");
+        		sobre1=true;
+                display.startSound("S3-1");
+                sobrevelocidad = 1;
+        	}
+    	} else {
         	if(sobre2)
         	{
         		sobre2=false;

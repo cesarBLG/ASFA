@@ -7,7 +7,7 @@ public class Captador {
     
     //public Queue<FrecASFA> frecs = new LinkedList<>();
     
-	FrecASFA captador;
+	FrecASFA captador = FrecASFA.FP;
 	
     public void nuevaFrecuencia(FrecASFA f)
     {

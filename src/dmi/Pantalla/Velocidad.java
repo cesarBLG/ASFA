@@ -14,7 +14,7 @@ import ecp.Main;
 
 public class Velocidad extends JLabel {
 
-    int value;
+    int value=-1;
     Color Night;
     Color Day;
 
@@ -26,20 +26,19 @@ public class Velocidad extends JLabel {
     		try {
 				font = Font.createFont(Font.TRUETYPE_FONT, new File("ASFA.ttf")).deriveFont((float)Main.dmi.pantalla.getScale(35));
 			} catch (FontFormatException | IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
     	}
         setBorder(null);
         Night = night;
         Day = day;
-        //Font f = new Font("ASFASans", 0, Main.dmi.pantalla.getScale(35));
         setFont(font);
         setHorizontalAlignment(RIGHT);
         setValue(0);
     }
 
     public void setValue(int val) {
+    	if (value == val) return;
         value = val;
         setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Day : Night);
         int v1 = value / 100;
@@ -54,5 +53,6 @@ public class Velocidad extends JLabel {
         }
         text = text.concat(Integer.toString(v3));
         setText(text);
+        repaint(50);
     }
 }
