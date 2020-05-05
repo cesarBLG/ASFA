@@ -75,13 +75,13 @@ public class Botón extends JButton {
             @Override
             public void mousePressed(MouseEvent arg0) {
                 // TODO Auto-generated method stub
-                if (arg0.getButton() == MouseEvent.BUTTON3) {
+                /*if (arg0.getButton() == MouseEvent.BUTTON3) {
                     iluminar(1);
-                }
+                }*/
                 if (arg0.getButton() == MouseEvent.BUTTON1) {
-                	enviarPulsacion(tipo, true);
+                	Main.dmi.ecp.enviarPulsacion(tipo, true);
                     if (tipo == TipoBotón.PrePar) {
-                    	enviarPulsacion(TipoBotón.VLCond, true);
+                    	Main.dmi.ecp.enviarPulsacion(TipoBotón.VLCond, true);
                     }
                 }
             }
@@ -89,22 +89,17 @@ public class Botón extends JButton {
             @Override
             public void mouseReleased(MouseEvent arg0) {
                 // TODO Auto-generated method stub
-                if (arg0.getButton() == MouseEvent.BUTTON3) {
+                /*if (arg0.getButton() == MouseEvent.BUTTON3) {
                     iluminar(0);
-                }
+                }*/
                 if (arg0.getButton() == MouseEvent.BUTTON1) {
-                	enviarPulsacion(tipo, false);
+                	Main.dmi.ecp.enviarPulsacion(tipo, false);
                     if (tipo == TipoBotón.PrePar) {
-                    	enviarPulsacion(TipoBotón.VLCond, false);
+                    	Main.dmi.ecp.enviarPulsacion(TipoBotón.VLCond, false);
                     }
                 }
             }
         });
-    }
-    static void enviarPulsacion(TipoBotón bot, boolean puls)
-    {
-    	byte b = (byte) ((bot.ordinal()<<1) | (puls ? 1 : 0));
-    	COM.parse(10, b);
     }
     public void iluminar(int num) {
         if (num >= Icons.length) {

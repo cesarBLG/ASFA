@@ -24,8 +24,9 @@ public class Velocidad extends JLabel {
     	if (font == null)
     	{
     		try {
-				font = Font.createFont(Font.TRUETYPE_FONT, new File("ASFA.ttf")).deriveFont((float)Main.dmi.pantalla.getScale(35));
+				font = Font.createFont(Font.TRUETYPE_FONT, new File(Main.dmi.fabricante+".ttf")).deriveFont((float)Main.dmi.pantalla.getScale(35));
 			} catch (FontFormatException | IOException e) {
+				font = new Font("Lucida Sans", 0, Main.dmi.pantalla.getScale(35));
 				e.printStackTrace();
 			}
     	}
@@ -38,9 +39,9 @@ public class Velocidad extends JLabel {
     }
 
     public void setValue(int val) {
+        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Day : Night);
     	if (value == val) return;
         value = val;
-        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Day : Night);
         int v1 = value / 100;
         int v2 = (value / 10) % 10;
         int v3 = value % 10;

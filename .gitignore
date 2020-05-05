@@ -5,8 +5,11 @@
 dist/
 bin/
 build/
+orts
 sound
 tipo.ini
 div.ini
+config.ini
 registro.cls
 registro.csv
+HelveticaCdBd.ttf

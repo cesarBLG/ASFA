@@ -56,6 +56,8 @@ public class Pantalla extends JPanel {
     public void poweroff()
     {
     	activa = false;
+        setBackground(Color.black);
+    	Main.dmi.ecp.unsubscribe("asfa::indicador::*");
         removeAll();
         validate();
         repaint();
@@ -105,7 +107,7 @@ public class Pantalla extends JPanel {
         info.setBounds(getScale(271), getScale(0), getScale(79), getScale(263));
         pane.add(info);
         vreal = new Velocidad(Color.black, Color.white);
-        vreal.LeadingZeros = true;
+        vreal.LeadingZeros = Main.dmi.fabricante.equals("DIMETRONIC");
         vreal.setBounds(getScale(16), getScale(41), getScale(75), getScale(31));
         pane.add(vreal);
         vtarget = new VelocidadObjetivo();
@@ -134,6 +136,7 @@ public class Pantalla extends JPanel {
         velo = new Velo(this);
         velo.setBounds(0,0,getScale(350),getScale(263));
         pane.add(velo, new Integer(12));
+    	Main.dmi.ecp.subscribe("asfa::indicador::*");
         set(ModoDisplay.Noche);
         repaint();
     }

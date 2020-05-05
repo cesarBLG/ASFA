@@ -1,7 +1,10 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <mutex>
+#include <orts/client.h>
+#include <orts/common.h>
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -11,7 +14,8 @@
 #include <arpa/inet.h>
 #endif
 #include <map>
-#define PORT 5000
+using namespace ORserver;
+using namespace std;
 const char *sonidos[] = {
 	"S1-1",
 	"S2-1",
@@ -43,20 +47,51 @@ struct soundid
         return ot.snd==snd && basic==ot.basic;
     }
 };
-struct sdlsounddata
-{
-    Uint8 *wavBuffer;
-    SDL_AudioSpec wavSpec;
-    Uint32 wavLength;
-};
-std::map<soundid, sdlsounddata> sndbuf;
-void play(sdlsounddata d, int channel, bool loop=false);
-void stop(int i);
+std::map<soundid, Mix_Chunk*> sndbuf;
 #define NCHANNELS 8
-SDL_AudioDeviceID deviceId[NCHANNELS];
-Uint32 refill(Uint32 interval, void *param);
 Uint32 updateVolume(Uint32 interval, void *param);
 int numactivo[NCHANNELS];
+
+string fabricante = "INDRA";
+
+ParameterManager manager;
+client *s_client;
+
+void cargar_sonidos()
+{
+    sndbuf.clear();
+    for(int i=0; i<15; i++)
+    {
+        {
+            string s = "src/content/Sonido/"+fabricante+"/"+sonidos[i]+".wav";
+            Mix_Chunk *m = Mix_LoadWAV(s.c_str());
+            if (m == nullptr)
+            {
+                string s = "src/content/Sonido/INDRA/";
+                s+=sonidos[i];
+                s+=".wav";
+                m = Mix_LoadWAV(s.c_str());
+            }
+            sndbuf[soundid({sonidos[i],false})] = m;
+            
+        }
+        {
+            string s = "src/content/Sonido/"+fabricante+"/Basico/"+sonidos[i]+".wav";
+            Mix_Chunk *m = Mix_LoadWAV(s.c_str());
+            if (m == nullptr)
+            {
+                string s = "src/content/Sonido/INDRA/Basico/";
+                s+=sonidos[i];
+                s+=".wav";
+                m = Mix_LoadWAV(s.c_str());
+            }
+            sndbuf[soundid({sonidos[i],true})] = m;
+        }
+    }
+}
+
+void handle_sound(int num, bool basic, bool trig);
+
 int main(int argc, char** argv)
 {
 #ifdef WIN32
@@ -64,104 +99,121 @@ int main(int argc, char** argv)
     WSAStartup(MAKEWORD(2,2), &wsa);
 #endif
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER);
-    int sock;
-    struct sockaddr_in server;
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
-    server.sin_family = AF_INET;
-    server.sin_port = htons(PORT);
-    connect(sock, (struct sockaddr *)&server, sizeof(server));
-    for(int i=0; i<15; i++)
-    {
-        {
-            char s[50];
-            s[0] = 0;
-            strcat(s, "src/content/Sonido/");
-            strcat(s, sonidos[i]);
-            strcat(s, ".wav");
-            sdlsounddata d;
-            SDL_LoadWAV(s, &d.wavSpec, &d.wavBuffer, &d.wavLength);
-            if(i<NCHANNELS) deviceId[i] = SDL_OpenAudioDevice(NULL, 0, &d.wavSpec, NULL, 0);
-            sndbuf[soundid({sonidos[i],false})] = d;
-            
+    Mix_Init(0);
+    Mix_AllocateChannels(NCHANNELS);
+    
+    threadwait *poller = new threadwait();
+    s_client = TCPclient::connect_to_server(poller);
+    s_client->WriteLine("register(asfa::fabricante)");
+    s_client->WriteLine("register(asfa::sonido::*)");
+
+    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY,MIX_DEFAULT_FORMAT,2,1024);
+    
+    cargar_sonidos();
+    
+    Parameter trig("asfa::sonido::iniciar");
+    Parameter stop("asfa::sonido::detener");
+    Parameter fabr("asfa::fabricante");
+    
+    trig.SetValue = [](string val) {
+        string::size_type com = val.find_first_of(',');
+        bool bas = false;
+        if (com != string::npos)
+            bas = val.substr(com + 1) == "1";
+        string snd = val.substr(0, com);
+        for (int i=0; i<15; i++) {
+            if (sonidos[i] == snd)
+                handle_sound(i, bas, true);
         }
-        {
-            char s[50];
-            s[0] = 0;
-            strcat(s, "src/content/Sonido/");
-            strcat(s, "Basico/");
-            strcat(s, sonidos[i]);
-            strcat(s, ".wav");
-            sdlsounddata d;
-            SDL_LoadWAV(s, &d.wavSpec, &d.wavBuffer, &d.wavLength);
-            sndbuf[soundid({sonidos[i],true})] = d;
+    };
+    stop.SetValue = [](string val) {
+        string::size_type com = val.find_first_of(',');
+        bool bas = false;
+        if (com != string::npos)
+            bas = val.substr(com + 1) == "1";
+        string snd = val.substr(0, com);
+        for (int i=0; i<15; i++) {
+            if (sonidos[i] == snd)
+                handle_sound(i, bas, false);
+        }
+    };
+    fabr.SetValue = [](string val) {
+        fabricante = val;
+        cargar_sonidos();
+    };
+    
+    manager.AddParameter(&trig);
+    manager.AddParameter(&stop);
+    manager.AddParameter(&fabr);
+    
+    SDL_AddTimer(100, updateVolume, nullptr);
+    while(s_client->connected) {
+        int nfds = poller->poll(1000);
+        if (nfds == 0)
+            continue;
+        s_client->handle();
+        string s = s_client->ReadLine();
+        while(s!="") {
+            if (s == "unregister(asfa::frecuencia)")
+                return 0;
+            manager.ParseLine(s_client, s);
+            s = s_client->ReadLine();
         }
     }
-    //SDL_AddTimer(100, updateVolume, nullptr);
-    while(1)
+}
+void handle_sound(int num, bool basic, bool trig)
+{
+    if (basic)
     {
-        char buff[3];
-        int res = recv(sock, buff, 3, MSG_WAITALL);
-        if(res<=0) return 0;
-        int functn = buff[0];
-        int val = buff[1];
-        if(functn==15)
-        {
-            int basic = (val & 1) != 0;
-            int trig = (val & 2) != 0;
-            int num = val >> 2;
-            if (basic)
-            {
-                if ((num > 1 && num <7) || num == 8) continue;
-            }
-            sdlsounddata d = sndbuf[soundid({sonidos[num],basic!=0})];
-            int i=0;
-            switch(num)
-            {
-                case 13:
-                    i = 0;
-                    break;
-                case 0:
-                case 1:
-                case 14:
-                    i = 1;
-                    break;
-                case 2:
-                case 3:
-                case 4:
-                case 5:
-                case 6:
-                    i = 2;
-                    break;
-                case 9:
-                    i = 3;
-                    break;
-                case 11:
-                    i = 4;
-                    break;
-                case 10:
-                    i = 5;
-                    break;
-                case 7:
-                case 8:
-                    i = 6;
-                    break;
-                case 12:
-                    i = 7;
-                    break;
-            }
-            if(trig)
-            {
-                bool loop = (num == 7 || num == 8 || num == 10 || num == 11 || num == 13);
-                if (!loop || numactivo[i] != num) play(d,i,loop);
-                numactivo[i] = num;
-            }
-            else if(numactivo[i] == num)
-            {
-                stop(i);
-                numactivo[i] = -1;
-            }
-        }
+        if ((num > 1 && num <7) || num == 8) return;
+    }
+    int i=0;
+    switch(num)
+    {
+        case 13:
+            i = 0;
+            break;
+        case 1:
+        case 14:
+            i = 1;
+            break;
+        case 0:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+            i = 2;
+            break;
+        case 9:
+            i = 3;
+            break;
+        case 11:
+            i = 4;
+            break;
+        case 10:
+            i = 5;
+            break;
+        case 7:
+        case 8:
+            i = 6;
+            break;
+        case 12:
+            i = 7;
+            break;
+    }
+    if(trig)
+    {
+        Mix_Chunk *m = sndbuf[soundid({sonidos[num],basic})];
+        bool loop = (num == 7 || num == 8 || num == 10 || num == 11 || num == 13);
+        if (!loop || numactivo[i] != num) Mix_PlayChannel(i, m, loop ? -1 : 0);
+        numactivo[i] = num;
+        updateVolume(0,0);
+    }
+    else if(numactivo[i] == num)
+    {
+        Mix_HaltChannel(i);
+        numactivo[i] = -1;
     }
 }
 Uint32 updateVolume(Uint32 interval, void *param)
@@ -169,44 +221,8 @@ Uint32 updateVolume(Uint32 interval, void *param)
     bool mute = false;
     for (int i=0; i<NCHANNELS; i++)
     {
-        if (SDL_GetAudioDeviceStatus(deviceId[i]) == SDL_AUDIO_PLAYING) mute = true;
+        Mix_Volume(i, mute ? 0 : 64);
+        if (Mix_Playing(i)!=0) mute = true;
     }
     return interval;
-}
-std::mutex mtx[NCHANNELS];
-Uint32 warnLength[NCHANNELS];
-Uint8 *warnBuffer[NCHANNELS];
-Uint32 refill(Uint32 interval, void *param)
-{
-    int i = *((int*)(&param));
-    std::unique_lock<std::mutex> lck(mtx[i]);
-    if(warnBuffer[i] != nullptr && SDL_GetQueuedAudioSize(deviceId[i]) < 3*warnLength[i]) SDL_QueueAudio(deviceId[i], warnBuffer[i], warnLength[i]);
-    if(warnBuffer[i] == nullptr) return 0;
-    return interval;
-}
-void play(sdlsounddata d, int i, bool loop)
-{
-    std::unique_lock<std::mutex> lck(mtx[i]);
-    if(warnBuffer[i] != nullptr)
-    {
-        lck.unlock();
-        stop(i);
-        lck.lock();
-    }
-    else SDL_ClearQueuedAudio(deviceId[i]);
-    int success = SDL_QueueAudio(deviceId[i], d.wavBuffer, d.wavLength);
-    SDL_PauseAudioDevice(deviceId[i], 0);
-    if(loop)
-    {
-        warnLength[i] = d.wavLength;
-        warnBuffer[i] = d.wavBuffer;
-        SDL_AddTimer(50, refill, (void*)i);
-    }
-}
-void stop(int i)
-{
-    std::unique_lock<std::mutex> lck(mtx[i]);
-    SDL_ClearQueuedAudio(deviceId[i]);
-    warnBuffer[i] = nullptr;
-    SDL_PauseAudioDevice(deviceId[i], 1);
 }

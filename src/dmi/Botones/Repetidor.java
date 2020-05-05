@@ -20,6 +20,8 @@ public class Repetidor extends JPanel {
 
     public Botón Modo, Rearme, Rebase, AumVel, Alarma, Ocultación, LVI, PN;
     
+    public JButton basico;
+    
     public Luces luces_basico;
     
     public Repetidor() {
@@ -59,7 +61,7 @@ public class Repetidor extends JPanel {
         JButton Conex = new JButton();
         Conex.addActionListener((arg0) -> 
         {
-        	Botón.enviarPulsacion(TipoBotón.Conex, !Main.dmi.activo);
+        	Main.dmi.ecp.enviarPulsacion(TipoBotón.Conex, !Main.dmi.activo);
         	if(Main.dmi.activo)
         	{
         		Main.dmi.pantalla.poweroff();
@@ -70,17 +72,17 @@ public class Repetidor extends JPanel {
         Conex.setOpaque(false);
         Conex.setContentAreaFilled(false);
         Conex.setBorderPainted(false);
-        JButton basico = new JButton();
+        basico = new JButton();
         basico.addActionListener((arg0) -> {
         	basico.setSelected(!basico.isSelected());
         	if (basico.isSelected())
         	{
-        		Botón.enviarPulsacion(TipoBotón.ASFA_básico, true);
+        		Main.dmi.ecp.enviarPulsacion(TipoBotón.ASFA_básico, true);
         		Main.dmi.pantalla.poweroff();
         	}
         	else
         	{
-        		Botón.enviarPulsacion(TipoBotón.ASFA_básico, false);
+        		Main.dmi.ecp.enviarPulsacion(TipoBotón.ASFA_básico, false);
         	}
         });
         basico.setIcon(new ImageIcon(getClass().getResource("/content/Botones/Basico.png")));

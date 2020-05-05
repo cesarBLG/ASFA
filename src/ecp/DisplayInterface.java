@@ -61,7 +61,6 @@ public class DisplayInterface {
         COM.parse(num, data);
         byte[] b = new byte[]{(byte) num, (byte) data, (byte) 0xFF};
         OR2.write(b);
-        orclient.send(num, data);
     }
 
     byte controlByte(int n1, int n2) {
@@ -99,7 +98,11 @@ public class DisplayInterface {
         } else {
             botones.get(botón).iluminado = state;
         }
-        write(0, (botón.ordinal() << 2) | (state ? 1 : 0));
+        String name = botón.name().toLowerCase();
+		if(name.equals("aumvel")) name = "aumento";
+		else if(name.equals("ocultación")) name = "ocultacion";
+		else if(name.equals("asfa_básico")) name = "basico";
+        write("asfa::pulsador::ilum::"+name, state ? 1 : 0);
     }
 
     public void iluminarTodos(boolean state) {
@@ -156,51 +159,50 @@ public class DisplayInterface {
         }
         switch (funct) {
             case "Info":
-                write(1, state);
+                write("asfa::indicador::ultima_info", state);
                 break;
             case "Velocidad":
-                write(2, state);
+                write("asfa::indicador::velocidad", state);
                 break;
             case "Velocidad Objetivo":
-                write(3, (state << 1) / 5);
+                write("asfa::indicador::v_control", state);
                 break;
             case "EstadoVobj":
-                write(3, (state << 1) | 1);
+                write("asfa::indicador::estado_vcontrol", state);
                 break;
             case "Eficacia":
-                write(4, state | 2);
+                write("asfa::indicador::eficacia", state);
                 break;
             case "Sobrevelocidad":
-                write(4, state | 4);
+                write("asfa::indicador::frenado", state);
                 break;
             case "Urgencia":
-                write(4, state);
+                write("asfa::emergency", state);
+                write("asfa::indicador::urgencia", state);
                 break;
             case "Paso Desvío":
-                write(5, state);
+                write("asfa::indicador::control_desvio", state);
                 break;
             case "Secuencia AA":
-                write(5, state | 1<<2);
+                write("asfa::indicador::secuencia_aa", state);
                 break;
             case "LVI":
-                write(5, state | 2<<2);
+                write("asfa::indicador::lvi", state);
                 break;
             case "PN sin protección":
-                write(5, state | 3<<2);
+                write("asfa::indicador::pndesp", state);
                 break;
             case "PN protegido":
-                write(5, state | 4<<2);
+                write("asfa::indicador::pnprot", state);
                 break;
             case "Modo":
-            	write(11, state);
+                write("asfa::indicador::modo", state);
                 break;
             case "Tipo":
-            	write(12, state);
+                write("asfa::indicador::tipo_tren", state);
                 break;
-            case "Arranque":
-            	write(14, state);
             case "Velo":
-            	write(16, state);
+                write("asfa::indicador::velo", state);
             	break;
         }
     }
@@ -211,14 +213,14 @@ public class DisplayInterface {
     	if (leds[led]!=state)
     	{
     		leds[led] = state;
-    		write(18, (led<<3) | state);
+            write("asfa::leds::"+led, state);
     	}
     }
     
     public void start()
     {
     	if (Main.ASFA.basico) return;
-    	write(14, 3);
+    	orclient.sendData("noretain(asfa::pantalla::iniciar=1)");
     }
     public void set(int num, int errno)
     {
@@ -229,24 +231,20 @@ public class DisplayInterface {
     {
     	startSound(num, Main.ASFA.basico);
     }
-    String activo = null;
     public void startSound(String num, boolean basic)
     {
-    	/*String num2 = num + (basic ? "b" : "");
-    	if(activo != null && activo.equals(num2))
-    	{
-    		if(activo.contains("S3-1") || activo.contains("S3-2") || activo.contains("S3-4") || activo.contains("S3-5") || activo.contains("S5"))
-    		{
-    			return;
-    		}
-    	}
-    	activo = num2;*/
-    	write(15, Sonidos.valueOf(num.replace('-', '_')).ordinal()<<2 | 2 | (basic ? 1 : 0));
+        orclient.sendData("noretain(asfa::sonido::iniciar=" + num + "," + (basic ? 1 : 0) + ")");
     }
     public void stopSound(String num)
     {
-    	//if(activo==null || !activo.contains(num)) return;
-    	write(15, Sonidos.valueOf(num.replace('-', '_')).ordinal()<<2);
-    	//activo = null;
+        orclient.sendData("noretain(asfa::sonido::detener="+num+")");
+    }
+    public void write(String fun, int val)
+    {
+    	write(fun, Integer.toString(val));
+    }
+    public void write(String fun, String val)
+    {
+    	orclient.sendData(fun + "=" + val);
     }
 }

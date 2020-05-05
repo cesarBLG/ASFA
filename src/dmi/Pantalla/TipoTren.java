@@ -40,5 +40,6 @@ public class TipoTren extends JLabel {
         	if (tipo.length()>i+1) t += " ";
         }
         setText(t);
+        repaint();
     }
 }

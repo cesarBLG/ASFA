@@ -30,22 +30,22 @@ public interface COM {
     	if(Main.dmi!=null && Main.dmi.pantalla != null)
     	{
         	Pantalla pantalla = Main.dmi.pantalla;
-            if (functn == 0) {
+            /*if (functn == 0) {
                 int BotNum = val >> 2;
                 int Ilum = val & 1;
                 if ((val & 2) != 0) return;
                 if (BotNum == Botón.TipoBotón.VLCond.ordinal()) Ilum += 2;
                 if (Botón.ListaBotones[BotNum] != null) Botón.ListaBotones[BotNum].iluminar(Ilum);
-            }
-            if (functn == 1) pantalla.info.setInfo(Info.values()[val>>1], (val & 1) != 0);
-            if (functn == 2) pantalla.vreal.setValue(val);
-            if (functn == 3) 
+            }*/
+            //if (functn == 1) pantalla.info.setInfo(Info.values()[val>>1], (val & 1) != 0);
+            //if (functn == 2) pantalla.vreal.setValue(val);
+            /*if (functn == 3) 
             {
                 if ((val & 1) == 1)  pantalla.vtarget.figureVisible = val >> 1;
                 else pantalla.vtarget.val = ((int) (val >> 1) & 0xFF) * 5;
                 pantalla.vtarget.update();
-            }
-            if (functn == 4) 
+            }*/
+            /*if (functn == 4) 
             {
                 if (val < 2) 
                 {
@@ -58,8 +58,8 @@ public interface COM {
                     pantalla.intervención.frenado = val & 3;
                     pantalla.intervención.update();
                 }
-            }
-            if (functn == 5)
+            }*/
+            /*if (functn == 5)
             {
                 int control = val >> 2;
                 int activate = (val & 3);
@@ -69,29 +69,29 @@ public interface COM {
                 if (control == 3) pantalla.controles.PNdesp = activate;
                 if(control == 4) pantalla.controles.PNprot = activate;
                 pantalla.controles.update();
-            }
-            if (functn == 6) pantalla.set();
-            if (functn == 11)
+            }*/
+            //if (functn == 6) pantalla.set();
+            /*if (functn == 11)
             {
             	pantalla.ModoASFA.update(Modo.values()[val]);
             }
             if (functn == 12)
             {
             	pantalla.tipoTren.set(val);
-            }
+            }*/
             if (functn == 14)
             {
             	if(val<3) pantalla.setup(val, null);
-            	if(val == 3) pantalla.start();
+            	//if(val == 3) pantalla.start();
             }
-            if (functn == 16)
+            /*if (functn == 16)
             {
             	pantalla.velo.setActivo(val == 1);
-            }
-            if (functn == 18)
+            }*/
+            /*if (functn == 18)
             {
             	Main.dmi.repetidor.luces_basico.update(val>>3, val & 7);
-            }
+            }*/
             /* Sounds are managed by external program
             if (functn == 15)
             {
@@ -105,28 +105,28 @@ public interface COM {
     	}
     	if(Main.ASFA!=null)
     	{
+            if (functn == 9) Odometer.speed = (float) val / 3.6;
         	synchronized(Main.ASFA)
         	{
-	            if(functn == 7)
+	            /*if(functn == 7)
 	    		{
 	    			Main.ASFA.div.add((byte) val);
-	    		}
+	    		}*/
 	            if (functn == 8)
 	            {
 	                Main.ASFA.captador.nuevaFrecuencia(FrecASFA.values()[val]);
 	                Main.ASFA.notify();
 	            }
-	            if (functn == 9) Odometer.speed = (float) val / 3.6;
-	            if (functn == 10)
+	            /*if (functn == 10)
 	            {
 	                int BotNum = val >> 1;
 	                boolean pulsad = (val & 1) == 1;
 	                Main.ASFA.display.pulsar(TipoBotón.values()[BotNum], pulsad);
-	            }
-	            if (functn == 13)
+	            }*/
+	            /*if (functn == 13)
 	            {
 	        		Main.ASFA.selectorT = (val & 7) + 1;
-	            }
+	            }*/
         	}
     	}
     }

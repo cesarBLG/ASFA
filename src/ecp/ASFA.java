@@ -94,7 +94,7 @@ public class ASFA {
                     {
                     	Update();
                     	try {
-                        	wait(frecRecibida == UltimaFrecProcesada ? 20 : 1);
+                        	wait(Connected ? (frecRecibida == UltimaFrecProcesada ? 20 : 1) : 500);
     					} catch (InterruptedException e) {
     						// TODO Auto-generated catch block
     						e.printStackTrace();
@@ -152,6 +152,33 @@ public class ASFA {
     public synchronized void Conex() {
     	if (Connected || averia) return;
     	Initialize();
+    	try
+    	{
+    		FileReader fileReader = new FileReader("config.ini");
+    		BufferedReader bufferedReader = new BufferedReader(fileReader);
+    		String line = bufferedReader.readLine();
+    		while (line != null)
+    		{
+    			String[] token = line.trim().split("=");
+    			if (token.length == 2)
+    			{
+        			if (token[0].trim().equalsIgnoreCase("fabricante"))
+        			{
+        				String fabr = token[1].trim();
+        				int c1 = fabr.indexOf('"');
+        				if (c1 >= 0) fabr = fabr.substring(c1+1);
+        				int c2 = fabr.lastIndexOf('"');
+        				if (c2 >= 0) fabr = fabr.substring(0, c2);
+        				display.write("asfa::fabricante", fabr.toUpperCase());
+        			}
+    			}
+        		line = bufferedReader.readLine();
+    		}
+    		bufferedReader.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	int defaultSelectorT;
     	try
     	{
@@ -659,7 +686,6 @@ public class ASFA {
             if (display.pulsado(TipoBotón.Rearme, FE)) {
                 FE = false;
                 estadoInicio = 0;
-                if(!basico) display.display("Tipo", T);
                 display.iluminar(TipoBotón.Rearme, false);
             }
         }
@@ -1164,8 +1190,11 @@ public class ASFA {
         }
         if(!some)
         {
-        	if (finParada == -1) display.stopSound("S3-4");
-        	if(display.botones.get(TipoBotón.Ocultación).lector == ControlReanudo.class) display.botones.get(TipoBotón.Ocultación).lector = null;
+        	if(display.botones.get(TipoBotón.Ocultación).lector == ControlReanudo.class)
+        	{
+            	if (finParada == -1) display.stopSound("S3-4");
+        		display.botones.get(TipoBotón.Ocultación).lector = null;
+        	}
         }
         for(Control c : Controles)
         {
@@ -1423,6 +1452,7 @@ public class ASFA {
         	display.display("Velocidad", T);
         	return;
         }
+        display.display("Tipo", T);
         int targetdisplay;
         if (ControlActivo instanceof ControlViaLibre || modo == Modo.MBRA) {
             targetdisplay = 0;

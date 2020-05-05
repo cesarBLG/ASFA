@@ -35,9 +35,12 @@ public class DMI extends JFrame {
     public Pupitre pupitre;
     public boolean singleScreen = false;
     public boolean activo=false;
+    public String fabricante = "DIMETRONIC";
+    public ECPinterface ecp;
 
     public DMI() {
         Main.dmi = this;
+        ecp = new ECPinterface(this);
     	if(singleScreen)
     	{
     		setUndecorated(true);
@@ -48,21 +51,23 @@ public class DMI extends JFrame {
         g.anchor = GridBagConstraints.CENTER;
         g.gridy = 0;
         g.gridx = 1;
+        g.gridwidth = 2;
         if(singleScreen) g.insets = new Insets(0, 0, 0, 0);
         else g.insets = new Insets(50, 5, 20, 70);
         pantalla = new Pantalla();
         add(pantalla, g);
+        g.gridwidth = 1;
         g.insets = new Insets(0, 0, 10, 0);
         JButton modonoche = new JButton("D/N");
         modonoche.addActionListener((ActionEvent) -> {
-        	COM.parse(new byte[] {6,0});
+        	pantalla.set();
         }); 
         if(!singleScreen)
         {
         	g.insets = new Insets(0, 5, 0, 0);
         	g.gridx = 0;
         	add(modonoche, g);
-        	g.gridwidth = 2;
+        	g.gridwidth = 3;
         }
         g.gridy++;
         g.insets = new Insets(5, 5, 5, 5);
@@ -82,7 +87,7 @@ public class DMI extends JFrame {
                     String[] sub = s.split(" ");
                     for(int i=0; i+1<sub.length; i+=2)
                     {
-                    	COM.parse(new byte[] {(byte) Integer.parseUnsignedInt(sub[i]), (byte) Integer.parseUnsignedInt(sub[i+1])});
+                    	COM.parse(Integer.parseUnsignedInt(sub[i]), Integer.parseUnsignedInt(sub[i+1]));
                     	try {
 							Thread.sleep(5);
 						} catch (InterruptedException e) {
@@ -106,10 +111,21 @@ public class DMI extends JFrame {
 
             }
         });
+        jtb.setPreferredSize(new Dimension(220, 25));
+        jtb.setMinimumSize(new Dimension(220, 25));
+        JButton cg = new JButton("CG");
+        cg.addActionListener((ActionEvent) -> {
+        	if (Main.ASFA == null) return;
+        	CombinadorGeneral c = new CombinadorGeneral(Main.ASFA);
+        	c.setVisible(true);
+        });
+        g.gridwidth = 2;
+        g.gridx = 1;
         g.gridy++;
-        jtb.setPreferredSize(new Dimension(300, 50));
-        jtb.setMinimumSize(new Dimension(300, 50));
         if(!singleScreen) add(jtb, g);
+        g.gridx = 0;
+        g.gridwidth = 1;
+        if(!singleScreen) add(cg, g);
         getContentPane().setBackground(Color.blue);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
