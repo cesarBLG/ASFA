@@ -48,7 +48,8 @@ public class Botón extends JButton {
         }
         setBorderPainted(false);
         setBorder(null);
-        this.setBackground(Color.BLUE);
+        setOpaque(false);
+        setContentAreaFilled(false);
         Botón b = this;
         Icons = icons;
         NumIcons = count;

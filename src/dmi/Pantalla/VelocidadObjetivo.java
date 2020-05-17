@@ -24,8 +24,9 @@ public class VelocidadObjetivo extends JPanel {
         setOpaque(false);
         setBorder(null);
         value = new Velocidad(Color.white, Color.black);
-        value.setHorizontalAlignment(JLabel.CENTER);
-        value.setBounds(Main.dmi.pantalla.getScale(45), Main.dmi.pantalla.getScale(2), Main.dmi.pantalla.getScale(75), Main.dmi.pantalla.getScale(31));
+        value.setBounds(Main.dmi.pantalla.getScale(45), Main.dmi.pantalla.getScale(3), Main.dmi.pantalla.getScale(75), Main.dmi.pantalla.getScale(31));
+        value.Center = true;
+        value.construct();
         add(value);
         Rectángulo = new JLabel();
         Rectángulo.setBounds(Main.dmi.pantalla.getScale(42), Main.dmi.pantalla.getScale(0), Main.dmi.pantalla.getScale(81), Main.dmi.pantalla.getScale(37));

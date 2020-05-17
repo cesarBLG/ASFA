@@ -22,7 +22,7 @@ public class ModeInfo extends JLabel {
         	setFont(new Font("Arial Narrow", 1, Main.dmi.pantalla.getScale(15)));
         }
         setForeground(Color.white);
-        update(Modo.CONV);
+        update();
     }
 
     public void update(Modo m) {

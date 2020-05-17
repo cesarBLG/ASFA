@@ -25,6 +25,7 @@ public class Repetidor extends JPanel {
     public Luces luces_basico;
     
     public Repetidor() {
+        setOpaque(false);
         ImageIcon[] iconos = new ImageIcon[2];
         iconos[0] = new ImageIcon(getClass().getResource("/content/Botones/Modo.png"));
         iconos[1] = new ImageIcon(getClass().getResource("/content/Botones/ModoIluminado.png"));
@@ -57,7 +58,6 @@ public class Repetidor extends JPanel {
         iconos[0] = new ImageIcon(getClass().getResource("/content/Botones/PN.png"));
         iconos[1] = new ImageIcon(getClass().getResource("/content/Botones/PNIluminado.png"));
         PN = new Botón(iconos, 2, Botón.TipoBotón.PN);
-        setBackground(Color.blue);
         JButton Conex = new JButton();
         Conex.addActionListener((arg0) -> 
         {
@@ -87,8 +87,8 @@ public class Repetidor extends JPanel {
         });
         basico.setIcon(new ImageIcon(getClass().getResource("/content/Botones/Basico.png")));
         basico.setSelectedIcon(new ImageIcon(getClass().getResource("/content/Botones/BasicoIluminado.png")));
-        basico.setOpaque(false);
-        basico.setContentAreaFilled(false);
+        basico.setBackground(new Color(0,124,176));
+        basico.setContentAreaFilled(true);
         basico.setBorderPainted(false);
         
         luces_basico = new Luces();
@@ -115,9 +115,11 @@ public class Repetidor extends JPanel {
         add(AumVel, gbc);
         gbc.gridx=0;
         gbc.gridy++;
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(0,0,0,0);
         add(basico, gbc);
         gbc.insets = new Insets(5,5,5,5);
+        gbc.fill = GridBagConstraints.NONE;
         gbc.gridx++;
         gbc.gridx++;
         add(Alarma, gbc);

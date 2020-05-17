@@ -31,7 +31,7 @@ public class CombinadorGeneral extends JDialog {
 		setTitle("Combinador General");
 		setLayout(new GridBagLayout());
 		setBackground(Color.blue);
-		getContentPane().setBackground(Color.blue);
+        getContentPane().setBackground(new Color(0, 83, 135));
 		GridBagConstraints g = new GridBagConstraints();
 		g.gridy=0;
 		SelectorTipo tipo = new SelectorTipo();

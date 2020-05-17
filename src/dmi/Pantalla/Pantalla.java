@@ -108,7 +108,9 @@ public class Pantalla extends JPanel {
         pane.add(info);
         vreal = new Velocidad(Color.black, Color.white);
         vreal.LeadingZeros = Main.dmi.fabricante.equals("DIMETRONIC");
-        vreal.setBounds(getScale(16), getScale(41), getScale(75), getScale(31));
+        vreal.setBounds(getScale(16), getScale(42), getScale(75), getScale(31));
+        vreal.Center = false;
+        vreal.construct();
         pane.add(vreal);
         vtarget = new VelocidadObjetivo();
         vtarget.setBounds(getScale(106), getScale(39), getScale(165), getScale(72));

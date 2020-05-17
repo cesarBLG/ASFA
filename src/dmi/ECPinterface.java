@@ -59,6 +59,7 @@ public class ECPinterface {
 			subscribe("asfa::leds::*");
 			subscribe("asfa::fabricante");
 			subscribe("asfa::pantalla::iniciar");
+			subscribe("asfa::pantalla::apagar");
 			while(true)
 			{
 				String s = readData();
@@ -176,6 +177,10 @@ public class ECPinterface {
 				else if(s.startsWith("asfa::pantalla::iniciar="))
 				{
 					dmi.pantalla.start();
+				}
+				else if(s.startsWith("asfa::pantalla::apagar="))
+				{
+	        		dmi.pantalla.poweroff();
 				}
 				else if(s.startsWith("asfa::pulsador::conex="))
 				{

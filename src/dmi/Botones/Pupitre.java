@@ -24,7 +24,8 @@ public class Pupitre extends JPanel {
         AnPar = new Botón(anparic, 2, Botón.TipoBotón.AnPar);
         AnPre = new Botón(anpreic, 2, Botón.TipoBotón.AnPre);
         PrePar = new Botón(preparvlic, 3, Botón.TipoBotón.PrePar);
-        setBackground(Color.blue);
+        //setBackground(Color.blue);
+        setOpaque(false);
         GridBagConstraints g = new GridBagConstraints();
         g.insets = new Insets(10,20,10,20);
         g.gridy = 0;

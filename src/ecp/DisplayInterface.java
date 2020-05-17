@@ -177,7 +177,6 @@ public class DisplayInterface {
                 write("asfa::indicador::frenado", state);
                 break;
             case "Urgencia":
-                write("asfa::emergency", state);
                 write("asfa::indicador::urgencia", state);
                 break;
             case "Paso Desvío":
@@ -221,6 +220,10 @@ public class DisplayInterface {
     {
     	if (Main.ASFA.basico) return;
     	orclient.sendData("noretain(asfa::pantalla::iniciar=1)");
+    }
+    public void apagar()
+    {
+    	orclient.sendData("noretain(asfa::pantalla::apagar=1)");
     }
     public void set(int num, int errno)
     {

@@ -76,7 +76,7 @@ public class ÚltimaInfo extends JPanel {
         for (int i = 0; i < num; i++) {
             iconos[i] = new Icono(true, Info.values()[i].name().concat(".png"));
         }
-        setInfo(Info.Desconocido, false);
+        setInfo(Info.Vía_libre, false);
     }
 
     public void update() {

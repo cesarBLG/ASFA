@@ -52,13 +52,17 @@ public class OR_Client {
 			subscribe("asfa::frecuencia");
 			subscribe("asfa::div");
 			subscribe("asfa::selector_tipo");
+			subscribe("asfa::akt");
+			subscribe("asfa::con");
 			subscribe("asfa::pulsador::*");
 			subscribe("speed");
 			subscribe("simulator_time");
+			sendData("asfa::cg=1");
 			while(true)
 			{
 				String s = readData();
 				if(s==null) return;
+				if (s.equals("register(asfa::cg)")) sendData("asfa::cg=1");
 				int index = s.indexOf('=');
 				if (index < 0) continue;
 				String[] topics = s.substring(0, index).split("::");
@@ -110,6 +114,14 @@ public class OR_Client {
 						Main.ASFA.div.add(b);
 					}
 				}
+				else if(s.startsWith("asfa::akt="))
+				{
+					Main.ASFA.AKT = val.equals("1");
+				}
+				else if(s.startsWith("asfa::con="))
+				{
+					Main.ASFA.CON = !val.equals("0");
+				}
 				else if(s.startsWith("asfa::selector_tipo="))
 				{
 					int speed = Integer.parseInt(val);
@@ -122,7 +134,7 @@ public class OR_Client {
 					else if (speed > 90) selectorT = 3;
 					else if (speed > 80) selectorT = 2;
 					else if (speed > 0) selectorT = 1;
-					Main.ASFA.selectorT = selectorT;
+					if (Main.ASFA.selectorT == 0 && selectorT != 0) Main.ASFA.selectorT = selectorT;
 				}
 			}
 		}).start();

@@ -24,7 +24,8 @@ public class Luces extends JPanel {
 	JLabel multi;
 	public Luces()
 	{
-		setOpaque(false);
+		setOpaque(true);
+        setBackground(new Color(0,124,176));
 		eficacia = new JLabel();
         eficacia.setDisabledIcon(new ImageIcon(getClass().getResource("/content/LED/Apagado.png")));
 		eficacia.setIcon(new ImageIcon(getClass().getResource("/content/LED/Eficacia.png")));

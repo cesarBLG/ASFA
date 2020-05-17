@@ -40,7 +40,6 @@ public class DMI extends JFrame {
 
     public DMI() {
         Main.dmi = this;
-        ecp = new ECPinterface(this);
     	if(singleScreen)
     	{
     		setUndecorated(true);
@@ -126,9 +125,10 @@ public class DMI extends JFrame {
         g.gridx = 0;
         g.gridwidth = 1;
         if(!singleScreen) add(cg, g);
-        getContentPane().setBackground(Color.blue);
+        getContentPane().setBackground(new Color(0, 83, 135));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
+        ecp = new ECPinterface(this);
         setVisible(true);
     	try {
 			Thread.sleep(1000);

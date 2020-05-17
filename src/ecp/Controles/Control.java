@@ -19,7 +19,7 @@ public abstract class Control {
     public int ASFA_version;
     boolean modoRAM;
     public ASFA.Modo Modo;
-    boolean basico = false;
+    public boolean basico = false;
     public boolean Velado = false;
     
     public Control(double t0, double d0, double tv, double dv, TrainParameters param) {
