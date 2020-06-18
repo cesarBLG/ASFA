@@ -62,7 +62,7 @@ public class OR_Client {
 			{
 				String s = readData();
 				if(s==null) return;
-				if (s.equals("register(asfa::cg)")) sendData("asfa::cg=1");
+				if (s.equals("register(asfa::cg)") || s.equals("register(asfa::*")) sendData("asfa::cg=1");
 				int index = s.indexOf('=');
 				if (index < 0) continue;
 				String[] topics = s.substring(0, index).split("::");

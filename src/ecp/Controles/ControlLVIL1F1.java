@@ -4,8 +4,6 @@ import ecp.ASFA;
 
 public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
 
-    private boolean AumentoVelocidad = false;
-
     public ControlLVIL1F1(double time, TrainParameters param) {
         super(time, param);
         Curvas();

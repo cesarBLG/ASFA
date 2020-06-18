@@ -104,6 +104,11 @@ public class ASFA {
             }
         });
         t.start();
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                display.write("asfa::cg", 0);
+            }
+        });
     }
 
     public void Initialize()
@@ -369,6 +374,8 @@ public class ASFA {
     	
     	//TODO: Enviar datos a registrador jurídico
     	
+    	FE &= !AKT;
+    	
     	if (FE != prevFE)
     	{
     		PaqueteRegistro.estado_urgencia();
@@ -395,9 +402,7 @@ public class ASFA {
 	    	{
 	    		display.botones.get(b).lector = null;
 	    	}
-	    	Controles.clear();
-	    	ControlesLVI.clear();
-	    	ControlesPN.clear();
+	    	Initialize();
         } else if (!AKT && CON && modo == Modo.EXT) {
     		modo = modoRAM ? Modo.RAM : (modoCONV ? Modo.CONV : Modo.AV);
 			param.Modo = modo;
@@ -441,6 +446,7 @@ public class ASFA {
 		        c.basico = basico && !curvasBasicoDigital;
 				c.Curvas();
 			}
+			PaqueteRegistro.modo();
 		}
 		if (!basico) display.iluminar(TipoBotón.Modo, MpS.ToKpH(Odometer.getSpeed())<5);
 		else display.iluminar(TipoBotón.Modo, modo == Modo.AV);
@@ -714,8 +720,9 @@ public class ASFA {
         	if (VeloActivo && VeloEliminable)
         	{
         		VeloActivo = false;
+        		PaqueteRegistro.ocultacion(1, false);
         	}
-        	else Velo();
+        	else if (!VeloActivo) Velo();
         }
         actualizarEstado();
     }
@@ -1051,11 +1058,8 @@ public class ASFA {
                     UltimaInfo = Info.Anuncio_parada;
                     Velo();
                     addControlSeñal(new ControlAnuncioParada(0, param));
-                }
-                for (Control c : Controles) {
-                    if (c instanceof ControlSecuenciaAN_A) {
-                        addControlSeñal(ControlSeñal);
-                    }
+                } else if (ControlSeñal instanceof ControlSecuenciaAN_A) {
+                	addControlSeñal(ControlSeñal);
                 }
             }
     	}
@@ -1149,6 +1153,7 @@ public class ASFA {
                     			}
                     			if(display.pulsado(TipoBotón.PN, RecPNStart))
                     			{
+                                    display.stopSound("S2-1");
                                     display.startSound("S2-5");
                     				((ControlPNDesprotegido) c).Rec = true;
                     				RecPNStart = 0;
@@ -1314,6 +1319,7 @@ public class ASFA {
     	}
     	VeloActivo = true;
     	UltimaInfo = Info.Vía_libre;
+		PaqueteRegistro.ocultacion(1, true);
     }
     
     double inicioParada = -1;
@@ -1468,6 +1474,9 @@ public class ASFA {
         if(estadoInicio != 0)
         {
             display.display("Eficacia", Eficacia ? 1 : 0);
+            display.display("Tipo", 0);
+            display.display("EstadoVobj", 0);
+            display.display("Modo", -1);
         	display.display("Velocidad", T);
         	return;
         }
@@ -1486,6 +1495,7 @@ public class ASFA {
         boolean PNdesp = false;
         boolean parpPN = false;
         boolean parpInfo = false;
+        Info infoMostrada = UltimaInfo;
         for (Control c : Controles) {
         	if (c.Velado) continue;
             if (c instanceof ControlPasoDesvío) {
@@ -1509,6 +1519,11 @@ public class ASFA {
             {
             	ControlSeñalParada csp = (ControlSeñalParada) c;
             	if(csp.recStart != -1) parpInfo = true;
+            	infoMostrada = csp.conRebase ? Info.Rebase : Info.Parada;
+            }
+            if(c instanceof ControlPreviaSeñalParada)
+            {
+            	infoMostrada = Info.Parada;
             }
         }
         display.display("Paso Desvío", Desv ? 1 : 0);
@@ -1532,7 +1547,7 @@ public class ASFA {
         display.display("EstadoVobj", targetdisplay);
         double vel = MpS.ToKpH(Odometer.getSpeed());
         display.display("Velocidad", vel < 0.3 ? 0 : (int) Math.ceil(vel-0.01f));
-        display.display("Info", UltimaInfo.ordinal()<<1 | (parpInfo ? 1 : 0));
+        display.display("Info", infoMostrada.ordinal()<<1 | (parpInfo ? 1 : 0));
         display.display("Velo", VeloActivo ? 1 : 0);
     }
 
@@ -1651,7 +1666,9 @@ public class ASFA {
         }
         Controles.removeAll(Caducados);
         if (modo != Modo.RAM && (!basico || curvasBasicoDigital) && AnteriorControlSeñal instanceof ControlPreanuncioParada && c instanceof ControlAnuncioParada) {
-            c = new ControlSecuenciaAN_A(Clock.getSeconds(), param, ((ControlPreanuncioParada) ((AnteriorControlSeñal instanceof ControlPreanuncioParada) ? AnteriorControlSeñal : null)).AumentoVelocidad, SigNo == 0);
+        	boolean aumento = ((ControlPreanuncioParada)AnteriorControlSeñal).AumentoVelocidad;
+        	if (!aumento && SigNo != 0 && ControlSeñal instanceof ControlSecuenciaAN_A) c = ControlSeñal;
+        	else c = new ControlSecuenciaAN_A(TiempoUltimaRecepcion, param, aumento, SigNo == 0);
         }
         c.TiempoRec = Clock.getSeconds();
         if(c instanceof ControlReanudo)

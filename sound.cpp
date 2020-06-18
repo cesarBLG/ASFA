@@ -56,18 +56,18 @@ string fabricante = "INDRA";
 
 ParameterManager manager;
 client *s_client;
-
+string path = "src/content/Sonido/";
 void cargar_sonidos()
 {
     sndbuf.clear();
     for(int i=0; i<15; i++)
     {
         {
-            string s = "src/content/Sonido/"+fabricante+"/"+sonidos[i]+".wav";
+            string s = path+fabricante+"/"+sonidos[i]+".wav";
             Mix_Chunk *m = Mix_LoadWAV(s.c_str());
             if (m == nullptr)
             {
-                string s = "src/content/Sonido/INDRA/";
+                string s = path+"INDRA/";
                 s+=sonidos[i];
                 s+=".wav";
                 m = Mix_LoadWAV(s.c_str());
@@ -76,11 +76,11 @@ void cargar_sonidos()
             
         }
         {
-            string s = "src/content/Sonido/"+fabricante+"/Basico/"+sonidos[i]+".wav";
+            string s = path+fabricante+"/Basico/"+sonidos[i]+".wav";
             Mix_Chunk *m = Mix_LoadWAV(s.c_str());
             if (m == nullptr)
             {
-                string s = "src/content/Sonido/INDRA/Basico/";
+                string s = path+"INDRA/Basico/";
                 s+=sonidos[i];
                 s+=".wav";
                 m = Mix_LoadWAV(s.c_str());

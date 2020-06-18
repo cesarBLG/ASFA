@@ -148,7 +148,13 @@ public class ECPinterface {
 				}
 				else if (s.startsWith("asfa::indicador::modo="))
 				{
-	            	dmi.pantalla.ModoASFA.update(Modo.values()[Integer.parseInt(val)]);
+					int num = Integer.parseInt(val);
+					if (num < 0)
+					{
+						dmi.pantalla.ModoASFA.setText("");
+						dmi.pantalla.ModoASFA.update();
+					}
+					else dmi.pantalla.ModoASFA.update(Modo.values()[num]);
 				}
 				else if (s.startsWith("asfa::indicador::tipo_tren="))
 				{

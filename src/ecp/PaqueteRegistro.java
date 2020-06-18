@@ -19,7 +19,9 @@ import ecp.Controles.ControlAnuncioParada;
 import ecp.Controles.ControlAnuncioPrecaución;
 import ecp.Controles.ControlArranque;
 import ecp.Controles.ControlAumentable;
+import ecp.Controles.ControlBTS;
 import ecp.Controles.ControlLVI;
+import ecp.Controles.ControlManiobras;
 import ecp.Controles.ControlPNDesprotegido;
 import ecp.Controles.ControlPasoDesvío;
 import ecp.Controles.ControlPreanuncioParada;
@@ -91,8 +93,8 @@ public class PaqueteRegistro
 			codigos.put(0xFF13,"Tipo de tren");
 			codigos.put(0xFF14,"Modo de funcionamiento");
 			codigos.put(0xFF20,"Freno de emergencia");
-			codigos.put(0xFFF0,"Baliza recibida");
-			codigos.put(0xFFF1,"Control activo");
+			codigos.put(0xFF42,"Ocultación cab 1");
+			codigos.put(0xFF43,"Ocultación cab 2");
 			codigos.put(0xFF50,"Interruptor ASFA básico cab 1");
 			codigos.put(0xFF51,"Interruptor ASFA básico cab 2");
 			codigos.put(0xFF52,"Pulsador anuncio parada cab 1");
@@ -119,6 +121,9 @@ public class PaqueteRegistro
 			codigos.put(0xFF67,"Pulsador reconocimiento LVI cab 2");
 			codigos.put(0xFF68,"Pulsador conexión cab 1");
 			codigos.put(0xFF69,"Pulsador conexión cab 2");
+			codigos.put(0xFFF0,"Baliza recibida");
+			codigos.put(0xFFF1,"Control activo");
+			codigos.put(0xFFF2,"Indicación acústica");
 			try {
 				File f = new File("registro.cls");
 				FileWriter f2 = new FileWriter("registro.csv");
@@ -293,8 +298,11 @@ public class PaqueteRegistro
 		else if (c instanceof ControlZonaLimiteParada) num = 14;
 		else if (c instanceof ControlPasoDesvío) num = 15;
 		else if (c instanceof ControlLVI) num = 16;
+		else if (c instanceof ControlBTS) num = 30;
+		else if (c instanceof ControlManiobras) num = 31;
 		//else if (c instanceof ControlCambioSeñalizacion) num = 17; TODO
 		if (c instanceof ControlAumentable && ((ControlAumentable) c).Aumentado()) num += 32;
+		else if (c instanceof ControlLVI && ((ControlLVI)c).AumentoVelocidad) num += 32;
 		add(0xFFF1, num);
 	}
 	static void pulsador(TipoBotón pulsador, int display, boolean pulsado)
@@ -345,5 +353,30 @@ public class PaqueteRegistro
 		}
 		if(display == 2) num++;
 		add(num, pulsado ? 1 : 0);
+	}
+	static void sonido(String snd, boolean basic)
+	{
+		int num=0;
+		if (snd.equals("S1-1")) num = 1;
+		else if (snd.equals("S2-1")) num = 2;
+		else if (snd.equals("S2-2")) num = 3;
+		else if (snd.equals("S2-3")) num = 4;
+		else if (snd.equals("S2-4")) num = 5;
+		else if (snd.equals("S2-5")) num = 6;
+		else if (snd.equals("S2-6")) num = 7;
+		else if (snd.equals("S3-1")) num = 8;
+		else if (snd.equals("S3-2")) num = 9;
+		else if (snd.equals("S3-3")) num = 10;
+		else if (snd.equals("S3-4")) num = 11;
+		else if (snd.equals("S3-5")) num = 12;
+		else if (snd.equals("S4")) num = 14;
+		else if (snd.equals("S5")) num = 15;
+		else if (snd.equals("S6")) num = 16;
+		if (basic) num += 32;
+		add(0xFFF2, num);
+	}
+	static void ocultacion(int display, boolean activo)
+	{
+		add(display == 2 ? 0xFF43 : 0xFF42, activo ? 1 : 0);
 	}
 }

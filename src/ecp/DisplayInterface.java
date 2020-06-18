@@ -8,7 +8,6 @@ import javax.swing.JOptionPane;
 
 import com.COM;
 import com.OR_Client;
-import com.TCP;
 
 import dmi.Sonidos;
 import dmi.Botones.Botón;
@@ -53,14 +52,11 @@ class EstadoBotón {
 }
 
 public class DisplayInterface {
-    TCP OR2 = new TCP();
     OR_Client orclient;
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
 
     void write(int num, int data) {
         COM.parse(num, data);
-        byte[] b = new byte[]{(byte) num, (byte) data, (byte) 0xFF};
-        OR2.write(b);
     }
 
     byte controlByte(int n1, int n2) {
@@ -74,7 +70,6 @@ public class DisplayInterface {
     }
 
     public DisplayInterface() {
-    	OR2.initialize();
     	orclient = new OR_Client();
     }
 
@@ -237,10 +232,12 @@ public class DisplayInterface {
     public void startSound(String num, boolean basic)
     {
         orclient.sendData("noretain(asfa::sonido::iniciar=" + num + "," + (basic ? 1 : 0) + ")");
+        PaqueteRegistro.sonido(num, basic);
     }
     public void stopSound(String num)
     {
         orclient.sendData("noretain(asfa::sonido::detener="+num+")");
+        PaqueteRegistro.sonido("", false);
     }
     public void write(String fun, int val)
     {

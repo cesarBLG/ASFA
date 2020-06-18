@@ -27,7 +27,7 @@ public class TipoTren extends JLabel {
     }
 
     public void set(int T) {
-        tipo = "T".concat(Integer.toString(T));
+        tipo = T==0 ? "" : "T".concat(Integer.toString(T));
         update();
     }
 

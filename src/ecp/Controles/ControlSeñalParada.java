@@ -13,6 +13,7 @@ public class ControlSeñalParada extends ControlFASF implements ControlAumentabl
 
     public ControlSeñalParada(TrainParameters param, double time, double dist, boolean conRebase) {
         super(time, dist, 20, 0, param);
+        this.conRebase = conRebase;
         Curvas();
     }
 

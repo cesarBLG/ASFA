@@ -65,7 +65,7 @@ public class ControlSecuenciaAN_A extends ControlFASF implements ControlReanudo 
         }
 		if (Modo == ASFA.Modo.AV) {
             if (!AnteriorAumVel) {
-                if(FirstBalise)
+                if(FirstBalise || ASFA_version < 3)
     			{
     				if (O >= 100) {
                         IF = new Curva(103);

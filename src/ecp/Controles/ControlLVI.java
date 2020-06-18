@@ -4,6 +4,8 @@ public class ControlLVI extends Control implements ControlReanudo {
 
     public boolean Reached = false;
 
+    public boolean AumentoVelocidad = false;
+    
     public final boolean isReached(double time, double speed) {
         if (Reached) {
             return true;
