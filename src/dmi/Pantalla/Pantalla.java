@@ -146,7 +146,7 @@ public class Pantalla extends JPanel {
     public void set(ModoDisplay m) {
         modo = m;
         setBackground(modo == ModoDisplay.Noche ? Color.black : Color.white);
-        vreal.setValue(vreal.value);
+        vreal.update();
         info.update();
         vtarget.update();
         eficacia.switchstate();

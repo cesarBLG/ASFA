@@ -64,7 +64,6 @@ public class Repetidor extends JPanel {
         	Main.dmi.ecp.enviarPulsacion(TipoBotón.Conex, !Main.dmi.activo);
         	if(Main.dmi.activo)
         	{
-        		Main.dmi.pantalla.poweroff();
         		Main.dmi.activo = false;
         	}
         });
@@ -75,15 +74,7 @@ public class Repetidor extends JPanel {
         basico = new JButton();
         basico.addActionListener((arg0) -> {
         	basico.setSelected(!basico.isSelected());
-        	if (basico.isSelected())
-        	{
-        		Main.dmi.ecp.enviarPulsacion(TipoBotón.ASFA_básico, true);
-        		Main.dmi.pantalla.poweroff();
-        	}
-        	else
-        	{
-        		Main.dmi.ecp.enviarPulsacion(TipoBotón.ASFA_básico, false);
-        	}
+        	Main.dmi.ecp.enviarPulsacion(TipoBotón.ASFA_básico, basico.isSelected());
         });
         basico.setIcon(new ImageIcon(getClass().getResource("/content/Botones/Basico.png")));
         basico.setSelectedIcon(new ImageIcon(getClass().getResource("/content/Botones/BasicoIluminado.png")));

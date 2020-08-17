@@ -4,9 +4,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 
 import com.COM;
+import com.OR_Client;
 
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.TipoBotón;
@@ -26,26 +32,7 @@ public class ECPinterface {
 	{
 		this.dmi = dmi;
 		new Thread(() -> {
-			while(s==null)
-			{
-				try
-				{
-					s = new Socket("localhost", 5090);
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
-			}
-			while(!s.isConnected()) 
-			{
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			s = OR_Client.getSocket();
 			try {
 				in = new BufferedReader(new InputStreamReader(s.getInputStream()));
 				out = s.getOutputStream();
@@ -94,7 +81,7 @@ public class ECPinterface {
 				}
 				else if (s.startsWith("asfa::indicador::v_control="))
 				{
-	            	dmi.pantalla.vtarget.val = Integer.parseInt(val);
+	            	dmi.pantalla.vtarget.veloc.value = Integer.parseInt(val);
 	            	dmi.pantalla.vtarget.update();
 				}
 				else if (s.startsWith("asfa::indicador::estado_vcontrol="))

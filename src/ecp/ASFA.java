@@ -157,37 +157,8 @@ public class ASFA {
     public synchronized void Conex() {
     	if (Connected || averia) return;
     	Initialize();
-    	try
-    	{
-    		FileReader fileReader = new FileReader("config.ini");
-    		BufferedReader bufferedReader = new BufferedReader(fileReader);
-    		String line = bufferedReader.readLine();
-    		while (line != null)
-    		{
-    			String[] token = line.trim().split("=");
-    			if (token.length == 2)
-    			{
-        			if (token[0].trim().equalsIgnoreCase("fabricante"))
-        			{
-        				String fabr = token[1].trim();
-        				int c1 = fabr.indexOf('"');
-        				if (c1 >= 0) fabr = fabr.substring(c1+1);
-        				int c2 = fabr.lastIndexOf('"');
-        				if (c2 >= 0) fabr = fabr.substring(0, c2);
-        				display.write("asfa::fabricante", fabr.toUpperCase());
-        			}
-        			else if (token[0].trim().equalsIgnoreCase("version"))
-        			{
-        				ASFA_version = Integer.parseInt(token[1].trim());
-        			}
-    			}
-        		line = bufferedReader.readLine();
-    		}
-    		bufferedReader.close();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		display.write("asfa::fabricante", Config.Fabricante);
+		ASFA_version = Config.Version;
     	try
     	{
     		FileReader fileReader = new FileReader("div.ini");
@@ -321,6 +292,7 @@ public class ASFA {
     public void Desconex()
     {
     	ApagarSonidos();
+		display.apagar();
     	display.iluminarTodos(false);
     	for (TipoBotón b : TipoBotón.values())
     	{
@@ -331,6 +303,11 @@ public class ASFA {
     	PaqueteRegistro.apagado();
     	Clock.reset_local_time();
         display.orclient.sendData("asfa::emergency=0");
+        try {
+			Runtime.getRuntime().exec("sudo shutdown -h now");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
     private Control ControlTransitorio;
     private Control ControlSeñal;
@@ -425,7 +402,7 @@ public class ASFA {
 		
 		if (Odometer.getSpeed() < 5/3.6f && basico != display.pressed(TipoBotón.ASFA_básico))
 		{
-			basico = !basico;
+			basico = display.pressed(TipoBotón.ASFA_básico);
 	        if(modoRAM) T = 40 + selectorT * 10;
 	        else T = selectorT<3 ? (70 + selectorT * 10) : (40 + selectorT * 20);
 	        T = Math.min(T, Vmax);
@@ -439,6 +416,10 @@ public class ASFA {
 	        	display.led_basico(0, 0);
 	        	display.led_basico(1, 0);
 	        	display.led_basico(2, 0);
+	        }
+	        else
+	        {
+	        	display.apagar();
 	        }
 			for(Control c : Controles)
 			{
@@ -526,6 +507,9 @@ public class ASFA {
             		Controles.removeAll(bad);
             		if (ControlesGuardados.modo != Modo.CONV && ControlesGuardados.modo != Modo.AV && ControlesGuardados.modo != Modo.RAM)
             		{
+            			ControlSeñal = AnteriorControlSeñal = null;
+            	        SigNo = 2;
+            	        PrevDist = 0;
             			Controles.add(new ControlArranque(param));
             			UltimaInfo = Info.Desconocido;
             		}

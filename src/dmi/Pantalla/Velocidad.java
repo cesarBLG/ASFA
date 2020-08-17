@@ -15,7 +15,7 @@ import ecp.Main;
 
 public class Velocidad extends JPanel {
 
-    int value=-1;
+    public int value=-1;
     Color Night;
     Color Day;
 
@@ -68,9 +68,9 @@ public class Velocidad extends JPanel {
         setValue(0);
     }
 
-    public void setValue(int val) {
-    	if (value == val) return;
-        value = val;
+    public void update()
+    {
+
         int v1 = value / 100;
         int v2 = (value / 10) % 10;
         int v3 = value % 10;
@@ -96,5 +96,11 @@ public class Velocidad extends JPanel {
         	digitos[1].repaint(50);
         	digitos[2].repaint(50);
         }
+    }
+    
+    public void setValue(int val) {
+    	if (value == val) return;
+        value = val;
+        update();
     }
 }

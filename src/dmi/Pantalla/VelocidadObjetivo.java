@@ -12,22 +12,21 @@ import ecp.Main;
 
 public class VelocidadObjetivo extends JPanel {
 
-    Velocidad value;
+    public Velocidad veloc;
     JLabel Triángulo;
     JLabel Rectángulo;
     Icono IconoTriángulo;
     public int figureVisible;
-    public int val;
 
     public VelocidadObjetivo() {
         setLayout(null);
         setOpaque(false);
         setBorder(null);
-        value = new Velocidad(Color.white, Color.black);
-        value.setBounds(Main.dmi.pantalla.getScale(45), Main.dmi.pantalla.getScale(3), Main.dmi.pantalla.getScale(75), Main.dmi.pantalla.getScale(31));
-        value.Center = true;
-        value.construct();
-        add(value);
+        veloc = new Velocidad(Color.white, Color.black);
+        veloc.setBounds(Main.dmi.pantalla.getScale(45), Main.dmi.pantalla.getScale(3), Main.dmi.pantalla.getScale(75), Main.dmi.pantalla.getScale(31));
+        veloc.Center = true;
+        veloc.construct();
+        add(veloc);
         Rectángulo = new JLabel();
         Rectángulo.setBounds(Main.dmi.pantalla.getScale(42), Main.dmi.pantalla.getScale(0), Main.dmi.pantalla.getScale(81), Main.dmi.pantalla.getScale(37));
         add(Rectángulo);
@@ -40,18 +39,18 @@ public class VelocidadObjetivo extends JPanel {
 
     public void set(int visible, int val) {
         figureVisible = visible;
-        this.val = val;
+        veloc.value = val;
         update();
     }
 
     public void update() {
         if (figureVisible != 0) {
-            value.setValue(val);
-            value.setVisible(true);
+        	veloc.update();
+            veloc.setVisible(true);
             Rectángulo.setOpaque(true);
             Rectángulo.setBackground(Main.dmi.pantalla.modo == ModoDisplay.Noche ? new Color(221, 221, 221) : Color.black);
         } else {
-            value.setVisible(false);
+        	veloc.setVisible(false);
             Rectángulo.setOpaque(false);
         }
         if (figureVisible == 2) {

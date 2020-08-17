@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import dmi.Sonidos;
@@ -19,22 +22,39 @@ public class OR_Client {
 	Socket s;
 	OutputStream out;
 	BufferedReader in;
-	public OR_Client()
+	public static Socket getSocket()
 	{
-		new Thread(() -> {
-			while(s==null)
+		Socket s = null;
+		while(s==null)
+		{
+			String ip = "localhost";
+			try
 			{
-				try
-				{
-					s = new Socket("localhost", 5090);
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
+				DatagramSocket ds = new DatagramSocket(null);
+				ds.setBroadcast(true);
+				ds.bind(new InetSocketAddress("0.0.0.0", 5091));
+				ds.setSoTimeout(1000);
+				byte[] buff = new byte[50];
+				DatagramPacket packet = new DatagramPacket(buff, buff.length);
+				ds.receive(packet);
+				ip = packet.getAddress().getCanonicalHostName();
+				ds.close();
 			}
-			while(!s.isConnected()) 
+			catch (Exception e)
 			{
+				e.printStackTrace();
+			}
+			try
+			{
+				s = new Socket(ip, 5090);
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			if(s == null || !s.isConnected())
+			{
+				s = null;
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
@@ -42,6 +62,13 @@ public class OR_Client {
 					e.printStackTrace();
 				}
 			}
+		}
+		return s;
+	}
+	public OR_Client()
+	{
+		new Thread(() -> {
+			s = getSocket();
 			try {
 				in = new BufferedReader(new InputStreamReader(s.getInputStream()));
 				out = s.getOutputStream();

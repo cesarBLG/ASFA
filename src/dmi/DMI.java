@@ -3,6 +3,7 @@ package dmi;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -24,6 +25,7 @@ import dmi.Botones.Repetidor;
 import dmi.Pantalla.*;
 import dmi.Pantalla.ÚltimaInfo.Info;
 import ecp.ASFA;
+import ecp.Config;
 import ecp.FrecASFA;
 import ecp.Main;
 import ecp.Odometer;
@@ -34,16 +36,23 @@ public class DMI extends JFrame {
     public Repetidor repetidor;
     public Pupitre pupitre;
     public boolean singleScreen = false;
+    public boolean fullScreen = false;
     public boolean activo=false;
     public String fabricante = "DIMETRONIC";
     public ECPinterface ecp;
 
     public DMI() {
         Main.dmi = this;
+        singleScreen = Config.SoloPantalla;
+        fullScreen = Config.PantallaCompleta;
     	if(singleScreen)
     	{
     		setUndecorated(true);
         	//setExtendedState(JFrame.MAXIMIZED_BOTH);
+    	}
+    	if(fullScreen)
+    	{
+    		GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(this);
     	}
         setLayout(new GridBagLayout());
         GridBagConstraints g = new GridBagConstraints();
@@ -125,7 +134,7 @@ public class DMI extends JFrame {
         g.gridx = 0;
         g.gridwidth = 1;
         if(!singleScreen) add(cg, g);
-        getContentPane().setBackground(new Color(0, 83, 135));
+        getContentPane().setBackground(singleScreen ? Color.black : new Color(0, 83, 135));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         ecp = new ECPinterface(this);
