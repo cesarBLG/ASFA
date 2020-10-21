@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="19.6mm"
+   height="35.799927mm"
+   viewBox="0 0 19.6 35.799927"
+   version="1.1"
+   id="svg1506"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
+   sodipodi:docname="PNprot.svg">
+  <defs
+     id="defs1500" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="4"
+     inkscape:cx="71.538363"
+     inkscape:cy="93.97816"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     showgrid="false" />
+  <metadata
+     id="metadata1503">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Capa 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="opacity:0.994;fill:#000000;fill-opacity:1;stroke:#f8f8f8;stroke-width:0.399871;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect2069"
+       width="19.200129"
+       height="24.900129"
+       x="0.19993556"
+       y="0.19993564" />
+    <rect
+       style="opacity:0.994;fill:#000000;fill-opacity:1;stroke:#f8f8f8;stroke-width:0.4;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect2071"
+       width="1.6998546"
+       height="10.499855"
+       x="8.9500732"
+       y="25.100073" />
+    <path
+       id="rect2075"
+       style="opacity:0.994;fill:#008000;fill-opacity:1;stroke:none;stroke-width:2.30175;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 10.771484,10.394531 32.316406,31.9375 V 63.685547 L 10.771484,85.228516 H 24.134766 L 37.039062,72.324219 49.943359,85.228516 H 63.306641 L 41.763672,63.685547 V 31.9375 L 63.306641,10.394531 H 49.943359 L 37.039062,23.298828 24.134766,10.394531 Z"
+       transform="scale(0.26458333)" />
+  </g>
+</svg>
