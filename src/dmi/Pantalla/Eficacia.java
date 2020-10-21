@@ -7,6 +7,7 @@ import javax.swing.Timer;
 
 import dmi.DMI;
 import ecp.ASFA;
+import ecp.Main;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -15,16 +16,10 @@ import javax.swing.JOptionPane;
 public class Eficacia extends JLabel {
 
     int state = 0;
-    String Fase;
     boolean eficacia = false;
     Icono[] iconos;
 
-    public Eficacia(boolean Fase2) {
-        if (Fase2) {
-            Fase = "Eficacia/Fase2/";
-        } else {
-            Fase = "Eficacia/Fase1/";
-        }
+    public Eficacia() {
         Timer t = new Timer(500, new ActionListener() {
 
             @Override
@@ -36,12 +31,22 @@ public class Eficacia extends JLabel {
             }
         });
         iconos = new Icono[8];
+        create(false);
+        t.setRepeats(true);
+        t.start();
+    }
+    public void create(boolean Fase2)
+    {
+    	String Fase = "Eficacia/";
+        if (Fase2) {
+            Fase += "Fase2/";
+        } else {
+            Fase += "Fase1/";
+        }
         for (int i = 0; i < 8; i++) {
             iconos[i] = new Icono(true, Fase.concat(Integer.toString(i).concat(".png")));
         }
-        set(false);
-        t.setRepeats(true);
-        t.start();
+        if (eficacia) setIcon(iconos[state].getIcon());
     }
 
     public void set(boolean e) {

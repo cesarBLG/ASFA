@@ -79,11 +79,11 @@ public interface COM {
             {
             	pantalla.tipoTren.set(val);
             }*/
-            if (functn == 14)
+            /*if (functn == 14)
             {
             	if(val<3) pantalla.setup(val, null);
             	//if(val == 3) pantalla.start();
-            }
+            }*/
             /*if (functn == 16)
             {
             	pantalla.velo.setActivo(val == 1);

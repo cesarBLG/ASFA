@@ -3,6 +3,7 @@ package dmi;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -16,6 +17,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import com.COM;
 
@@ -25,6 +27,7 @@ import dmi.Botones.Repetidor;
 import dmi.Pantalla.*;
 import dmi.Pantalla.ÚltimaInfo.Info;
 import ecp.ASFA;
+import ecp.ASFA.Modo;
 import ecp.Config;
 import ecp.FrecASFA;
 import ecp.Main;
@@ -32,14 +35,14 @@ import ecp.Odometer;
 
 public class DMI extends JFrame {
 
-    public Pantalla pantalla;
+	public Pantalla pantalla;
     public Repetidor repetidor;
     public Pupitre pupitre;
     public boolean singleScreen = false;
     public boolean fullScreen = false;
     public boolean activo=false;
-    public String fabricante = "DIMETRONIC";
     public ECPinterface ecp;
+    public Modo modo;
 
     public DMI() {
         Main.dmi = this;
@@ -49,10 +52,6 @@ public class DMI extends JFrame {
     	{
     		setUndecorated(true);
         	//setExtendedState(JFrame.MAXIMIZED_BOTH);
-    	}
-    	if(fullScreen)
-    	{
-    		GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(this);
     	}
         setLayout(new GridBagLayout());
         GridBagConstraints g = new GridBagConstraints();
@@ -138,10 +137,6 @@ public class DMI extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         ecp = new ECPinterface(this);
-        setVisible(true);
-    	try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e1) {
-		}
+        if (!fullScreen) setVisible(true);
     }
 }

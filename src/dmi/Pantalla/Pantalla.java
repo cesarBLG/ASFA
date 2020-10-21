@@ -1,16 +1,24 @@
 package dmi.Pantalla;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
@@ -19,15 +27,16 @@ import javax.swing.Timer;
 
 import dmi.DMI;
 import ecp.ASFA;
+import ecp.Config;
 import ecp.Main;
 
-enum ModoDisplay {
-    Día,
-    Noche
-}
 
 public class Pantalla extends JPanel {
-    public ModoDisplay modo = ModoDisplay.Día;
+	public enum ModoDisplay {
+    	Día,
+    	Noche
+	}
+	public ModoDisplay modo = ModoDisplay.Día;
     public Velocidad vreal;
     public ÚltimaInfo info;
     public VelocidadObjetivo vtarget;
@@ -35,15 +44,18 @@ public class Pantalla extends JPanel {
     public InfoControles controles;
     public Intervención intervención;
     public ModeInfo ModoASFA;
-    JLabel linea;
+    public JLabel linea;
     public TipoTren tipoTren;
     public Velo velo;
     public float scale = 1.95f /*1.2f*/;
-    public boolean activa = true;
-
-    public int getScale(int val) {
+    public boolean activa = false;
+    public boolean conectada = false;
+    
+    static Color blanco = new Color(248, 248, 248);
+    
+    public int getScale(float val) {
     	
-    	return Main.dmi.singleScreen ? Math.round(val*scale) : val;
+    	return Math.round(Main.dmi.singleScreen ? val*scale : val);
     }
     public Pantalla() {
         setSize(getScale(350), getScale(263));
@@ -51,22 +63,82 @@ public class Pantalla extends JPanel {
         setMaximumSize(new Dimension(getScale(350), getScale(263)));
         setPreferredSize(new Dimension(getScale(350), getScale(263)));
         setBackground(Color.black);
+        this.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				set();
+			}
+			@Override
+			public void mouseEntered(MouseEvent arg0) {}
+			@Override
+			public void mouseExited(MouseEvent arg0) {}
+			@Override
+			public void mousePressed(MouseEvent arg0) {}
+			@Override
+			public void mouseReleased(MouseEvent arg0) {}});
     }
 
-    public void poweroff()
+    public void stop()
     {
-    	activa = false;
         setBackground(Color.black);
     	Main.dmi.ecp.unsubscribe("asfa::indicador::*");
+    	Main.dmi.ecp.unsubscribe("asfa::fase");
         removeAll();
         validate();
         repaint();
     }
     
+    public void splash_logytel()
+    {
+        removeAll();
+    	setLayout(new BorderLayout());
+    	JLabel j = new JLabel("Esperando comunicaciones con ECP ......");
+    	j.setForeground(Color.green);
+    	j.setHorizontalAlignment(JLabel.CENTER);
+    	add(j);
+    	validate();
+    	repaint();
+    }
+    
+    public void encender()
+    {
+    	if (Config.Fabricante.contentEquals("LOGYTEL")) splash_logytel();
+		Timer t = new Timer(0, (arg0) -> {
+	    	Main.dmi.ecp.subscribe("asfa::ecp::estado");
+		});
+		t.setRepeats(false);
+		t.start();
+    	if(Main.dmi.fullScreen)
+    	{
+    		GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(Main.dmi);
+    		Main.dmi.setVisible(true);
+    	}
+    }
+    
+    public void apagar()
+    {
+    	stop();
+		conectada = false;
+    	Main.dmi.ecp.unsubscribe("asfa::ecp::estado");
+    	Main.dmi.ecp.unsubscribe("asfa::pantalla::activa");
+    	if(Main.dmi.fullScreen)
+    	{
+    		Main.dmi.setVisible(false);
+    	}
+    }
+    
     public void setup(int state, String msg) {
         removeAll();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        JLabel j;
+        Date date = new Date();
+        DateFormat df = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+        JLabel j = new JLabel(df.format(date));
+        j.setForeground(Color.blue);
+        j.setAlignmentX(Component.CENTER_ALIGNMENT);
+        add(Box.createRigidArea(new Dimension(0, 5)));
+        add(j);
+        add(Box.createRigidArea(new Dimension(0, 5)));
         switch (state) {
             case 0:
                 j = new JLabel("ASFA OK");
@@ -75,29 +147,58 @@ public class Pantalla extends JPanel {
             case 1:
                 j = new JLabel("ASFA-operativo");
                 j.setForeground(Color.yellow);
+                msg = "<html>Fallo de comunicación con DIV<br/><center>Información redundante</center></html>";
                 break;
             default:
                 j = new JLabel("ASFA no operativo");
                 j.setForeground(Color.red);
+                msg = "Fallo de comunicación con DIV";
                 break;
         }
+        j.setFont(new Font(j.getFont().getName(), Font.PLAIN, getScale(20)));
+        j.setAlignmentX(Component.CENTER_ALIGNMENT);
         setBackground(Color.black);
         add(j);
-        JLabel m = new JLabel(msg);
-        m.setForeground(Color.white);
-        add(m);
-        Date date = new Date();
-        DateFormat df = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
-        j = new JLabel(df.format(date));
-
-        j.setForeground(Color.white);
+        add(Box.createRigidArea(new Dimension(0, 5)));
+        if (msg != null && !msg.isEmpty())
+        {
+            JLabel m = new JLabel(msg);
+            m.setAlignmentX(Component.CENTER_ALIGNMENT);
+            m.setHorizontalAlignment(JLabel.CENTER);
+            m.setForeground(Color.white);
+            m.setFont(new Font(m.getFont().getName(), Font.PLAIN, getScale(m.getFont().getSize())));
+            add(m);
+            add(Box.createRigidArea(new Dimension(0, 5)));
+        }
+        j = new JLabel("Versión Software EV V"+Config.Version);
+        j.setAlignmentX(Component.CENTER_ALIGNMENT);
+        j.setForeground(Color.gray);
+        j.setFont(new Font(j.getFont().getName(), Font.PLAIN, getScale(j.getFont().getSize())));
         add(j);
+        add(Box.createRigidArea(new Dimension(0, 5)));
+        j = new JLabel("Estado del Display OK");
+        j.setAlignmentX(Component.CENTER_ALIGNMENT);
+        j.setForeground(Color.green);
+        j.setFont(new Font(j.getFont().getName(), Font.PLAIN, getScale(j.getFont().getSize())));
+        add(j);
+        add(Box.createRigidArea(new Dimension(0, 5)));
+        
         validate();
+        repaint();
+        if (state == 0 || state == 1)
+        {
+    		Timer t = new Timer(1800, (arg0) -> {
+    			conectada = true;
+    			stop();
+    	    	Main.dmi.ecp.subscribe("asfa::pantalla::activa");
+    			Main.dmi.ecp.sendData("noretain(asfa::pantalla::conectada=1)");
+    		});
+    		t.setRepeats(false);
+    		t.start();
+        }
     }
 
     public void start() {
-    	Main.dmi.activo = true;
-    	activa = true;
         removeAll();
         setLayout(null);
         JLayeredPane pane = new JLayeredPane();
@@ -106,10 +207,10 @@ public class Pantalla extends JPanel {
         info = new ÚltimaInfo();
         info.setBounds(getScale(271), getScale(0), getScale(79), getScale(263));
         pane.add(info);
-        vreal = new Velocidad(Color.black, Color.white);
-        vreal.LeadingZeros = Main.dmi.fabricante.equals("DIMETRONIC");
+        vreal = new Velocidad(Color.black, blanco);
+        vreal.LeadingZeros = Config.Fabricante.equals("DIMETRONIC");
         vreal.setBounds(getScale(16), getScale(42), getScale(75), getScale(31));
-        vreal.Center = false;
+        vreal.Center = !Config.Fabricante.equals("DIMETRONIC");
         vreal.construct();
         pane.add(vreal);
         vtarget = new VelocidadObjetivo();
@@ -117,17 +218,17 @@ public class Pantalla extends JPanel {
         pane.add(vtarget);
         linea = new JLabel();
         linea.setOpaque(true);
-        linea.setBackground(Color.white);
+        linea.setBackground(blanco);
         linea.setBounds(getScale(16), getScale(73), getScale(213), getScale(3));
         pane.add(linea);
-        eficacia = new Eficacia(false);
+        eficacia = new Eficacia();
         eficacia.setBounds(getScale(16), getScale(202), getScale(19), getScale(19));
         pane.add(eficacia);
         tipoTren = new TipoTren();
-        tipoTren.setBounds(getScale(39), getScale(186), getScale(51), getScale(16));
+        tipoTren.setBounds(getScale(39), getScale(182), getScale(51), getScale(16));
         pane.add(tipoTren);
         ModoASFA = new ModeInfo();
-        ModoASFA.setBounds(getScale(39), getScale(208), getScale(51), getScale(16));
+        ModoASFA.setBounds(getScale(39), getScale(205), getScale(51), getScale(16));
         pane.add(ModoASFA);
         controles = new InfoControles();
         controles.setBounds(getScale(106), getScale(140), getScale(165), getScale(98));
@@ -139,20 +240,22 @@ public class Pantalla extends JPanel {
         velo.setBounds(0,0,getScale(350),getScale(263));
         pane.add(velo, new Integer(12));
     	Main.dmi.ecp.subscribe("asfa::indicador::*");
-        set(ModoDisplay.Noche);
+    	Main.dmi.ecp.subscribe("asfa::fase");
+        set(ModoDisplay.Día);
         repaint();
     }
 
     public void set(ModoDisplay m) {
+    	if (!activa) return;
         modo = m;
-        setBackground(modo == ModoDisplay.Noche ? Color.black : Color.white);
+        setBackground(modo == ModoDisplay.Noche ? Color.black : blanco);
         vreal.update();
         info.update();
         vtarget.update();
         eficacia.switchstate();
         ModoASFA.update();
         controles.update();
-        linea.setBackground(modo == ModoDisplay.Día ? Color.black : Color.white);
+        linea.setBackground(modo == ModoDisplay.Día ? Color.black : blanco);
         tipoTren.update();
     }
 

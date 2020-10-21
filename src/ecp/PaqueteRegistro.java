@@ -207,9 +207,9 @@ public class PaqueteRegistro
 	{
 		add(0xFF04, 1);
 	}
-	static void frecuencia(FrecASFA freq)
+	static void frecuencia(int freqHz)
 	{
-		add(0xFF05, freq.ordinal());//TODO frecuencia/500Hz
+		add(0xFF05, freqHz/500);
 	}
 	static void codigo_fallo(int codigo)
 	{

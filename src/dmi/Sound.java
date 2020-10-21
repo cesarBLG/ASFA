@@ -1,9 +1,13 @@
 package dmi;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -21,6 +25,7 @@ import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import ecp.Clock;
 import java.util.logging.Level;
@@ -34,7 +39,7 @@ public class Sound implements Runnable {
 
     public Sound()
     {
-    	SwingUtilities.invokeLater(() -> new Thread(this).start());
+    	new Thread(this).start();
     }
     public void Trigger(String s) {Trigger(s, false);}
     public void Trigger(String s, boolean basico) {
@@ -80,13 +85,20 @@ public class Sound implements Runnable {
     @Override
     public void run() {
     	try {
-			Thread.sleep(500);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	try {
-			Runtime.getRuntime().exec("./sound");
+			Process p = Runtime.getRuntime().exec("./sound");
+			new Thread(() -> {
+				try {
+					BufferedReader in = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+					String line;
+					while ((line = in.readLine()) != null) {
+					     System.out.println(line);
+					}
+				    in.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}).start();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

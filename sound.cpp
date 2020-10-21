@@ -165,6 +165,7 @@ void handle_sound(int num, bool basic, bool trig)
 {
     if (basic)
     {
+        return;
         if ((num > 1 && num <7) || num == 8) return;
     }
     int i=0;

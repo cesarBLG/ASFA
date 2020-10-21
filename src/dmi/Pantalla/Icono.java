@@ -1,15 +1,18 @@
 package dmi.Pantalla;
 
 import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
 
+import dmi.Pantalla.Pantalla.ModoDisplay;
 import ecp.ASFA;
 import ecp.Main;
 
 public class Icono {
-
+	
     ImageIcon[] iconos;
     boolean variable;
     
@@ -17,7 +20,7 @@ public class Icono {
     {
     	ImageIcon ic = new ImageIcon(location);
     	Image img = ic.getImage();
-    	Image newimg = img.getScaledInstance(Main.dmi.pantalla.getScale(img.getWidth(ic.getImageObserver())), Main.dmi.pantalla.getScale(img.getHeight(ic.getImageObserver())), java.awt.Image.SCALE_SMOOTH);
+    	Image newimg = img.getScaledInstance(Main.dmi.pantalla.getScale(img.getWidth(ic.getImageObserver())/4.3906f), Main.dmi.pantalla.getScale(img.getHeight(ic.getImageObserver())/4.3906f), java.awt.Image.SCALE_SMOOTH);
     	return new ImageIcon(newimg);
     }
     

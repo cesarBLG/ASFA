@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import javax.swing.Timer;
 
 import dmi.DMI;
+import dmi.Pantalla.Pantalla.ModoDisplay;
 import ecp.ASFA;
 import ecp.Main;
 
@@ -49,7 +50,7 @@ public class ÚltimaInfo extends JPanel {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 // TODO Auto-generated method stub
-            	if(info == Info.Vía_libre_condicional)
+            	/*if(info == Info.Vía_libre_condicional)
             	{
                     if (state) {
                         j.setIcon(iconos[Info.Vía_libre_condicional.ordinal()].getIcon());
@@ -65,7 +66,7 @@ public class ÚltimaInfo extends JPanel {
                         j.setIcon(iconos[Info.Vía_libre.ordinal()].getIcon());
                     }
             	}
-                state = !state;
+                state = !state;*/
             }
         });
         setLayout(null);

@@ -12,6 +12,7 @@ import com.OR_Client;
 import dmi.Sonidos;
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.*;
+import ecp.ASFA.Modo;
 
 class EstadoBotón {
 
@@ -19,6 +20,8 @@ class EstadoBotón {
     public boolean iluminado;
     public double startTime = 0;
     public double tiempoPulsar = 0.5;
+    public double siguientePulsacion = -1;
+    double rawPress = 0;
     Object lector;
     
     public EstadoBotón(boolean p, boolean i) {
@@ -29,7 +32,8 @@ class EstadoBotón {
     {
     	if(p == pulsado) return;
     	pulsado = p;
-    	if(pulsado && lector != null) startTime = Clock.getSeconds();
+    	rawPress = Clock.getSeconds();
+    	if(pulsado && lector != null && siguientePulsacion < Clock.getSeconds()) startTime = Clock.getSeconds();
     	else startTime = 0;
     }
     public void esperarPulsado(Object detector)
@@ -49,15 +53,20 @@ class EstadoBotón {
     	}
     	return val;
     }
+    public boolean averiado()
+    {
+    	return averiado(10);
+    }
+    public boolean averiado(double threshold)
+    {
+    	return (pulsado && rawPress + threshold < Clock.getSeconds());
+    }
 }
 
 public class DisplayInterface {
     OR_Client orclient;
+    public boolean pantallaconectada=false;
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
-
-    void write(int num, int data) {
-        COM.parse(num, data);
-    }
 
     byte controlByte(int n1, int n2) {
         int number = (n1 << 8) | n2;
@@ -103,7 +112,7 @@ public class DisplayInterface {
     public void iluminarTodos(boolean state) {
         TipoBotón[] t = TipoBotón.values();
         for (int i = 0; i < t.length; i++) {
-            iluminar(t[i], state);
+            if (t[i]!=TipoBotón.Conex && t[i]!=TipoBotón.ASFA_básico) iluminar(t[i], state);
         }
     }
 
@@ -192,6 +201,9 @@ public class DisplayInterface {
             case "Modo":
                 write("asfa::indicador::modo", state);
                 break;
+            case "ModoEXT":
+                write("asfa::indicador::tipo_tren", Modo.values()[state].name());
+                break;
             case "Tipo":
                 write("asfa::indicador::tipo_tren", state);
                 break;
@@ -211,19 +223,27 @@ public class DisplayInterface {
     	}
     }
     
+    /*public void poweron()
+    {
+    	if (Main.ASFA.basico) return;
+    	orclient.sendData("noretain(asfa::pantalla::encender=1)");
+    }*/
+    public boolean pantallaactiva=false;
     public void start()
     {
-    	if (Main.ASFA.basico) return;
-    	orclient.sendData("noretain(asfa::pantalla::iniciar=1)");
+    	pantallaactiva=true;
+    	orclient.sendData("asfa::pantalla::activa=1");
     }
-    public void apagar()
+    public void stop()
     {
-    	orclient.sendData("noretain(asfa::pantalla::apagar=1)");
+    	pantallaactiva=false;
+    	orclient.sendData("asfa::pantalla::activa=0");
     }
+    public int estadoecp = -1;
     public void set(int num, int errno)
     {
-    	if (Main.ASFA.basico) return;
-    	write(14, num);
+    	estadoecp = num;
+    	orclient.sendData("asfa::ecp::estado="+num);
     }
     public void startSound(String num)
     {

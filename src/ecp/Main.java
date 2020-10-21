@@ -24,8 +24,11 @@ public class Main {
 		}
     	if(args.length!=0) num = Integer.parseInt(args[0]);
     	else num = Config.Modo;
-        if(num!=2) ASFA = new ASFA();
+        if(num!=2)
+        {
+        	ASFA = new ASFA();
+        	new Sound();
+        }
     	if(num!=1) dmi = new DMI();
-    	Sound sound = new Sound();
     }
 }

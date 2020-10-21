@@ -7,7 +7,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import dmi.Pantalla.Pantalla.ModoDisplay;
 import ecp.ASFA;
+import ecp.Config;
 import ecp.Main;
 
 public class VelocidadObjetivo extends JPanel {
@@ -22,13 +24,14 @@ public class VelocidadObjetivo extends JPanel {
         setLayout(null);
         setOpaque(false);
         setBorder(null);
-        veloc = new Velocidad(Color.white, Color.black);
+        veloc = new Velocidad(Pantalla.blanco, Color.black);
         veloc.setBounds(Main.dmi.pantalla.getScale(45), Main.dmi.pantalla.getScale(3), Main.dmi.pantalla.getScale(75), Main.dmi.pantalla.getScale(31));
         veloc.Center = true;
         veloc.construct();
         add(veloc);
         Rectángulo = new JLabel();
-        Rectángulo.setBounds(Main.dmi.pantalla.getScale(42), Main.dmi.pantalla.getScale(0), Main.dmi.pantalla.getScale(81), Main.dmi.pantalla.getScale(37));
+        int fact = Config.Fabricante.equals("INDRA") ? 3 : 0;
+        Rectángulo.setBounds(Main.dmi.pantalla.getScale(42), Main.dmi.pantalla.getScale(fact), Main.dmi.pantalla.getScale(81), Main.dmi.pantalla.getScale(37-fact));
         add(Rectángulo);
         Triángulo = new JLabel();
         Triángulo.setBounds(Main.dmi.pantalla.getScale(0), Main.dmi.pantalla.getScale(0), Main.dmi.pantalla.getScale(165), Main.dmi.pantalla.getScale(72));

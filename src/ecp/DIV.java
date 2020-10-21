@@ -10,7 +10,7 @@ public class DIV {
     byte[] data = new byte[64];
 
     public byte[] getData() {
-        Timer t = new Timer(1000, new ActionListener() {
+        /*Timer t = new Timer(1000, new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent arg0) {
@@ -30,7 +30,7 @@ public class DIV {
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
+        }*/
         if(dataCount == 64)
         {
         	dataCount = 0;
@@ -46,10 +46,10 @@ public class DIV {
 
     public void add(byte b) {
         if(dataCount<64) data[dataCount++] = b;
-        if (dataCount == 64) {
+        /*if (dataCount == 64) {
             synchronized (this) {
                 notifyAll();
             }
-        }
+        }*/
     }
 }

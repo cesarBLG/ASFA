@@ -9,6 +9,7 @@ public class Config {
 	public static int Modo=0;
 	public static boolean SoloPantalla=false;
 	public static boolean PantallaCompleta=false;
+	public static boolean ApagarOrdenador=false;
 	public static void load()
 	{
     	try
@@ -50,6 +51,11 @@ public class Config {
         			{
         				String val = token[1].trim().toLowerCase();
         				PantallaCompleta = val.equals("true") || val.equals("1");
+        			}
+        			else if (token[0].trim().equalsIgnoreCase("apagarordenador"))
+        			{
+        				String val = token[1].trim().toLowerCase();
+        				ApagarOrdenador = val.equals("true") || val.equals("1");
         			}
     			}
         		line = bufferedReader.readLine();

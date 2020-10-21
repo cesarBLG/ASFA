@@ -11,13 +11,18 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 
+import javax.swing.Timer;
+
 import com.COM;
 import com.OR_Client;
 
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.TipoBotón;
+import dmi.Pantalla.Pantalla;
+import dmi.Pantalla.Pantalla.ModoDisplay;
 import dmi.Pantalla.ÚltimaInfo.Info;
 import ecp.Clock;
+import ecp.Config;
 import ecp.FrecASFA;
 import ecp.Main;
 import ecp.Odometer;
@@ -45,8 +50,6 @@ public class ECPinterface {
 			subscribe("asfa::pulsador::ilum::*");
 			subscribe("asfa::leds::*");
 			subscribe("asfa::fabricante");
-			subscribe("asfa::pantalla::iniciar");
-			subscribe("asfa::pantalla::apagar");
 			while(true)
 			{
 				String s = readData();
@@ -141,11 +144,42 @@ public class ECPinterface {
 						dmi.pantalla.ModoASFA.setText("");
 						dmi.pantalla.ModoASFA.update();
 					}
-					else dmi.pantalla.ModoASFA.update(Modo.values()[num]);
+					else
+					{
+						Modo m = Modo.values()[num];
+						if (m == Modo.EXT)
+						{
+							dmi.pantalla.linea.setVisible(false);
+							dmi.pantalla.vreal.setVisible(false);
+							dmi.pantalla.vtarget.setVisible(false);
+							dmi.pantalla.controles.setVisible(false);
+							dmi.pantalla.info.setVisible(false);
+							dmi.pantalla.velo.setVisible(false);
+							dmi.pantalla.intervención.setVisible(false);
+							dmi.pantalla.set(ModoDisplay.Noche);
+						}
+						else if (dmi.modo == Modo.EXT)
+						{
+							dmi.pantalla.linea.setVisible(true);
+							dmi.pantalla.vreal.setVisible(true);
+							dmi.pantalla.vtarget.setVisible(true);
+							dmi.pantalla.controles.setVisible(true);
+							dmi.pantalla.info.setVisible(true);
+							dmi.pantalla.velo.setVisible(true);
+							dmi.pantalla.intervención.setVisible(true);
+							dmi.pantalla.set(ModoDisplay.Día);
+						}
+						dmi.modo = m;
+						dmi.pantalla.ModoASFA.update(m);
+					}
 				}
 				else if (s.startsWith("asfa::indicador::tipo_tren="))
 				{
-					dmi.pantalla.tipoTren.set(Integer.parseInt(val));
+					try {
+						dmi.pantalla.tipoTren.set(Integer.parseInt(val));
+					} catch (Exception e) {
+						dmi.pantalla.tipoTren.set(val);
+					}
 				}
 				else if (s.startsWith("asfa::leds::"))
 				{
@@ -162,27 +196,52 @@ public class ECPinterface {
 				}
 				else if(s.startsWith("asfa::pulsador::basico="))
 				{
-					boolean bas = val.equals("1");
-					if (bas) 
-		        		dmi.pantalla.poweroff();
-					dmi.repetidor.basico.setSelected(bas);
+					dmi.repetidor.basico.setSelected(val.equals("1"));
 				}
-				else if(s.startsWith("asfa::pantalla::iniciar="))
+				else if(s.startsWith("asfa::ecp::estado="))
 				{
-					dmi.pantalla.start();
+					String[] spl = val.split(",");
+					dmi.pantalla.setup(Integer.parseInt(spl[0]), spl.length>1 ? spl[1] : "");
 				}
-				else if(s.startsWith("asfa::pantalla::apagar="))
+				else if(s.startsWith("asfa::pantalla::activa="))
 				{
-	        		dmi.pantalla.poweroff();
+					boolean act = val.equals("1");
+					if (act != dmi.pantalla.activa)
+					{
+						dmi.pantalla.activa = act;
+						if (dmi.pantalla.conectada)
+						{
+							if (act) dmi.pantalla.start();
+							else dmi.pantalla.stop();
+						}
+					}
 				}
 				else if(s.startsWith("asfa::pulsador::conex="))
 				{
-					if (!val.equals("1")) 
-		        		dmi.pantalla.poweroff();
+					if (!val.equals("1"))
+					{
+						dmi.activo = false;
+						dmi.pantalla.apagar();
+		        		if (Config.ApagarOrdenador)
+		        		{
+		        			try {
+								Runtime.getRuntime().exec("shutdown -h now");
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+		        		}
+					}
+					else
+					{
+						dmi.activo = true;
+						dmi.pantalla.encender();
+					}
 				}
-				else if (s.startsWith("asfa::fabricante="))
+				else if(s.startsWith("asfa::fase="))
 				{
-					dmi.fabricante = val;
+					boolean Fase2 = val.equals("2");
+					dmi.pantalla.eficacia.create(Fase2);
 				}
 			}
 		}).start();

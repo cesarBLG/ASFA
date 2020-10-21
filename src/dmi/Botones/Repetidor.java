@@ -62,10 +62,6 @@ public class Repetidor extends JPanel {
         Conex.addActionListener((arg0) -> 
         {
         	Main.dmi.ecp.enviarPulsacion(TipoBotón.Conex, !Main.dmi.activo);
-        	if(Main.dmi.activo)
-        	{
-        		Main.dmi.activo = false;
-        	}
         });
         Conex.setIcon(new ImageIcon(getClass().getResource("/content/Botones/Conex.png")));
         Conex.setOpaque(false);

@@ -9,6 +9,8 @@ import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import javax.swing.Timer;
+
 import dmi.Sonidos;
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.TipoBotón;
@@ -84,12 +86,16 @@ public class OR_Client {
 			subscribe("asfa::pulsador::*");
 			subscribe("speed");
 			subscribe("simulator_time");
+			subscribe("asfa::pantalla::conectada");
 			sendData("asfa::cg=1");
 			while(true)
 			{
 				String s = readData();
 				if(s==null) return;
-				if (s.equals("register(asfa::cg)") || s.equals("register(asfa::*")) sendData("asfa::cg=1");
+				if (matches(s, "asfa::cg")) sendData("asfa::cg=1");
+				if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (Main.ASFA.Fase2 ? "2" : "1"));
+				if (matches(s, "asfa::ecp::estado") && Main.ASFA.display.estadoecp != -1) sendData("asfa::ecp::estado=" + Main.ASFA.display.estadoecp);
+				if (matches(s, "asfa::pantalla::activa")) sendData("asfa::pantalla::activa=" + (Main.ASFA.display.pantallaactiva ? 1 : 0));
 				int index = s.indexOf('=');
 				if (index < 0) continue;
 				String[] topics = s.substring(0, index).split("::");
@@ -163,8 +169,27 @@ public class OR_Client {
 					else if (speed > 0) selectorT = 1;
 					if (Main.ASFA.selectorT == 0 && selectorT != 0) Main.ASFA.selectorT = selectorT;
 				}
+				else if(s.startsWith("asfa::pantalla::conectada="))
+				{
+					if (val.equals("1"))
+					{
+						Main.ASFA.display.pantallaconectada = true;
+					}
+				}
 			}
 		}).start();
+	}
+	static boolean matches(String topic, String var)
+	{
+		String[] t1 = topic.split("::");
+		String[] t2 = var.split("::");
+		for (int i=0; i<t1.length && i<t2.length; i++)
+		{
+			if (t1[i] == "*") return true;
+			if (t1[i] != "+" && !t1[i].equals(t2[i])) break;
+			if (i+1 == t1.length && t1.length == t2.length) return true;
+		}
+		return false;
 	}
 	void subscribe(String topic)
 	{
@@ -193,5 +218,9 @@ public class OR_Client {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	public boolean connected()
+	{
+		return out!=null;
 	}
 }

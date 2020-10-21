@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import javax.swing.JLabel;
 
+import dmi.Pantalla.Pantalla.ModoDisplay;
 import ecp.ASFA;
 import ecp.Main;
 
@@ -22,7 +23,7 @@ public class TipoTren extends JLabel {
         } catch(FontFormatException | IOException e) {
         	setFont(new Font("Arial Narrow", 1, Main.dmi.pantalla.getScale(15)));
         }
-        setForeground(Color.white);
+        setForeground(Pantalla.blanco);
         update();
     }
 
@@ -30,9 +31,14 @@ public class TipoTren extends JLabel {
         tipo = T==0 ? "" : "T".concat(Integer.toString(T));
         update();
     }
+    public void set(String text)
+    {
+        tipo = text;
+        update();
+    }
 
     public void update() {
-        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
+        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Pantalla.blanco);
         String t = "";
         for (int i=0; i<tipo.length(); i++)
         {

@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import javax.swing.JLabel;
 
+import dmi.Pantalla.Pantalla.ModoDisplay;
 import ecp.ASFA;
 import ecp.ASFA.Modo;
 import ecp.Main;
@@ -34,9 +35,9 @@ public class ModeInfo extends JLabel {
         	if (mod.length()>i+1) t += " ";
         }
         setText(t);
-        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
+        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Pantalla.blanco);
     }
     public void update() {
-        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Color.white);
+        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Pantalla.blanco);
     }
 }

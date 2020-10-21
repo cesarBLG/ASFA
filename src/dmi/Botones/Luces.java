@@ -22,6 +22,7 @@ public class Luces extends JPanel {
 	JLabel eficacia;
 	JLabel frenar;
 	JLabel multi;
+	Timer timer_luces;
 	public Luces()
 	{
 		setOpaque(true);
@@ -64,7 +65,7 @@ public class Luces extends JPanel {
 		g.gridy = 3;
 		g.gridwidth = 2;
 		add(labelasfa, g);
-		new Timer(500, new ActionListener() {
+		timer_luces = new Timer(500, new ActionListener() {
             boolean state = false;
 
             @Override
@@ -74,7 +75,7 @@ public class Luces extends JPanel {
                 if ((leds[2]&2) != 0) multi.setEnabled(state);
                 state = !state;
             }
-        }).start();
+        });
 	}
 	public void update(int led, int state)
 	{
@@ -86,6 +87,8 @@ public class Luces extends JPanel {
 			multi.setIcon(state > 2 ? rojo : verde);
 			multi.setEnabled(state!=0);
 		}
+		if (leds[0]==2 || leds[1]==2 || (leds[2]&2) != 0) timer_luces.start();
+		else timer_luces.stop();
 		repaint();
 	}
 }
