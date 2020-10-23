@@ -76,7 +76,7 @@ public class ASFA {
     double TiempoValidarFrecuencia = 0.001;
     double TiempoValidarFP = 0.05;
     double TiempoPerdidaFP = 0.05;
-    double TiempoAlarmaFrecNormal = 2; //Debería ser igual al tiempo de pérdida FP, se deja así por compatibilidad con simulador
+    double TiempoAlarmaFrecNormal = 0.5; //Debería ser igual al tiempo de pérdida FP, se deja así por compatibilidad con simulador
 
     double InicioRebase;
     boolean RebaseAuto;
@@ -102,11 +102,11 @@ public class ASFA {
 					}
             	}
                 while (true) {
-                    synchronized(this)
+                    synchronized(ASFA.this)
                     {
                     	Update();
                     	try {
-                        	wait(Connected ? (frecRecibida == UltimaFrecProcesada ? 20 : 1) : 500);
+                        	ASFA.this.wait(Connected ? (frecRecibida == UltimaFrecProcesada ? 20 : 1) : 500);
     					} catch (InterruptedException e) {
     						// TODO Auto-generated catch block
     						e.printStackTrace();
@@ -166,7 +166,24 @@ public class ASFA {
     
     public boolean averia = false;
     
-    public synchronized void Conex() {
+    public void asfa_wait(long time) throws InterruptedException
+    {
+    	long start = System.currentTimeMillis();
+    	while(start+time>System.currentTimeMillis())
+    	{
+    		try {
+				wait(time+start-System.currentTimeMillis());
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+    		if (!display.botones.get(TipoBotón.Conex).pulsado)
+    		{
+    			throw new InterruptedException();
+    		}
+    	}
+    }
+    
+    public void Conex() {
     	if (Connected) return;
     	display.iluminar(TipoBotón.Conex, false);
     	Initialize();
@@ -199,13 +216,13 @@ public class ASFA {
             display.led_basico(0, 1);
             display.led_basico(1, 1);
             display.led_basico(2, 4);
-            Thread.sleep(2000);
+            asfa_wait(2000);
             display.stopSound("S2-1");
             display.led_basico(2, 0);
-            Thread.sleep(1000);
+            asfa_wait(1000);
             display.startSound("S2-1", false);
             display.led_basico(2, 1);
-            Thread.sleep(2000);
+            asfa_wait(2000);
             display.stopSound("S2-1");
             display.iluminarTodos(false);
             display.led_basico(0, 0);
@@ -214,11 +231,12 @@ public class ASFA {
             if (Config.Fabricante.equals("INDRA"))
             {
             	display.startSound("S5", false);
-            	Thread.sleep(2000);
+            	asfa_wait(2000);
             	display.stopSound("S5");
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+        	Desconex();
+            return;
         }
         byte newDivData[] = div.getData();
         if (newDivData != null)
@@ -292,9 +310,10 @@ public class ASFA {
         while(!basico && !display.pantallaconectada)
     	{
             try {
-                Thread.sleep(100);
+            	asfa_wait(100);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+            	Desconex();
+                return;
             }
             if (display.pressed(TipoBotón.ASFA_básico))
             {
@@ -307,7 +326,7 @@ public class ASFA {
 		        param.basico = !curvasBasicoDigital;
             }
     	}
-        if (basico)
+        if (basico && Config.Fabricante.equalsIgnoreCase("LOGYTEL"))
         {
             try {
             	display.startSound("S1-1", true);
@@ -360,7 +379,8 @@ public class ASFA {
     	display.estadoecp = -1;
     	for (TipoBotón b : TipoBotón.values())
     	{
-    		display.botones.get(b).lector = null;
+    		EstadoBotón e = display.botones.get(b);
+    		if (e!=null) e.lector = null;
     	}
     	Connected = Activated = false;
     	averia = false;

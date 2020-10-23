@@ -105,18 +105,17 @@ public interface COM {
     	}
     	if(Main.ASFA!=null)
     	{
-            if (functn == 9) Odometer.speed = (float) val / 3.6;
+            if (functn == 8)
+            {
+                Main.ASFA.captador.nuevaFrecuencia(FrecASFA.values()[val]);
+            }
         	synchronized(Main.ASFA)
         	{
+                if (functn == 9) Odometer.speed = (float) val / 3.6;
 	            /*if(functn == 7)
 	    		{
 	    			Main.ASFA.div.add((byte) val);
 	    		}*/
-	            if (functn == 8)
-	            {
-	                Main.ASFA.captador.nuevaFrecuencia(FrecASFA.values()[val]);
-	                Main.ASFA.notify();
-	            }
 	            /*if (functn == 10)
 	            {
 	                int BotNum = val >> 1;

@@ -117,14 +117,16 @@ public class DisplayInterface {
     }
 
     public void pulsar(TipoBotón botón, boolean state) {
-        if (!botones.containsKey(botón)) {
-            botones.put(botón, new EstadoBotón(state, false));
-            PaqueteRegistro.pulsador(botón, 1, state);
-        } else {
-        	EstadoBotón b = botones.get(botón);
-        	if(b.pulsado != state) PaqueteRegistro.pulsador(botón, 1, state);
-            b.pulsar(state);
-        }
+    	synchronized(Main.ASFA) {
+	        if (!botones.containsKey(botón)) {
+	            botones.put(botón, new EstadoBotón(state, false));
+	            PaqueteRegistro.pulsador(botón, 1, state);
+	        } else {
+	        	EstadoBotón b = botones.get(botón);
+	        	if(b.pulsado != state) PaqueteRegistro.pulsador(botón, 1, state);
+	            b.pulsar(state);
+	        }
+    	}
     }
 
     public boolean pressed(TipoBotón botón) {

@@ -31,21 +31,27 @@ public class DIV {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }*/
-        if(dataCount == 64)
-        {
-        	dataCount = 0;
-        	return data;
-        }
-        else
-        {
-        	dataCount = 0;
-        	return null;
-        }
+    	synchronized(data)
+    	{
+    		if(dataCount == 64)
+            {
+            	dataCount = 0;
+            	return data;
+            }
+            else
+            {
+            	dataCount = 0;
+            	return null;
+            }
+    	}
     }
     int dataCount = 0;
 
     public void add(byte b) {
-        if(dataCount<64) data[dataCount++] = b;
+    	synchronized(data)
+    	{
+    		if(dataCount<64) data[dataCount++] = b;
+    	}
         /*if (dataCount == 64) {
             synchronized (this) {
                 notifyAll();
