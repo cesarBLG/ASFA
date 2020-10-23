@@ -22,17 +22,18 @@ const int LuzRebase = 24; //Luz pulsador rebase
 const int LuzLVI = 22; //Luz pulsador limitacion velocidad por infraestructura
 const int LuzPN = 26; //Luz pulsador paso a nivel
 const int LuzAumento = 28; //Luz pulsador aumento velocidad
-const int LuzConex = A0;
-const int LuzBasico = 10;
+const int LuzConex = A0; //Luz pulsador conexion
+const int LuzBasico = 10; //Luz modo ASFA basico
 const int LEDVerde = A5; //LED verde ASFA basico
 const int LEDRojo = A4; //LED rojo ASFA basico
 const int LEDFrenar = A3; //LED amarillo frenar ASFA basico
 const int LEDEficacia = A2; //LED azul eficacia ASFA basico
 const int AlimentacionPantalla = -1; //Alimentacion pantalla ASFA digital
-const int AvisadorBasico = 11;
+const int AvisadorBasico = 11; //Avisador acustico ASFA básico
 
 const bool invertirLuzPulsadores = true; //Algunos pulsadores adicionales tienen positivo común, por lo que se encienden cuando la entrada está a LOW
 
+//Estado LEDs ASFA basico: 0 apagado, 1 encendido, 2 parpadeante
 int estLEDVerde = 0;
 int estLEDRojo = 0;
 int estLEDFrenar = 0;
@@ -55,6 +56,7 @@ bool sonando;
 
 void setup() {
   // put your setup code here, to run once:
+  //Si tienen +12V comun, activar las salidas del L298N (para GND comun activado siempre con jumper)
   if (invertirLuzPulsadores)
   {
     pinMode(46,OUTPUT);
@@ -108,20 +110,17 @@ void setup() {
   Serial.begin(115200);
   while (!Serial) {}
 }
-unsigned long Previous;
-unsigned long BuzzEnd = 0;
-unsigned long poweroff = 0;
-byte data[60];
-int windex = 0;
-int reindex = 0;
-bool con = 0;
+byte data[60]; //Buffer de datos
+int windex = 0; //Indice de escritura en buffer
+int reindex = 0; //Indice de lectura en buffer
+bool con = 0; //Conectado al servidor de datos
 void readSerial()
 {
-  if (reindex >= windex)
+  if (reindex >= windex) //Si no hay datos sin leer, volver al inicio del buffer
   {
     windex = reindex = 0;
   }
-  if (reindex > 20)
+  if (reindex > 20) //Si hay mas de 20 bytes libres a la izquierda, mover todo para aumentar espacio por la derecha
   {
     for (int i = reindex; i < windex; i++)
     {
@@ -137,12 +136,12 @@ void readSerial()
   }
   for (int i = reindex; i < windex; i++)
   {
-    if (data[i] == '\r' || data[i] == '\n')
+    if (data[i] == '\r' || data[i] == '\n') //Buscamos el final de linea
     {
-      char line[i - reindex + 1];
-      memcpy(line, data + reindex, i - reindex);
-      line[i - reindex] = 0;
-      const char *value = strchr(line, '=') + 1;
+      char line[i - reindex + 1];                // Creamos un null-terminated array que guarda la linea.
+      memcpy(line, data + reindex, i - reindex); // Se podria evitar el memcpy y la reserva del array reutilizando el propio buffer data[]
+      line[i - reindex] = 0;                     // (en ese caso no estaria null-terminated). Como es para un Arduino Mega, vamos sobrados y da igual.
+      const char *value = strchr(line, '=') + 1; // Los mensajes llegan en el formato: asfa::pulsador::ilum::anpar=1, por lo que separamos comando y valor
       if (!strncmp(line, "asfa::pulsador::ilum::", 22))
       {
         const char *boton = line + 22;
@@ -195,10 +194,12 @@ void readSerial()
       else if (!strncmp(line, "asfa::pantalla::iniciar", 24))
       {
         digitalWrite(AlimentacionPantalla, HIGH);
+        con = 1;
       }
       else if (!strncmp(line, "asfa::pantalla::apagar", 24))
       {
         digitalWrite(AlimentacionPantalla, LOW);
+        con = 1;
       }
       else if (!strncmp(line, "asfa::sonido::iniciar", 21))
       {
@@ -211,6 +212,7 @@ void readSerial()
         else if (!strncmp(val, "S3-5,1", 6)) sonidos[S35] = millis();
         else if (!strncmp(val, "S5,1", 4)) sonidos[S5] = millis();
         else if (!strncmp(val, "S6,1", 4)) sonidos[S6] = millis();
+        con = 1;
       }
       else if (!strncmp(line, "asfa::sonido::detener", 21))
       {
@@ -223,6 +225,7 @@ void readSerial()
         else if (!strncmp(val, "S3-5", 4)) sonidos[S35] = 0;
         else if (!strncmp(val, "S5", 2)) sonidos[S5] = 0;
         else if (!strncmp(val, "S6", 2)) sonidos[S6] = 0;
+        con = 1;
       }
       else if (!strncmp(line, "connected", 9))
       {
@@ -237,9 +240,10 @@ void readSerial()
       reindex = i + 1;
       break;
     }
-    else if (i + 1 == 60) windex = reindex = 0;
+    else if (i + 1 == 60) windex = reindex = 0; // El buffer no permite lineas de mas de 60 caracteres, si es el caso borramos todo
   }
 }
+// Estado pulsadores, para enviar los datos solo cuando cambian
 int anpar_state = 1;
 int anpre_state = 1;
 int prepar_state = 1;
@@ -253,7 +257,6 @@ int rebase_state = 1;
 int aumento_state = 1;
 int conex_state = 1;
 int basico_state = 1;
-unsigned long last = 0;
 
 void avisador()
 {
@@ -299,8 +302,9 @@ void avisador()
   sonando = on;
 }
 
+unsigned long last = 0;
 void loop() {
-  if (!con && last + 500 < millis())
+  if (!con && last + 500 < millis()) //Pedimos periodicamente los parametros que queremos leer, hasta que recibamos alguno
   {
     Serial.println("register(asfa::pulsador::ilum::*)");
     Serial.println("register(asfa::leds::*)");
