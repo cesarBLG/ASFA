@@ -93,11 +93,9 @@ public class OR_Client {
 				String s = readData();
 				if(s==null) return;
 				if (matches(s, "asfa::cg")) sendData("asfa::cg=1");
-				synchronized(Main.ASFA) {
-					if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (Main.ASFA.Fase2 ? "2" : "1"));
-					if (matches(s, "asfa::ecp::estado") && Main.ASFA.display.estadoecp != -1) sendData("asfa::ecp::estado=" + Main.ASFA.display.estadoecp);
-					if (matches(s, "asfa::pantalla::activa")) sendData("asfa::pantalla::activa=" + (Main.ASFA.display.pantallaactiva ? 1 : 0));
-				}
+				if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (Main.ASFA.Fase2 ? "2" : "1"));
+				if (matches(s, "asfa::ecp::estado") && Main.ASFA.display.estadoecp != -1) sendData("asfa::ecp::estado=" + Main.ASFA.display.estadoecp);
+				if (matches(s, "asfa::pantalla::activa")) sendData("asfa::pantalla::activa=" + (Main.ASFA.display.pantallaactiva ? 1 : 0));
 				int index = s.indexOf('=');
 				if (index < 0) continue;
 				String[] topics = s.substring(0, index).split("::");
@@ -111,14 +109,13 @@ public class OR_Client {
 					}
 					catch(IllegalArgumentException e)
 					{
+						e.printStackTrace(); 
 					}
-					COM.parse(8, f.ordinal());
+	                Main.ASFA.captador.nuevaFrecuencia(f);
 				}
 				else if(s.startsWith("speed="))
 				{
-					synchronized(Main.ASFA) {
-						Odometer.speed = (float) Float.parseFloat(val.replace(',', '.')) / 3.6;
-					}
+					Odometer.speed = (float) Float.parseFloat(val.replace(',', '.')) / 3.6;
 				}
 				else if(s.startsWith("asfa::pulsador::"))
 				{
@@ -137,6 +134,13 @@ public class OR_Client {
 					}
 					if (tb == null) continue;
 		            Main.ASFA.display.pulsar(tb, val.equals("1"));
+		            if(tb==TipoBotón.Conex)
+		            {
+		            	synchronized(Main.ASFA)
+		            	{
+		            		Main.ASFA.notify();
+		            	}
+		            }
 		            if(tb==TipoBotón.PrePar) Main.ASFA.display.pulsar(TipoBotón.VLCond, val.equals("1"));
 				}
 				else if(s.startsWith("simulator_time="))
@@ -153,15 +157,11 @@ public class OR_Client {
 				}
 				else if(s.startsWith("asfa::akt="))
 				{
-					synchronized(Main.ASFA) {
 					Main.ASFA.AKT = val.equals("1");
-					}
 				}
 				else if(s.startsWith("asfa::con="))
 				{
-					synchronized(Main.ASFA) {
 					Main.ASFA.CON = !val.equals("0");
-					}
 				}
 				else if(s.startsWith("asfa::selector_tipo="))
 				{
@@ -175,17 +175,13 @@ public class OR_Client {
 					else if (speed > 90) selectorT = 3;
 					else if (speed > 80) selectorT = 2;
 					else if (speed > 0) selectorT = 1;
-					synchronized(Main.ASFA) {
 					if (Main.ASFA.selectorT == 0 && selectorT != 0) Main.ASFA.selectorT = selectorT;
-					}
 				}
 				else if(s.startsWith("asfa::pantalla::conectada="))
 				{
 					if (val.equals("1"))
 					{
-						synchronized(Main.ASFA) {
 						Main.ASFA.display.pantallaconectada = true;
-						}
 					}
 				}
 			}

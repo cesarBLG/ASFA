@@ -109,24 +109,24 @@ public interface COM {
             {
                 Main.ASFA.captador.nuevaFrecuencia(FrecASFA.values()[val]);
             }
-        	synchronized(Main.ASFA)
+            else if (functn == 9) Odometer.speed = (float) val / 3.6;
+        	/*synchronized(Main.ASFA)
         	{
-                if (functn == 9) Odometer.speed = (float) val / 3.6;
-	            /*if(functn == 7)
+	            if(functn == 7)
 	    		{
 	    			Main.ASFA.div.add((byte) val);
-	    		}*/
-	            /*if (functn == 10)
+	    		}
+	            if (functn == 10)
 	            {
 	                int BotNum = val >> 1;
 	                boolean pulsad = (val & 1) == 1;
 	                Main.ASFA.display.pulsar(TipoBotón.values()[BotNum], pulsad);
-	            }*/
-	            /*if (functn == 13)
+	            }
+	            if (functn == 13)
 	            {
 	        		Main.ASFA.selectorT = (val & 7) + 1;
-	            }*/
-        	}
+	            }
+        	}*/
     	}
     }
 }

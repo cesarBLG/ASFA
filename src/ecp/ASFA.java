@@ -161,6 +161,8 @@ public class ASFA {
         InicioControlDesvioEspecial = 0;
         ControlDesvioEspecialAumentado = false;
         
+        captador.lastSent = 0;
+        
         display.reset();
     }
     
@@ -262,7 +264,7 @@ public class ASFA {
         if(divData==null)
         {
         	averia = true;
-            display.set(2, 0);
+            display.set(2, 2);
         	return;
         }
         Fase2 = (divData[15] & 1) != 0;
@@ -300,12 +302,13 @@ public class ASFA {
         {
         	if (b.getKey() != TipoBotón.ASFA_básico && b.getKey() != TipoBotón.Conex && b.getValue().averiado(5))
         	{
+                display.set(2, 3);
         		averia = true;
             	return;
         	}
         }
         
-        display.set(estadoInicio-1, 0);
+        display.set(estadoInicio-1, newDivData == null ? 1 : 0);
         
         while(!basico && !display.pantallaconectada)
     	{
@@ -549,7 +552,7 @@ public class ASFA {
 			else FE = true;
 		}
 		if (!basico && !display.pantallaconectada) FE = true;
-		if (!basico) display.iluminar(TipoBotón.Modo, MpS.ToKpH(Odometer.getSpeed())<5);
+		if (!basico) display.iluminar(TipoBotón.Modo, MpS.ToKpH(Odometer.getSpeed())<5 && display.botones.get(TipoBotón.Modo).siguientePulsacion < Clock.getSeconds());
 		else display.iluminar(TipoBotón.Modo, modo == Modo.AV);
 		
 		if (Odometer.getSpeed() >= 5/3.6f)

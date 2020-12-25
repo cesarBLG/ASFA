@@ -245,7 +245,20 @@ public class DisplayInterface {
     public void set(int num, int errno)
     {
     	estadoecp = num;
-    	orclient.sendData("asfa::ecp::estado="+num);
+    	String msg = "";
+    	switch (errno)
+    	{
+	    	case 1:
+	    		msg = "<html>Fallo de comunicacion con DIV<br/><center>Informacion redundante</center></html>";
+	    		break;
+	    	case 2:
+	    		msg = "Fallo de comunicación con DIV";
+	    		break;
+	    	case 3:
+	    		msg = "Fallo de pulsador";
+	    		break;
+    	}
+    	orclient.sendData("asfa::ecp::estado="+num+","+msg);
     }
     public void startSound(String num)
     {

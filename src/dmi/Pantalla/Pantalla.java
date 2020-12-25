@@ -129,6 +129,7 @@ public class Pantalla extends JPanel {
     }
     
     public void setup(int state, String msg) {
+    	conectada = true;
         removeAll();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         Date date = new Date();
@@ -147,12 +148,10 @@ public class Pantalla extends JPanel {
             case 1:
                 j = new JLabel("ASFA-operativo");
                 j.setForeground(Color.yellow);
-                msg = "<html>Fallo de comunicación con DIV<br/><center>Información redundante</center></html>";
                 break;
             default:
                 j = new JLabel("ASFA no operativo");
                 j.setForeground(Color.red);
-                msg = "Fallo de comunicación con DIV";
                 break;
         }
         j.setFont(new Font(j.getFont().getName(), Font.PLAIN, getScale(20)));
@@ -176,9 +175,17 @@ public class Pantalla extends JPanel {
         j.setFont(new Font(j.getFont().getName(), Font.PLAIN, getScale(j.getFont().getSize())));
         add(j);
         add(Box.createRigidArea(new Dimension(0, 5)));
-        j = new JLabel("Estado del Display OK");
+        if (state != 3)
+        {
+        	j = new JLabel("Estado del Display OK");
+        	j.setForeground(Color.green);
+        }
+        else
+        {
+        	j = new JLabel("Estado del Display NOT OK");
+        	j.setForeground(Color.red);
+        }
         j.setAlignmentX(Component.CENTER_ALIGNMENT);
-        j.setForeground(Color.green);
         j.setFont(new Font(j.getFont().getName(), Font.PLAIN, getScale(j.getFont().getSize())));
         add(j);
         add(Box.createRigidArea(new Dimension(0, 5)));

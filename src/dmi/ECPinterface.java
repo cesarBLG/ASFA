@@ -33,6 +33,7 @@ public class ECPinterface {
 	OutputStream out;
 	BufferedReader in;
 	DMI dmi;
+	boolean connected;
 	public ECPinterface(DMI dmi)
 	{
 		this.dmi = dmi;
@@ -41,6 +42,7 @@ public class ECPinterface {
 			try {
 				in = new BufferedReader(new InputStreamReader(s.getInputStream()));
 				out = s.getOutputStream();
+				connected = true;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -280,6 +282,12 @@ public class ECPinterface {
 	}
 	public void enviarPulsacion(TipoBotón botón, boolean state)
 	{
+		if (botón == TipoBotón.Conex && !connected)
+		{
+			if (!state || dmi.pantalla.conectada) dmi.pantalla.apagar();
+			else dmi.pantalla.setup(3, "Fallo de comunicaciones con ECP");
+			return;
+		}
         String name = botón.name().toLowerCase();
 		if(name.equals("aumvel")) name = "aumento";
 		else if(name.equals("ocultación")) name = "ocultacion";

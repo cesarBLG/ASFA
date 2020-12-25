@@ -14,12 +14,9 @@ public class Captador {
     public void nuevaFrecuencia(FrecASFA f)
     {
     	//captador = f;
-    	synchronized(frecs)
-    	{
-    		frecs.add(f);
-    	}
         synchronized(Main.ASFA)
         {
+    		frecs.add(f);
         	Main.ASFA.notify();
         }
     }
@@ -27,23 +24,20 @@ public class Captador {
     public double lastSent=0;
     
     public FrecASFA getData() {
-    	synchronized(frecs)
+    	if (frecs.isEmpty())
+    		return FrecASFA.FP;
+    	if (lastSent == 0)
+    		lastSent = Clock.getSeconds();
+    	else if (frecs.size() > 1)
     	{
-	    	if (frecs.isEmpty())
-	    		return FrecASFA.FP;
-	    	if (lastSent == 0)
-	    		lastSent = Clock.getSeconds();
-	    	else if (frecs.size() > 1)
-	    	{
-	    		if (lastSent + 0.005 < Clock.getSeconds())
-	    		{
-	    			lastSent = 0;
-	    			return frecs.poll();
-	    		}
-	    	}
-	        return frecs.peek();
-	    	//return captador;
+    		if (lastSent + 0.005 < Clock.getSeconds())
+    		{
+    			lastSent = 0;
+    			return frecs.poll();
+    		}
     	}
+        return frecs.peek();
+    	//return captador;
     }
     
     public int[][] seguradesactivacionabajo = {{58560,62484,66671,71138,75904,80988,86447,93243,100572,108992,117006,126204}, {59160,63054,67212,71651,76380,81422,87042,93873,102001,108437,117065,126268}};
