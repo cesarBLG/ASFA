@@ -87,12 +87,12 @@ public class OR_Client {
 			subscribe("speed");
 			subscribe("simulator_time");
 			subscribe("asfa::pantalla::conectada");
-			sendData("asfa::cg=1");
+			sendData("asfa::cg="+(Main.ASFA.ASFAconectado?"1":"0"));
 			while(true)
 			{
 				String s = readData();
 				if(s==null) return;
-				if (matches(s, "asfa::cg")) sendData("asfa::cg=1");
+				if (matches(s, "asfa::cg")) sendData("asfa::cg="+(Main.ASFA.ASFAconectado?"1":"0"));
 				if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (Main.ASFA.Fase2 ? "2" : "1"));
 				if (matches(s, "asfa::ecp::estado") && Main.ASFA.display.estadoecp != -1) sendData("asfa::ecp::estado=" + Main.ASFA.display.estadoecp);
 				if (matches(s, "asfa::pantalla::activa")) sendData("asfa::pantalla::activa=" + (Main.ASFA.display.pantallaactiva ? 1 : 0));
@@ -105,11 +105,19 @@ public class OR_Client {
 					FrecASFA f = FrecASFA.AL;
 					try
 					{
-						 f = FrecASFA.valueOf(val);
+						int freqHz = (int) Double.parseDouble(val);
+						f = Main.ASFA.captador.procesarFrecuencia(freqHz);
 					}
-					catch(IllegalArgumentException e)
+					catch (NumberFormatException e1)
 					{
-						e.printStackTrace(); 
+						try
+						{
+							 f = FrecASFA.valueOf(val);
+						}
+						catch(IllegalArgumentException e)
+						{
+							e.printStackTrace(); 
+						}
 					}
 	                Main.ASFA.captador.nuevaFrecuencia(f);
 				}
@@ -174,7 +182,8 @@ public class OR_Client {
 					else if (speed > 100) selectorT = 4;
 					else if (speed > 90) selectorT = 3;
 					else if (speed > 80) selectorT = 2;
-					else if (speed > 0) selectorT = 1;
+					else if (speed > 10) selectorT = 1;
+					else if (speed > 0) selectorT = speed;
 					if (Main.ASFA.selectorT == 0 && selectorT != 0) Main.ASFA.selectorT = selectorT;
 				}
 				else if(s.startsWith("asfa::pantalla::conectada="))
@@ -189,6 +198,8 @@ public class OR_Client {
 	}
 	static boolean matches(String topic, String var)
 	{
+		if (topic.startsWith("register(")) topic = topic.substring(9, topic.length()-2);
+		if (topic.startsWith("get(")) topic = topic.substring(4, topic.length()-2);
 		String[] t1 = topic.split("::");
 		String[] t2 = var.split("::");
 		for (int i=0; i<t1.length && i<t2.length; i++)

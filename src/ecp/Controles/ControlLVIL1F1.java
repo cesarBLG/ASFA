@@ -32,7 +32,7 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
                 }
             }
         }
-    	else if(Modo == ASFA.Modo.CONV) {
+    	else if(Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BTS) {
     		if (basico) {
     			if (O >= 160) {
 	                IF = new Curva(163, 83, 0.5, 9);

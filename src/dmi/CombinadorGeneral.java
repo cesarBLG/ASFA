@@ -27,13 +27,91 @@ public class CombinadorGeneral extends JDialog {
 	{
 		this.asfa = asfa;
         if (asfa.selectorT<1 || asfa.selectorT > 8) asfa.selectorT = 1;
-		setSize(600, 320);
 		setTitle("Combinador General");
 		setLayout(new GridBagLayout());
 		setBackground(Color.blue);
         getContentPane().setBackground(new Color(0, 83, 135));
 		GridBagConstraints g = new GridBagConstraints();
 		g.gridy=0;
+		g.gridx=0;
+		Conexion conex = new Conexion();
+		conex.update(asfa.ASFAconectado);
+		conex.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				if (arg0.getButton() == MouseEvent.BUTTON1 || arg0.getButton() == MouseEvent.BUTTON3)
+				{
+					asfa.ASFAconectado = !asfa.ASFAconectado;
+				}
+				conex.update(asfa.ASFAconectado);
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseExited(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+        	
+        });
+		add(conex, g);
+		g.gridx++;
+		Anulacion anul = new Anulacion();
+		anul.update(asfa.ASFAanulado);
+		anul.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				if (arg0.getButton() == MouseEvent.BUTTON1 || arg0.getButton() == MouseEvent.BUTTON3)
+				{
+					asfa.ASFAanulado = !asfa.ASFAanulado;
+				}
+				anul.update(asfa.ASFAanulado);
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseExited(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+        	
+        });
+		add(anul, g);
+		g.gridx++;
 		SelectorTipo tipo = new SelectorTipo();
         tipo.update(asfa.selectorT);
         tipo.addMouseListener(new MouseListener() {
@@ -74,6 +152,7 @@ public class CombinadorGeneral extends JDialog {
         	
         });
 		add(tipo, g);
+		setSize(700, 320);
 	}
 	class SelectorTipo extends JLabel
 	{
@@ -107,4 +186,68 @@ public class CombinadorGeneral extends JDialog {
             g2.drawImage(bi, 0, 0, null);
 		}
 	};
+	class Conexion extends JLabel
+	{
+		boolean conectado = true;
+		public Conexion()
+		{
+			setIcon(new ImageIcon(getClass().getResource("/content/CG/Conexion.png")));
+			setHorizontalAlignment(CENTER);
+			setVerticalAlignment(CENTER);
+		}
+		void update(boolean conectado)
+		{
+			this.conectado = conectado;
+			repaint();
+		}
+		@Override
+		protected void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+			BufferedImage bi;
+			try {
+				bi = ImageIO.read(getClass().getResource("/content/CG/Selector.png"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return;
+			}
+            Graphics2D g2 = (Graphics2D) g;
+            g2.translate(getWidth()/2-bi.getWidth()/2, getHeight()/2-bi.getHeight()/2);
+            g2.rotate(conectado ? Math.PI/2 : 0, bi.getWidth()/2, bi.getHeight()/2);
+            g2.drawImage(bi, 0, 0, null);
+		}
+	}
+	class Anulacion extends JLabel
+	{
+		boolean anulado = true;
+		public Anulacion()
+		{
+			setIcon(new ImageIcon(getClass().getResource("/content/CG/Anulacion.png")));
+			setHorizontalAlignment(CENTER);
+			setVerticalAlignment(CENTER);
+		}
+		void update(boolean anulado)
+		{
+			this.anulado = anulado;
+			repaint();
+		}
+		@Override
+		protected void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+			BufferedImage bi;
+			try {
+				bi = ImageIO.read(getClass().getResource("/content/CG/Selector.png"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return;
+			}
+            Graphics2D g2 = (Graphics2D) g;
+            g2.translate(getWidth()/2-bi.getWidth()/2, getHeight()/2-bi.getHeight()/2);
+            g2.rotate(anulado ? 0 : Math.PI/2, bi.getWidth()/2, bi.getHeight()/2);
+            g2.drawImage(bi, 0, 0, null);
+		}
+	}
 }

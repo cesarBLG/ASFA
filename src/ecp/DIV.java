@@ -50,7 +50,7 @@ public class DIV {
     public void add(byte b) {
     	synchronized(data)
     	{
-    		if(dataCount<64) data[dataCount++] = b;
+    		if (dataCount<64) data[dataCount++] = b;
     	}
         /*if (dataCount == 64) {
             synchronized (this) {
