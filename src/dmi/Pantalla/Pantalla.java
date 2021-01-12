@@ -27,6 +27,7 @@ import javax.swing.Timer;
 
 import dmi.DMI;
 import ecp.ASFA;
+import ecp.ASFA.Modo;
 import ecp.Config;
 import ecp.Main;
 
@@ -267,6 +268,6 @@ public class Pantalla extends JPanel {
     }
 
     public void set() {
-        set(modo == ModoDisplay.Día ? ModoDisplay.Noche : ModoDisplay.Día);
+        if (Main.dmi.modo != Modo.EXT) set(modo == ModoDisplay.Día ? ModoDisplay.Noche : ModoDisplay.Día);
     }
 }

@@ -23,10 +23,55 @@ import ecp.Main;
 
 public class CombinadorGeneral extends JDialog {
 	ASFA asfa;
+	boolean conect=true;
+	boolean anul=false;
+	int t=7;
+	void setConectado(boolean c)
+	{
+		if (asfa==null) conect = c;
+		else
+		{
+			asfa.ASFAconectado = c;
+			synchronized(asfa)
+			{
+				asfa.notify();
+			}
+		}
+	}
+	void setAnulado(boolean a)
+	{
+		if (asfa==null) anul = a;
+		else 
+		{
+			asfa.ASFAanulado = a;
+			synchronized(asfa)
+			{
+				asfa.notify();
+			}
+		}
+	}
+	void setTipo(int t)
+	{
+		if (asfa==null) this.t = t;
+		else asfa.selectorT = t;
+	}
+	boolean getConectado()
+	{
+		return asfa==null ? conect : asfa.ASFAconectado;
+	}
+	boolean getAnulado()
+	{
+		return asfa==null ? anul : asfa.ASFAanulado;
+	}
+	int getT()
+	{
+		return asfa==null ? t : asfa.selectorT;
+	}
+	
 	public CombinadorGeneral(ASFA asfa)
 	{
 		this.asfa = asfa;
-        if (asfa.selectorT<1 || asfa.selectorT > 8) asfa.selectorT = 1;
+        if (asfa != null && (asfa.selectorT<1 || asfa.selectorT > 8)) asfa.selectorT = 1;
 		setTitle("Combinador General");
 		setLayout(new GridBagLayout());
 		setBackground(Color.blue);
@@ -35,15 +80,15 @@ public class CombinadorGeneral extends JDialog {
 		g.gridy=0;
 		g.gridx=0;
 		Conexion conex = new Conexion();
-		conex.update(asfa.ASFAconectado);
+		conex.update(getConectado());
 		conex.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				if (arg0.getButton() == MouseEvent.BUTTON1 || arg0.getButton() == MouseEvent.BUTTON3)
 				{
-					asfa.ASFAconectado = !asfa.ASFAconectado;
+					setConectado(!getConectado());
 				}
-				conex.update(asfa.ASFAconectado);
+				conex.update(getConectado());
 			}
 
 			@Override
@@ -80,9 +125,9 @@ public class CombinadorGeneral extends JDialog {
 			public void mouseClicked(MouseEvent arg0) {
 				if (arg0.getButton() == MouseEvent.BUTTON1 || arg0.getButton() == MouseEvent.BUTTON3)
 				{
-					asfa.ASFAanulado = !asfa.ASFAanulado;
+					setAnulado(!getAnulado());
 				}
-				anul.update(asfa.ASFAanulado);
+				anul.update(getAnulado());
 			}
 
 			@Override
@@ -117,13 +162,15 @@ public class CombinadorGeneral extends JDialog {
         tipo.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				if (arg0.getButton() == MouseEvent.BUTTON1) asfa.selectorT = asfa.selectorT%8+1;
+				int sel = getT();
+				if (arg0.getButton() == MouseEvent.BUTTON1) sel = sel%8+1;
 				if (arg0.getButton() == MouseEvent.BUTTON3)
 				{
-					if (asfa.selectorT <= 1) asfa.selectorT = 8;
-					else asfa.selectorT = asfa.selectorT-1;
+					if (sel <= 1) sel = 8;
+					else sel = sel-1;
 				}
-				tipo.update(asfa.selectorT);
+				setTipo(sel);
+				tipo.update(sel);
 			}
 
 			@Override

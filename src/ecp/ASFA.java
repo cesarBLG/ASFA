@@ -127,7 +127,7 @@ public class ASFA {
         t.start();
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                display.orclient.sendData("asfa::cg=");
+                display.orclient.sendData("asfa::conectado=");
                 display.orclient.sendData("asfa::emergency=false");
             }
         });
@@ -188,7 +188,7 @@ public class ASFA {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-    		if (!display.botones.get(TipoBotón.Conex).pulsado)
+    		if (!display.botones.get(TipoBotón.Conex).pulsado || ASFAanulado || !ASFAconectado)
     		{
     			throw new InterruptedException();
     		}
@@ -220,9 +220,8 @@ public class ASFA {
 			divData = null;
 		}
     	estadoInicio = 1;
-        display.orclient.sendData("asfa::emergency=1");
         display.orclient.sendData("register(simulator_time)");
-        display.orclient.sendData("get(asfa::div)");
+        display.orclient.sendData("register(asfa::div)");
         try {
             display.iluminarTodos(true);
             display.startSound("S2-1", true);
@@ -271,6 +270,7 @@ public class ASFA {
         {
         	estadoInicio = 2;
         }
+        display.orclient.sendData("unregister(asfa::div)");
         if(selectorT < 1 || selectorT > 8) selectorT = 8;
         if(divData==null)
         {
@@ -361,8 +361,6 @@ public class ASFA {
         PaqueteRegistro.encendido();
         PaqueteRegistro.tipo_tren();
         PaqueteRegistro.modo();
-        
-        if (!CON) estadoInicio = 0;
     }
     void ApagarSonidos()
     {
@@ -418,7 +416,6 @@ public class ASFA {
 
     private boolean prevFE=false;
     private boolean prevASFAconectado = false;
-    private boolean prevASFAanulado = false;
     
     private class ControlesGuardados
     {
@@ -444,17 +441,18 @@ public class ASFA {
     public void Update() {
         if (prevASFAconectado != ASFAconectado)
         {
-            display.orclient.sendData("asfa::cg=" + (ASFAconectado ? "1" : "0"));
+            display.orclient.sendData("asfa::conectado=" + (ASFAconectado && !ASFAanulado ? "1" : "0"));
         }
-        prevASFAconectado = ASFAconectado;
+        prevASFAconectado = ASFAconectado && !ASFAanulado;
     	if (!ASFAconectado || ASFAanulado)
     	{
     		if (Connected) Desconex();
+    		display.iluminar(TipoBotón.Conex, false);
     		FE = !ASFAanulado || ASFAconectado;
             if (FE != prevFE)
         	{
         		PaqueteRegistro.estado_urgencia();
-                display.orclient.sendData("asfa::emergency=" + (FE ? "1" : "0"));
+                display.orclient.sendData("asfa::emergency=" + (FE && !AKT ? "1" : "0"));
         	}
             prevFE = FE;
     		return;
@@ -467,12 +465,10 @@ public class ASFA {
     	
     	//TODO: Enviar datos a registrador jurídico
     	
-    	FE &= !AKT;
-    	
     	if (FE != prevFE)
     	{
     		PaqueteRegistro.estado_urgencia();
-            display.orclient.sendData("asfa::emergency=" + (FE ? "1" : "0"));
+            display.orclient.sendData("asfa::emergency=" + (FE && !AKT ? "1" : "0"));
     	}
     	prevFE = FE;
         if (!Connected) {
@@ -482,7 +478,7 @@ public class ASFA {
         if (!AKT && !CON) {
             FE = true;
         }
-        if (!CON && modo != Modo.EXT) {
+        if (!CON && modo != Modo.EXT && estadoInicio == 0) {
             modo = Modo.EXT;
             if (modoRAM) modo_ext = Modo.RAM;
             else if (!modoAV && modoCONV) modo_ext = Modo.CONV;
@@ -1213,9 +1209,9 @@ public class ASFA {
             	VentanaL4 = -1;
             }
     	}
-    	if(modo == Modo.CONV || modo == Modo.AV)
+    	if(modo == Modo.CONV || modo == Modo.AV || modo == Modo.RAM)
     	{
-            if (PrevDist + (modo == Modo.AV ? 600 : 450) < Odometer.getDistance() && SigNo == 0) {
+            if (PrevDist + (modo == Modo.AV ? 600 : modo == Modo.RAM ? 800 : 450) < Odometer.getDistance() && SigNo == 0) {
                 SigNo = 2;
                 if (ControlSeñal instanceof ControlPreviaSeñalParada) {
                     Urgencias();
@@ -1876,11 +1872,9 @@ public class ASFA {
 				}
                 Controles.add(new ControlPasoDesvío(param, Clock.getSeconds(), ((ControlAnuncioPrecaución)AnteriorControlSeñal).AumentoVelocidad));
             } else if (InicioControlDesvioEspecial != 0) {
-            	if (InicioControlDesvioEspecial != 0 && InicioControlDesvioEspecial + (modo == Modo.AV ? 600 : 450) > Odometer.getDistance())
-            	{
-            		Controles.add(new ControlPasoDesvío(param, Clock.getSeconds(), ControlDesvioEspecialAumentado));
-            	}
-            	else InicioControlDesvioEspecial = 0;
+                if ((ControlSeñal instanceof ControlPreviaSeñalParada && Odometer.getDistance() - InicioControlDesvioEspecial > 80) || 
+                		InicioControlDesvioEspecial + (modo == Modo.AV ? 600 : 450) < Odometer.getDistance()) InicioControlDesvioEspecial = 0;
+                else Controles.add(new ControlPasoDesvío(param, Clock.getSeconds(), ControlDesvioEspecialAumentado));
             }
             if ((AnteriorControlSeñal instanceof ControlAnuncioParada || AnteriorControlSeñal instanceof ControlSecuenciaAN_A) && ControlSeñal instanceof ControlAnuncioParada) {
                 Controles.add(new ControlSecuenciaAA(Clock.getSeconds(), param));

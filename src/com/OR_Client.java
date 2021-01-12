@@ -79,133 +79,154 @@ public class OR_Client {
 				e.printStackTrace();
 			}
 			subscribe("asfa::frecuencia");
-			subscribe("asfa::div");
 			subscribe("asfa::selector_tipo");
+			subscribe("asfa::cg::conectado");
+			subscribe("asfa::cg::anulado");
 			subscribe("asfa::akt");
 			subscribe("asfa::con");
 			subscribe("asfa::pulsador::*");
 			subscribe("speed");
 			subscribe("simulator_time");
 			subscribe("asfa::pantalla::conectada");
-			sendData("asfa::cg="+(Main.ASFA.ASFAconectado?"1":"0"));
 			while(true)
 			{
 				String s = readData();
-				if(s==null) return;
-				if (matches(s, "asfa::cg")) sendData("asfa::cg="+(Main.ASFA.ASFAconectado?"1":"0"));
-				if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (Main.ASFA.Fase2 ? "2" : "1"));
-				if (matches(s, "asfa::ecp::estado") && Main.ASFA.display.estadoecp != -1) sendData("asfa::ecp::estado=" + Main.ASFA.display.estadoecp);
-				if (matches(s, "asfa::pantalla::activa")) sendData("asfa::pantalla::activa=" + (Main.ASFA.display.pantallaactiva ? 1 : 0));
-				int index = s.indexOf('=');
-				if (index < 0) continue;
-				String[] topics = s.substring(0, index).split("::");
-				String val = s.substring(index+1);
-				if(s.startsWith("asfa::frecuencia="))
-				{
-					FrecASFA f = FrecASFA.AL;
-					try
-					{
-						int freqHz = (int) Double.parseDouble(val);
-						f = Main.ASFA.captador.procesarFrecuencia(freqHz);
-					}
-					catch (NumberFormatException e1)
-					{
-						try
-						{
-							 f = FrecASFA.valueOf(val);
-						}
-						catch(IllegalArgumentException e)
-						{
-							e.printStackTrace(); 
-						}
-					}
-	                Main.ASFA.captador.nuevaFrecuencia(f);
-				}
-				else if(s.startsWith("speed="))
-				{
-					Odometer.speed = (float) Float.parseFloat(val.replace(',', '.')) / 3.6;
-				}
-				else if(s.startsWith("asfa::pulsador::"))
-				{
-					String pul = topics[2];
-					TipoBotón tb = null;
-					if(pul.equals("aumento")) tb = TipoBotón.AumVel;
-					else if(pul.equals("ocultacion")) tb = TipoBotón.Ocultación;
-					else if(pul.equals("basico")) tb = TipoBotón.ASFA_básico;
-					else for(TipoBotón t : TipoBotón.values())
-					{
-						if(t.name().toLowerCase().equals(pul))
-						{
-							tb = t;
-							break;
-						}
-					}
-					if (tb == null) continue;
-		            Main.ASFA.display.pulsar(tb, val.equals("1"));
-		            if(tb==TipoBotón.Conex)
-		            {
-		            	synchronized(Main.ASFA)
-		            	{
-		            		Main.ASFA.notify();
-		            	}
-		            }
-		            if(tb==TipoBotón.PrePar) Main.ASFA.display.pulsar(TipoBotón.VLCond, val.equals("1"));
-				}
-				else if(s.startsWith("simulator_time="))
-				{
-					Clock.set_external_time(Double.parseDouble(val.replace(',','.')));
-				}
-				else if(s.startsWith("asfa::div="))
-				{
-					for(int i=0; i<64; i++)
-					{
-						byte b = Integer.decode("0x"+val.substring(2*i, 2*i+2)).byteValue();
-						Main.ASFA.div.add(b);
-					}
-				}
-				else if(s.startsWith("asfa::akt="))
-				{
-					Main.ASFA.AKT = val.equals("1");
-				}
-				else if(s.startsWith("asfa::con="))
-				{
-					Main.ASFA.CON = !val.equals("0");
-				}
-				else if(s.startsWith("asfa::selector_tipo="))
-				{
-					int speed = Integer.parseInt(val);
-					int selectorT=0;
-					if (speed > 180) selectorT = 8;
-					else if (speed > 160) selectorT = 7;
-					else if (speed > 140) selectorT = 6;
-					else if (speed > 120) selectorT = 5;
-					else if (speed > 100) selectorT = 4;
-					else if (speed > 90) selectorT = 3;
-					else if (speed > 80) selectorT = 2;
-					else if (speed > 10) selectorT = 1;
-					else if (speed > 0) selectorT = speed;
-					if (Main.ASFA.selectorT == 0 && selectorT != 0) Main.ASFA.selectorT = selectorT;
-				}
-				else if(s.startsWith("asfa::pantalla::conectada="))
-				{
-					if (val.equals("1"))
-					{
-						Main.ASFA.display.pantallaconectada = true;
-					}
-				}
+				if (s == null) return;
+				parse(s);
 			}
 		}).start();
 	}
+	void parse(String s)
+	{
+		if(s==null) return;
+		if (matches(s, "asfa::conectado")) sendData("asfa::conectado="+(Main.ASFA.ASFAconectado&&!Main.ASFA.ASFAanulado?"1":"0"));
+		if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (Main.ASFA.Fase2 ? "2" : "1"));
+		if (matches(s, "asfa::ecp::estado") && Main.ASFA.display.estadoecp != -1) sendData("asfa::ecp::estado=" + Main.ASFA.display.estadoecp);
+		if (matches(s, "asfa::pantalla::activa")) sendData("asfa::pantalla::activa=" + (Main.ASFA.display.pantallaactiva ? 1 : 0));
+		int index = s.indexOf('=');
+		if (index < 0) return;
+		String[] topics = s.substring(0, index).split("::");
+		String val = s.substring(index+1);
+		if(s.startsWith("asfa::frecuencia="))
+		{
+			FrecASFA f = FrecASFA.AL;
+			try
+			{
+				int freqHz = (int) Double.parseDouble(val);
+				f = Main.ASFA.captador.procesarFrecuencia(freqHz);
+			}
+			catch (NumberFormatException e1)
+			{
+				try
+				{
+					 f = FrecASFA.valueOf(val);
+				}
+				catch(IllegalArgumentException e)
+				{
+					e.printStackTrace(); 
+				}
+			}
+            Main.ASFA.captador.nuevaFrecuencia(f);
+		}
+		else if(s.startsWith("speed="))
+		{
+			Odometer.speed = (float) Float.parseFloat(val.replace(',', '.')) / 3.6;
+		}
+		else if(s.startsWith("asfa::pulsador::"))
+		{
+			String pul = topics[2];
+			TipoBotón tb = null;
+			if(pul.equals("aumento")) tb = TipoBotón.AumVel;
+			else if(pul.equals("ocultacion")) tb = TipoBotón.Ocultación;
+			else if(pul.equals("basico")) tb = TipoBotón.ASFA_básico;
+			else for(TipoBotón t : TipoBotón.values())
+			{
+				if(t.name().toLowerCase().equals(pul))
+				{
+					tb = t;
+					break;
+				}
+			}
+			if (tb == null) return;
+            Main.ASFA.display.pulsar(tb, val.equals("1"));
+            if(tb==TipoBotón.Conex)
+            {
+            	synchronized(Main.ASFA)
+            	{
+            		Main.ASFA.notify();
+            	}
+            }
+            if(tb==TipoBotón.PrePar) Main.ASFA.display.pulsar(TipoBotón.VLCond, val.equals("1"));
+		}
+		else if(s.startsWith("simulator_time="))
+		{
+			Clock.set_external_time(Double.parseDouble(val.replace(',','.')));
+		}
+		else if(s.startsWith("asfa::div="))
+		{
+			for(int i=0; i<64; i++)
+			{
+				byte b = Integer.decode("0x"+val.substring(2*i, 2*i+2)).byteValue();
+				Main.ASFA.div.add(b);
+			}
+		}
+		else if(s.startsWith("asfa::akt="))
+		{
+			Main.ASFA.AKT = val.equals("1");
+		}
+		else if(s.startsWith("asfa::con="))
+		{
+			Main.ASFA.CON = !val.equals("0");
+		}
+		else if(s.startsWith("asfa::cg::conectado="))
+		{
+			Main.ASFA.ASFAconectado = val.equals("1");
+			synchronized(Main.ASFA)
+        	{
+        		Main.ASFA.notify();
+        	}
+		}
+		else if(s.startsWith("asfa::cg::anulado="))
+		{
+			Main.ASFA.ASFAanulado = val.equals("1");
+			synchronized(Main.ASFA)
+        	{
+        		Main.ASFA.notify();
+        	}
+		}
+		else if(s.startsWith("asfa::selector_tipo="))
+		{
+			int speed = Integer.parseInt(val);
+			int selectorT=0;
+			if (speed > 180) selectorT = 8;
+			else if (speed > 160) selectorT = 7;
+			else if (speed > 140) selectorT = 6;
+			else if (speed > 120) selectorT = 5;
+			else if (speed > 100) selectorT = 4;
+			else if (speed > 90) selectorT = 3;
+			else if (speed > 80) selectorT = 2;
+			else if (speed > 10) selectorT = 1;
+			else if (speed > 0) selectorT = speed;
+			if (selectorT > 0) Main.ASFA.selectorT = selectorT;
+		}
+		else if(s.startsWith("asfa::pantalla::conectada="))
+		{
+			if (val.equals("1"))
+			{
+				Main.ASFA.display.pantallaconectada = true;
+			}
+		}
+	}
 	static boolean matches(String topic, String var)
 	{
-		if (topic.startsWith("register(")) topic = topic.substring(9, topic.length()-2);
-		if (topic.startsWith("get(")) topic = topic.substring(4, topic.length()-2);
+		if (topic.startsWith("register(")) topic = topic.substring(9, topic.length()-1);
+		if (topic.startsWith("get(")) topic = topic.substring(4, topic.length()-1);
 		String[] t1 = topic.split("::");
 		String[] t2 = var.split("::");
 		for (int i=0; i<t1.length && i<t2.length; i++)
 		{
-			if (t1[i] == "*") return true;
-			if (t1[i] != "+" && !t1[i].equals(t2[i])) break;
+			if (t1[i].equals("*")) return true;
+			if (!t1[i].equals("+") && !t1[i].equals(t2[i])) break;
 			if (i+1 == t1.length && t1.length == t2.length) return true;
 		}
 		return false;

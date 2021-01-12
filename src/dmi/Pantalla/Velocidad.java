@@ -44,13 +44,15 @@ public class Velocidad extends JPanel {
 
     boolean LeadingZeros=false;
     boolean Center;
-    static Font font = null;
+    static Font fontdia = null;
+    static Font fontnoche = null;
     JDigit[] digitos;
     ImageIcon[] icons_dia = new ImageIcon[10];
     ImageIcon[] icons_noche = new ImageIcon[10];
     ImageIcon[] icons;
-    static float digits_height;
-    ImageIcon RenderDigit(int num, Color c)
+    static float digits_height_dia;
+    static float digits_height_noche;
+    ImageIcon RenderDigit(int num, Color c, boolean noche)
     {
 		BufferedImage bi = new BufferedImage(
 				Main.dmi.pantalla.getScale(19), Main.dmi.pantalla.getScale(30), BufferedImage.TYPE_INT_ARGB);
@@ -59,16 +61,16 @@ public class Velocidad extends JPanel {
             RenderingHints.KEY_ANTIALIASING,
             RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setColor(c);
-        g2d.setFont(font);
+        g2d.setFont(noche ? fontnoche : fontdia);
         FontMetrics fm = g2d.getFontMetrics();
         String text = Integer.toString(num);
         if (Config.Fabricante.equals("DIMETRONIC"))
         {
-        	g2d.drawString(text, (Main.dmi.pantalla.getScale(19)-fm.stringWidth(text))/2, (Main.dmi.pantalla.getScale(31)+digits_height)/2);
+        	g2d.drawString(text, (Main.dmi.pantalla.getScale(19)-fm.stringWidth(text))/2, (Main.dmi.pantalla.getScale(31)+(noche ? digits_height_noche : digits_height_dia))/2);
         }
         else
         {
-            float sc = Main.dmi.pantalla.getScale(30)/digits_height;
+            float sc = Main.dmi.pantalla.getScale(30)/(noche ? digits_height_noche : digits_height_dia);
             g2d.transform(AffineTransform.getScaleInstance(1, sc));
             g2d.drawString(text, (Main.dmi.pantalla.getScale(19)-fm.stringWidth(text))/2, Main.dmi.pantalla.getScale(30)/sc);
         }
@@ -76,30 +78,19 @@ public class Velocidad extends JPanel {
         return new ImageIcon(bi);
     }
     public Velocidad(Color day, Color night) {
-    	if (font == null)
+    	if (fontdia == null)
     	{
-    		int sz = Main.dmi.pantalla.getScale(30);
-    		try {
-				font = Font.createFont(Font.TRUETYPE_FONT, new File(Config.Fabricante+".ttf")).deriveFont((float)sz);
-			} catch (FontFormatException | IOException e) {
-				font = new Font("Lucida Sans", 0, sz);
-				e.printStackTrace();
-			}
-    		Rectangle2D r = font.createGlyphVector(getFontMetrics(font).getFontRenderContext(), "0").getVisualBounds();
-			double ty = sz*sz/r.getHeight();
-			double tx = sz*Main.dmi.pantalla.getScale(18)/r.getWidth();
-			if (tx<ty) digits_height = (float)(tx*r.getHeight()/sz);
-			else digits_height = sz;
-    		font = font.deriveFont((float) Math.min(tx, ty));
-    	}	  
+    		fontdia = getFont(false);
+    		fontnoche = getFont(true);
+    	}
     	setOpaque(false);
         Night = night;
         Day = day;
         setLayout(null);  	
     	for (int i=0; i<10; i++)
     	{
-	        icons_dia[i] = RenderDigit(i, Day);
-	        icons_noche[i] = RenderDigit(i, Night);
+	        icons_dia[i] = RenderDigit(i, Day, false);
+	        icons_noche[i] = RenderDigit(i, Night, true);
     	}
     	icons = icons_dia;
     }
@@ -167,5 +158,26 @@ public class Velocidad extends JPanel {
     	if (value == val) return;
         value = val;
         update();
+    }
+    public Font getFont(boolean noche)
+    {
+    	Font font;
+    	int sz = Main.dmi.pantalla.getScale(30);
+		try {
+			font = Font.createFont(Font.TRUETYPE_FONT, new File(Config.Fabricante+".ttf")).deriveFont((float)sz);
+			if (!noche && Config.Fabricante.equals("")) font = font.deriveFont(1); // TODO: comprobar qué fabricantes cumplen
+		} catch (FontFormatException | IOException e) {
+			font = new Font("Lucida Sans", noche ? 0 : 1, sz);
+			e.printStackTrace();
+		}
+		Rectangle2D r = font.createGlyphVector(getFontMetrics(font).getFontRenderContext(), "0").getVisualBounds();
+		double ty = sz*sz/r.getHeight();
+		double tx = sz*Main.dmi.pantalla.getScale(18)/r.getWidth();
+		float digits_height;
+		if (tx<ty) digits_height = (float)(tx*r.getHeight()/sz);
+		else digits_height = sz;
+		if (noche) digits_height_noche = digits_height;
+		else digits_height_dia = digits_height;
+		return font.deriveFont((float) Math.min(tx, ty));
     }
 }
