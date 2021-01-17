@@ -50,6 +50,7 @@ public class ECPinterface {
 			subscribe("asfa::pulsador::conex");
 			subscribe("asfa::pulsador::basico");
 			subscribe("asfa::pulsador::ilum::*");
+			subscribe("asfa::dmi::activo");
 			subscribe("asfa::leds::*");
 			subscribe("asfa::fabricante");
 			while(true)
@@ -218,7 +219,27 @@ public class ECPinterface {
 						}
 					}
 				}
-				else if(s.startsWith("asfa::pulsador::conex="))
+				else if(s.startsWith("asfa::conectado="))
+				{
+					if (!val.equals("1"))
+					{
+						dmi.pantalla.apagar();
+		        		if (Config.ApagarOrdenador)
+		        		{
+		        			try {
+								Runtime.getRuntime().exec("shutdown -h now");
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+		        		}
+					}
+					else if (dmi.activo)
+					{
+						dmi.pantalla.encender();
+					}
+				}
+				else if(s.startsWith("asfa::dmi::activo="))
 				{
 					if (!val.equals("1"))
 					{

@@ -38,7 +38,7 @@ class EstadoBotón {
     }
     public void esperarPulsado(Object detector)
     {
-    	if(lector!=null && detector.equals(lector)) return;
+    	if(lector!=null && detector != null && detector.equals(lector)) return;
     	startTime = 0;
     	lector = detector;
     }
