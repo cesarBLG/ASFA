@@ -135,6 +135,18 @@ public class PaqueteRegistro
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run()
+				{
+					try {
+						writer.close();
+						excel.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			});
 		}
 		ByteBuffer b = ByteBuffer.allocate(30);
 		b.putShort((short) 0xDCBA);
@@ -182,18 +194,6 @@ public class PaqueteRegistro
 			e.printStackTrace();
 		}
 		paquetes.add(p);
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			public void run()
-			{
-				try {
-					writer.close();
-					excel.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		});
 	}
 	static void cambio_hora(double horantigua)
 	{

@@ -6,6 +6,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -25,7 +26,9 @@ public class Repetidor extends JPanel {
     public Luces luces_basico;
     
     public Repetidor() {
-        setOpaque(false);
+        setOpaque(true);
+        setBackground(new Color(0, 83, 135));
+        this.setBorder(BorderFactory.createLineBorder(new Color(0, 83, 135), 10));
         ImageIcon[] iconos = new ImageIcon[2];
         iconos[0] = new ImageIcon(getClass().getResource("/content/Botones/Modo.png"));
         iconos[1] = new ImageIcon(getClass().getResource("/content/Botones/ModoIluminado.png"));

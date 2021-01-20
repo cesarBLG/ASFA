@@ -120,9 +120,13 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
                 }
             }
         }
+    	if (Reached) {
+            VC = new Curva(VC.OrdenadaFinal);
+            IF = new Curva(IF.OrdenadaFinal);
+    	}
         return new Curva[] {VC, IF};
     }
-    int aum = 0;
+    public int aum = 0;
     Curva vc0;
     Curva if0;
     public final void SpeedUp() {

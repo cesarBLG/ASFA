@@ -88,11 +88,17 @@ public class ECPinterface {
 				else if (s.startsWith("asfa::indicador::v_control="))
 				{
 	            	dmi.pantalla.vtarget.veloc.value = Integer.parseInt(val);
+	            	dmi.pantalla.vtarget.veloc_lvi.value = Integer.parseInt(val);
 	            	dmi.pantalla.vtarget.update();
 				}
 				else if (s.startsWith("asfa::indicador::estado_vcontrol="))
 				{
 	            	dmi.pantalla.vtarget.figureVisible = Integer.parseInt(val);
+	            	dmi.pantalla.vtarget.update();
+				}
+				else if (s.startsWith("asfa::indicador::vcontrol_degradada="))
+				{
+	            	dmi.pantalla.vtarget.lvi = val.equals("1") || val.equals("true");
 	            	dmi.pantalla.vtarget.update();
 				}
 				else if (s.startsWith("asfa::indicador::frenado="))

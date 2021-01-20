@@ -14,6 +14,7 @@ import java.util.Comparator;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
@@ -40,6 +41,7 @@ public class DMI extends JFrame {
     public Pupitre pupitre;
     public boolean singleScreen = false;
     public boolean fullScreen = false;
+    public boolean separado = false;
     public boolean activo=false;
     public ECPinterface ecp;
     public Modo modo;
@@ -134,6 +136,19 @@ public class DMI extends JFrame {
         g.gridwidth = 1;
         if(!singleScreen) add(cg, g);
         getContentPane().setBackground(singleScreen ? Color.black : new Color(0, 83, 135));
+        /*if (true)
+        {
+        	JFrame PA = new JFrame();
+        	PA.setUndecorated(true);
+        	PA.add(pupitre);
+        	PA.pack();
+        	PA.setVisible(true);
+        	JFrame Rep = new JFrame();
+        	Rep.setUndecorated(true);
+        	Rep.add(repetidor);
+        	Rep.pack();
+        	Rep.setVisible(true);
+        }*/
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         ecp = new ECPinterface(this);

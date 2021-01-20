@@ -39,6 +39,7 @@ class EstadoBotón {
     public void esperarPulsado(Object detector)
     {
     	if(lector!=null && detector != null && detector.equals(lector)) return;
+    	if (pulsado && Config.Fabricante.equalsIgnoreCase("DIMETRONIC")) return;
     	startTime = 0;
     	lector = detector;
     }
@@ -173,6 +174,9 @@ public class DisplayInterface {
             case "Velocidad Objetivo":
                 write("asfa::indicador::v_control", state);
                 break;
+            case "Velocidad Objetivo Degradada":
+                write("asfa::indicador::vcontrol_degradada", state);
+                break;
             case "EstadoVobj":
                 write("asfa::indicador::estado_vcontrol", state);
                 break;
@@ -273,6 +277,10 @@ public class DisplayInterface {
     {
         orclient.sendData("noretain(asfa::sonido::detener="+num+")");
         PaqueteRegistro.sonido("", false);
+    }
+    public void stopSoundNoLog(String num)
+    {
+        orclient.sendData("noretain(asfa::sonido::detener="+num+")");
     }
     public void write(String fun, int val)
     {

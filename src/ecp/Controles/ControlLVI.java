@@ -22,7 +22,7 @@ public class ControlLVI extends Control implements ControlReanudo {
     Curva[] getCurvas(int O) {
     	Curva VC = null;
     	Curva IF = null;
-        if (O > 160) {
+    	if (O > 160) {
             IF = new Curva(O + 5, Vf + 3, 0.5, 9);
             VC = new Curva(O, Vf, 0.6, 7.5);
         } else if (O == 160) {
@@ -42,6 +42,10 @@ public class ControlLVI extends Control implements ControlReanudo {
             IF.OrdenadaFinal = IF.valor(0);
             VC.OrdenadaFinal = VC.valor(0);
         }
+    	if (Reached) {
+            VC = new Curva(VC.OrdenadaFinal);
+            IF = new Curva(IF.OrdenadaFinal);
+    	}
         return new Curva[] {VC, IF};
     }
     public ControlLVI(TrainParameters param, int Vf, boolean aumentable, double time) {
@@ -77,6 +81,8 @@ public class ControlLVI extends Control implements ControlReanudo {
 		return activado;
 	}
 	double distancia = -1;
+
+	public boolean Degradado;
 	@Override
 	public double UltimaDistancia() {
 		return distancia;
