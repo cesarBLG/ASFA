@@ -1577,7 +1577,6 @@ public class ASFA {
     private void actualizarEstado() {
         double max = ControlActivo.getIF(Clock.getSeconds());
         double control = ControlActivo.getVC(Clock.getSeconds());
-        double target = ControlActivo.VC.OrdenadaFinal;
         double overspeed1 = control + 0.25 * (max - control);
         double overspeed2 = control + 0.5 * (max - control);
         double vreal = MpS.ToKpH(Odometer.getSpeed());

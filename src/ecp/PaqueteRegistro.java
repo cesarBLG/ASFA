@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -128,6 +129,31 @@ public class PaqueteRegistro
 				File f = new File("registro.cls");
 				FileWriter f2 = new FileWriter("registro.csv");
 				writer = new FileOutputStream(f);
+				ByteBuffer b = ByteBuffer.allocate(40);
+				b.order(ByteOrder.LITTLE_ENDIAN);
+				b.putShort((short) 0x5ACE);
+				b.putShort((short) 0x3130);
+				b.putInt(0x30416300);
+				b.putInt(0);
+				b.put((byte)3);
+				b.put((byte)1);
+				b.putShort((short)0x465F);
+				b.putShort((short)0x5916);
+				b.putShort((short)0x9465);
+				b.putShort((short)0x9671);
+				b.putShort((short)0x0091);
+				b.putShort((short)0x0001);
+				b.putInt(0x31304142);
+				b.putShort((short)120);
+				b.putShort((short)2);
+				b.putInt(100);
+				short checksum=0;
+				for(int i=2; i<38; i++)
+				{
+					checksum += (short)(b.get(i)&0xff);
+				}
+				b.putShort(checksum);
+				writer.write(b.array());
 				excel = new BufferedWriter(f2);
 				excel.write("NP;FECHA;HORA;VARIABLE;VALOR;VEL.REAL;VEL.CONT;VEL.IF;DISTANCIA");
 				excel.newLine();
@@ -149,6 +175,7 @@ public class PaqueteRegistro
 			});
 		}
 		ByteBuffer b = ByteBuffer.allocate(30);
+		b.order(ByteOrder.LITTLE_ENDIAN);
 		b.putShort((short) 0xDCBA);
 		b.putInt(paquetes.size()+1);
 		b.putShort((short)p.Codigo);
@@ -160,9 +187,9 @@ public class PaqueteRegistro
 		b.putShort((short)p.Vcontrol);
 		b.putShort((short)p.Vif);
 		short checksum=0;
-		for(int i=4; i<28; i++)
+		for(int i=2; i<28; i++)
 		{
-			checksum += b.get(i);
+			checksum += (short)(b.get(i)&0xff);
 		}
 		b.putShort(checksum);
 		try {
