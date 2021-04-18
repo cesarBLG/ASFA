@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import javax.swing.JOptionPane;
+import javax.swing.Timer;
 
 import dmi.*;
 import dmi.Botones.Botón;
@@ -88,9 +89,44 @@ public class ASFA {
     
     int estadoInicio = 0;
 
+    Timer watchdog;
+    
     public ASFA() {
         Main.ASFA = this;
         div = new DIV();
+
+        Thread shutdown = new Thread() {
+            public void run() {
+                display.orclient.sendData("asfa::conectado=");
+                display.orclient.sendData("asfa::emergency=false");
+                display.iluminarTodos(false);
+                display.iluminar(TipoBotón.Conex, false);
+                display.led_basico(0, 0);
+                display.led_basico(1, 0);
+                display.led_basico(2, 0);
+                ApagarSonidos();
+            }
+        };
+        Runtime.getRuntime().addShutdownHook(shutdown);
+        
+        watchdog = new Timer(500, (ev) ->  {
+            display.orclient.sendData("asfa::conectado=");
+            display.orclient.sendData("asfa::emergency=true");
+            display.iluminarTodos(false);
+            display.iluminar(TipoBotón.Conex, false);
+            display.led_basico(0, 0);
+            display.led_basico(1, 0);
+            display.led_basico(2, 0);
+            ApagarSonidos();
+            try {
+				Runtime.getRuntime().exec("java -jar ASFA.jar");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+            Runtime.getRuntime().removeShutdownHook(shutdown);
+            System.exit(1);
+        });
+        watchdog.setRepeats(false);
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -113,7 +149,9 @@ public class ASFA {
                     		new ASFA();
                     		return;
                     	}*/
+                    	watchdog.start();
                     	Update();
+                    	watchdog.stop();
                     	try {
                     		if (!Connected) ASFA.this.wait(500);
                     		else if (!CON) ASFA.this.wait(1000);
@@ -127,20 +165,8 @@ public class ASFA {
             }
         });
         t.start();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                display.orclient.sendData("asfa::conectado=");
-                display.orclient.sendData("asfa::emergency=false");
-                display.iluminarTodos(false);
-                display.iluminar(TipoBotón.Conex, false);
-                display.led_basico(0, 0);
-                display.led_basico(1, 0);
-                display.led_basico(2, 0);
-                ApagarSonidos();
-            }
-        });
     }
-
+    
     public void Initialize()
     {
     	Controles.clear();
@@ -317,7 +343,7 @@ public class ASFA {
         display.orclient.sendData("asfa::fase=" + (Fase2 ? "2" : "1"));
         for (Entry<TipoBotón, EstadoBotón> b : display.botones.entrySet())
         {
-        	if (b.getKey() != TipoBotón.ASFA_básico && b.getKey() != TipoBotón.Conex && b.getValue().averiado(5))
+        	if (b.getKey() != TipoBotón.ASFA_básico && b.getKey() != TipoBotón.Conex && b.getValue().averiado(4))
         	{
                 display.set(2, 3);
             	Connected = false;
@@ -473,8 +499,13 @@ public class ASFA {
     	else
     	{
         	display.esperarPulsado(TipoBotón.Conex, this);
-        	if (display.botones.get(TipoBotón.Conex).pulsado && !Connected) Conex();
-        	if (!display.botones.get(TipoBotón.Conex).pulsado && Connected) Desconex();
+        	if (display.botones.get(TipoBotón.Conex).pulsado && !Connected && !averia)
+        	{
+            	watchdog.stop();
+        		Conex();
+            	watchdog.start();
+        	}
+        	if (!display.botones.get(TipoBotón.Conex).pulsado && (Connected || averia)) Desconex();
         	display.iluminar(TipoBotón.Conex, !display.botones.get(TipoBotón.Conex).pulsado);
     	}
     	if (prevFE_lazo != FE_lazo)
@@ -550,7 +581,8 @@ public class ASFA {
 
         if (modo == Modo.EXT) {
         	UltimaFrecProcesada = frecRecibida = captador.getData();
-        	Eficacia = frecRecibida == FrecASFA.FP && !EficaciaIrrecuperable;
+       	 	if (frecRecibida == FrecASFA.FP) UltimaFP = Clock.getSeconds();
+        	Eficacia = (frecRecibida == FrecASFA.FP || UltimaFP + TiempoPerdidaFP > Clock.getSeconds()) && !EficaciaIrrecuperable;
             display.iluminar(TipoBotón.Alarma, !Eficacia);
             display.display("Eficacia", Eficacia ? 1 : 0);
             display.display("Modo", modo.ordinal());
@@ -893,6 +925,10 @@ public class ASFA {
                 estadoInicio = 0;
                 display.iluminar(TipoBotón.Rearme, false);
             }
+        }
+        else
+        {
+            display.iluminar(TipoBotón.Rearme, false);
         }
         if (!basico)
         {

@@ -132,6 +132,25 @@ public class Pantalla extends JPanel {
     public void setup(int state, String msg) {
     	conectada = true;
         removeAll();
+        setup_sepsa(state, msg);
+        validate();
+        repaint();
+        if (state == 0 || state == 1)
+        {
+    		Timer t = new Timer(1800, (arg0) -> {
+    			conectada = true;
+    			stop();
+    	    	Main.dmi.ecp.subscribe("asfa::pantalla::activa");
+    			Main.dmi.ecp.sendData("noretain(asfa::pantalla::conectada=1)");
+    		});
+    		t.setRepeats(false);
+    		t.start();
+        }
+    }
+    
+    public void setup_sepsa(int state, String msg)
+    {
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         Date date = new Date();
         DateFormat df = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
@@ -190,19 +209,57 @@ public class Pantalla extends JPanel {
         j.setFont(new Font(j.getFont().getName(), Font.PLAIN, getScale(j.getFont().getSize())));
         add(j);
         add(Box.createRigidArea(new Dimension(0, 5)));
+    }
+    
+    public void setup_indra(int state, String msg)
+    {
+    	setBackground(blanco);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        add(Box.createRigidArea(new Dimension(0, 5)));
+        JLabel j;
+        switch (state) {
+            case 0:
+                j = new JLabel("ASFA OK");
+                j.setForeground(Color.green);
+                break;
+            case 1:
+                j = new JLabel("ASFA-operativo");
+                j.setForeground(Color.yellow);
+                break;
+            default:
+                j = new JLabel("ASFA no operativo");
+                j.setForeground(Color.red);
+                break;
+        }
+        j.setFont(new Font(j.getFont().getName(), Font.PLAIN, getScale(20)));
+        j.setAlignmentX(Component.LEFT_ALIGNMENT);
+        j.setHorizontalAlignment(JLabel.LEFT);
+        add(j);
         
-        validate();
-        repaint();
-        if (state == 0 || state == 1)
+        j = new JLabel("Version "+Config.Version);
+        j.setForeground(Color.black);
+        j.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        add(Box.createRigidArea(new Dimension(0, 5)));
+        add(j);
+        
+        Date date = new Date();
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        j = new JLabel(df.format(date)+"-GMT");
+        j.setForeground(Color.black);
+        j.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(Box.createRigidArea(new Dimension(0, 5)));
+        add(j);
+        
+        add(Box.createRigidArea(new Dimension(0, 5)));
+        if (msg != null && !msg.isEmpty())
         {
-    		Timer t = new Timer(1800, (arg0) -> {
-    			conectada = true;
-    			stop();
-    	    	Main.dmi.ecp.subscribe("asfa::pantalla::activa");
-    			Main.dmi.ecp.sendData("noretain(asfa::pantalla::conectada=1)");
-    		});
-    		t.setRepeats(false);
-    		t.start();
+            JLabel m = new JLabel(msg);
+            m.setAlignmentX(Component.CENTER_ALIGNMENT);
+            m.setHorizontalAlignment(JLabel.CENTER);
+            m.setForeground(Color.white);
+            m.setFont(new Font(m.getFont().getName(), Font.PLAIN, getScale(m.getFont().getSize())));
+            add(m);
+            add(Box.createRigidArea(new Dimension(0, 5)));
         }
     }
 
