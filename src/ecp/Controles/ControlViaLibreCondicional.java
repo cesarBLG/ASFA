@@ -24,4 +24,16 @@ public class ControlViaLibreCondicional extends ControlFASF {
         }
 		return new Curva[] {VC, IF};
 	}
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+    	double vfc=0,v0c=0;
+		if (T>160) {
+			vfc = 160;
+			if (v > 180) v0c = 200;
+			else v0c = 180;
+		} else {
+			v0c = vfc = T;
+		}
+    	return Curva.generarCurvas(this, v0c, vfc);
+	}
 }

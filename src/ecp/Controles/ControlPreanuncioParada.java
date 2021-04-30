@@ -5,6 +5,8 @@ import ecp.ASFA;
 public class ControlPreanuncioParada extends ControlFASF implements ControlAumentable, ControlReanudo {
 
     public boolean AumentoVelocidad;
+    
+    public boolean AumentoConfirmado;
 
     public ControlPreanuncioParada(double time, TrainParameters param) {
         super(time, 0, 0, 0, param);
@@ -82,17 +84,49 @@ public class ControlPreanuncioParada extends ControlFASF implements ControlAumen
         return new Curva[] {VC, IF};
     }
 
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		double vfc=0,v0c=0;
+		if (Modo == ASFA.Modo.AV) {
+			if (T>=140) {
+				vfc = AumentoVelocidad ? 140 : 100;
+				if (v > 180) v0c = 200;
+				else if (v > 160) v0c = 180;
+				else if (v > 140) v0c = 160;
+				else v0c = 140;
+			} else if (T == 120) {
+				v0c = 120;
+				vfc = AumentoVelocidad ? 120 : 100;
+			} else {
+				v0c = vfc = T;
+			}
+		} else {
+			if (T>=120) {
+				vfc = AumentoVelocidad ? 100 : 80;
+				if (v > 140) v0c = 160;
+				else if (v > 120) v0c = 140;
+				else v0c = 120;
+			} else {
+				v0c = T;
+				vfc = AumentoVelocidad ? 80 : 60;
+			}
+		}
+		return Curva.generarCurvas(this, v0c, vfc);
+	}
+
     @Override
     public void AumentarVelocidad(boolean value) {
         AumentoVelocidad = value;
+        AumentoConfirmado = value;
         Curvas();
     }
 
     public final boolean Aumentado() {
         return AumentoVelocidad;
     }
-    public final boolean Aumentable() {
-    	return !basico && !AumentoVelocidad;
+    public final boolean Aumentable()
+    {
+    	return !AumentoConfirmado && Modo != ASFA.Modo.RAM && !basico;
     }
     boolean activado = false;
 	@Override

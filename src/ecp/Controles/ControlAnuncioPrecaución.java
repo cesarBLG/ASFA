@@ -6,11 +6,54 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
 
     public boolean AumentoVelocidad;
     
+    public boolean AumentoConfirmado;
+    
     public ControlAnuncioPrecaución(double time, TrainParameters param) {
         super(time, 0, 0, param.Modo == ASFA.Modo.RAM ? 200 : 0, param);
         Curvas();
     }
-
+    @Override
+	Curva[] getCurvas_AESF(int T, int v) {
+    	double vfc=0,v0c=0;
+    	if (Modo == ASFA.Modo.AV && !basico) {
+			if (T>=160) {
+				vfc = AumentoVelocidad ? 160 : 120;
+				if (v > 180) v0c = 200;
+				else if (v > 160) v0c = 180;
+				else v0c = 160;
+			} else if (T == 140) {
+				v0c = 140;
+				vfc = AumentoVelocidad ? 140 : 120;
+			} else {
+				v0c = vfc = T;
+			}
+		} else if (Modo == ASFA.Modo.AV && basico) {
+			if (T>=120) {
+				vfc = 100;
+				if (v > 180) v0c = 200;
+				else if (v > 160) v0c = 180;
+				else if (v > 140) v0c = 160;
+				else if (v > 120) v0c = 140;
+				else v0c = 120;
+			} else {
+				v0c = vfc = T;
+			}
+		} else if (Modo == ASFA.Modo.CONV) {
+			if (T>=120) {
+				vfc = AumentoVelocidad ? 100 : 80;
+				if (v > 140) v0c = 160;
+				else if (v > 120) v0c = 140;
+				else v0c = 120;
+			} else {
+				v0c = T;
+				vfc = AumentoVelocidad ? T : 60;
+			}
+		} else if (Modo == ASFA.Modo.RAM) {
+			v0c = T;
+			vfc = 30;
+		}
+    	return Curva.generarCurvas(this, v0c, vfc);
+    }
     Curva[] getCurvas(int O) {
     	Curva VC = null;
     	Curva IF = null;
@@ -98,6 +141,7 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
 
     public final void AumentarVelocidad(boolean value) {
         AumentoVelocidad = value;
+        AumentoConfirmado = value;
         Curvas();
     }
 
@@ -106,7 +150,7 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
     }
     public final boolean Aumentable()
     {
-    	return !AumentoVelocidad && Modo != ASFA.Modo.RAM && !basico;
+    	return !AumentoConfirmado && Modo != ASFA.Modo.RAM && !basico;
     }
     boolean activado = false;
 	@Override

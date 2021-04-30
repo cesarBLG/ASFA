@@ -22,4 +22,15 @@ public class ControlSecuenciaAA extends Control {
         }
 		return new Curva[] {VC, IF};
 	}
+
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		int vel;
+		if (Modo == ASFA.Modo.AV) {
+			vel = Math.min(T, 100);
+		} else {
+			vel = 60;
+		}
+		return Curva.generarCurvas(this, vel, vel);
+	}
 }

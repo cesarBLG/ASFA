@@ -106,6 +106,59 @@ public class ControlSecuenciaAN_A extends ControlFASF implements ControlReanudo 
         }
 		return new Curva[] {VC, IF};
 	}
+	
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		double vfc=0,v0c=0;
+		if (Modo == ASFA.Modo.AV) {
+			if (T>=140) {
+				if (FirstBalise) {
+					v0c = AnteriorAumVel ? 140 : 100;
+					vfc = AnteriorAumVel ? 120 : 100;
+				} else {
+					v0c = AnteriorAumVel ? 120 : 100;
+					vfc = 100;
+				}
+			} else if (T==120) {
+				if (FirstBalise) {
+					v0c = AnteriorAumVel ? 120 : 100;
+					vfc = AnteriorAumVel ? 120 : 100;
+				} else {
+					v0c = AnteriorAumVel ? 120 : 100;
+					vfc = 100;
+				}
+			} else if (T==100) {
+				v0c = vfc = 100;
+			} if (T<100) {
+				if (FirstBalise) {
+					v0c = T;
+					vfc = AnteriorAumVel ? T : 80;
+				} else {
+					v0c = AnteriorAumVel ? T : 80;
+					vfc = AnteriorAumVel ? T : 80;
+				}
+			}
+		} else {
+			if (T>=120) {
+				if (FirstBalise) {
+					v0c = AnteriorAumVel ? 100 : 80;
+					vfc = AnteriorAumVel ? 90 : 60;
+				} else {
+					v0c = AnteriorAumVel ? 90 : 60;
+					vfc = AnteriorAumVel ? 80 : 60;
+				}
+			} else {
+				if (FirstBalise) {
+					v0c = AnteriorAumVel ? 80 : 60;
+					vfc = 60;
+				} else {
+					v0c = vfc = 60;
+				}
+			}
+		}
+		return Curva.generarCurvas(this, v0c, vfc);
+	}
+
     boolean activado = false;
 	@Override
 	public void Activar(boolean val) {

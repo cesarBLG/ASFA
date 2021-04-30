@@ -12,5 +12,9 @@ public class ControlBTS extends Control {
         this.Vbts = Vbts;
         Curvas();
     }
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		return getCurvas(T);
+	}
 
 }

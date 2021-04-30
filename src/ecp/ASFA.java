@@ -940,7 +940,7 @@ public class ASFA {
             		VeloActivo = false;
             		PaqueteRegistro.ocultacion(1, false);
             	}
-            	else if (!VeloActivo) Velo();
+            	else if (!VeloActivo) Velo(true);
             }
         }
         actualizarEstado();
@@ -1022,8 +1022,8 @@ public class ASFA {
             if (RecStart != 0 && UltimaFrecValida != FrecASFA.L3) {
                 if ((frecRecibida != FrecASFA.L4 || VentanaL4 == -1) && ((frecRecibida != FrecASFA.L10 && frecRecibida != FrecASFA.L11) || (VentanaL10 == -1 && VentanaL11 == -1))) {
                     notRec(UltimaFrecValida);
+                    Velo(false);
                     display.stopSound("S2-1");
-                    Velo();
                 }
             }
             if (frecRecibida != FrecASFA.L4 && VentanaL4 != -1)
@@ -1307,13 +1307,13 @@ public class ASFA {
     	}
     	if(modo == Modo.CONV || modo == Modo.AV || modo == Modo.RAM)
     	{
-            if (PrevDist + (modo == Modo.AV ? 600 : modo == Modo.RAM ? 800 : 450) < Odometer.getDistance() && SigNo == 0) {
+            if (PrevDist + (modo == Modo.AV ? 600 : modo == Modo.RAM ? 800 : 450) < Odometer.getDistance() && SigNo != 2) {
                 SigNo = 2;
-                if (ControlSeñal instanceof ControlPreviaSeñalParada) {
+                if (ControlSeñal instanceof ControlPreviaSeñalParada || (ASFA_version == 2 && ControlSeñal instanceof ControlZonaLimiteParada)) {
                     Urgencias();
                     UltimaInfo = Info.Anuncio_parada;
-                    Velo();
                     addControlSeñal(new ControlAnuncioParada(0, param));
+                    Velo(false);
                 } else if (ControlSeñal instanceof ControlSecuenciaAN_A) {
                 	addControlSeñal(ControlSeñal);
                 }
@@ -1512,7 +1512,7 @@ public class ASFA {
         		ControlSeñalParada csp = (ControlSeñalParada) c;
         		if(csp.TiempoVAlcanzada==0 && ((modo == Modo.CONV && csp.recCount<2) || (modo == Modo.AV && csp.recCount<3)))
         		{
-        			if((csp.recCount == 0 && csp.DistanciaInicial + 200 < Odometer.getDistance()) || (csp.recCount > 0 && ((distanciaRecParada > 0 && csp.lastDistRec + distanciaRecParada < Odometer.getDistance()) || (tiempoRecParada > 0 && csp.lastTimeRec + tiempoRecParada < Clock.getSeconds()))))
+        			if((csp.recCount == 0 && csp.DistanciaInicial + 200 < Odometer.getDistance()) || (csp.recCount > 0 && ((distanciaRecParada > 0 && csp.lastDistRec + distanciaRecParada < Odometer.getDistance()) || (tiempoRecParada > 0 && csp.lastTimeRec + (csp.Aumentado() ? tiempoRecParada/2 : tiempoRecParada) < Clock.getSeconds()))))
         			{
         				if(csp.recStart < 0)
         				{
@@ -1545,6 +1545,16 @@ public class ASFA {
         			}
         		}
         		break;
+        	}
+        }
+        for(Control c : Controles)
+        {
+        	if (c instanceof ControlAumentable)
+        	{
+        		ControlAumentable aum = (ControlAumentable)c;
+        		if (c.TiempoRec + 10 < Clock.getSeconds() && aum.Aumentable() && aum.Aumentado()) {
+            		aum.AumentarVelocidad(false);
+        		}
         	}
         }
         if (UltimoControl instanceof ControlAumentable && UltimoControl.TiempoRec + 10 > Clock.getSeconds() && ((ControlAumentable) UltimoControl).Aumentable()) {
@@ -1589,17 +1599,20 @@ public class ASFA {
     
     boolean VeloActivo = false;
     boolean VeloEliminable = false;
-    private void Velo()
+    private void Velo(boolean velarControles)
     {
     	Object obj = display.botones.get(TipoBotón.Ocultación).lector;
     	if (obj!=null && obj.equals(VeloActivo)) display.botones.get(TipoBotón.Ocultación).lector = null;
     	VeloEliminable = false;
-    	for (Control c : Controles)
+    	if (velarControles)
     	{
-    		c.Velado = true;
+        	for (Control c : Controles)
+        	{
+        		c.Velado = true;
+        	}
+        	UltimaInfo = Info.Vía_libre;
     	}
     	VeloActivo = true;
-    	UltimaInfo = Info.Vía_libre;
 		PaqueteRegistro.ocultacion(1, true);
     }
     
@@ -1935,7 +1948,7 @@ public class ASFA {
             SigNo = 0;
             AnteriorControlSeñal = ControlSeñal;
         }
-        PrevDist = DistanciaUltimaRecepcion;
+        if (SigNo != 1) PrevDist = DistanciaUltimaRecepcion;
     }
     private boolean InfoSeñalDistinta;
     private Info UltimaInfo = Info.Desconocido;
@@ -1973,7 +1986,7 @@ public class ASFA {
         Controles.removeAll(Caducados);
         if (modo != Modo.RAM && (!basico || curvasBasicoDigital) && AnteriorControlSeñal instanceof ControlPreanuncioParada && c instanceof ControlAnuncioParada) {
         	boolean aumento = ((ControlPreanuncioParada)AnteriorControlSeñal).AumentoVelocidad;
-        	if (!aumento && SigNo != 0 && ControlSeñal instanceof ControlSecuenciaAN_A) c = ControlSeñal;
+        	if (!aumento && SigNo != 0 && ControlSeñal instanceof ControlSecuenciaAN_A && ASFA_version < 3) c = ControlSeñal;
         	else c = new ControlSecuenciaAN_A(TiempoUltimaRecepcion, param, aumento, SigNo == 0);
         }
         c.TiempoRec = Clock.getSeconds();
@@ -2036,7 +2049,7 @@ public class ASFA {
                 } else if (ASFA_version >= 3){
                     c = new ControlViaLibreCondicional(ControlSeñal.TiempoInicial, param, false);
                 } else {
-                	c = new ControlViaLibreCondicional(TiempoUltimaRecepcion, param, Fixed);
+                	c = new ControlViaLibreCondicional(TiempoUltimaRecepcion, param, false);
                 }
             } else {
                 c = new ControlViaLibreCondicional(TiempoUltimaRecepcion, param, Fixed);
@@ -2095,8 +2108,12 @@ public class ASFA {
                 	c = cs;
                     if(cs.Aumentado())
                     {
-                    	cs.AumentarVelocidad(false);
-                    	cs.TiempoInicial = TiempoUltimaRecepcion;
+                    	if (ASFA_version >= 4)  {
+                    		cs.AumentoConfirmado = false;
+                    	} else {
+                        	cs.AumentarVelocidad(false);
+                        	cs.TiempoInicial = TiempoUltimaRecepcion;
+                    	}
                     }
                 } else if (ASFA_version >= 3){
                     c = new ControlAnuncioPrecaución((ControlSeñal instanceof ControlAumentable && ((ControlAumentable) ControlSeñal).Aumentado()) ? TiempoUltimaRecepcion : ControlSeñal.TiempoInicial, param);
@@ -2123,8 +2140,12 @@ public class ASFA {
                 c = cs;
                 if(cs.Aumentado())
                 {
-                	cs.AumentarVelocidad(false);
-                	cs.TiempoInicial = TiempoUltimaRecepcion;
+                	if (ASFA_version >= 4)  {
+                		cs.AumentoConfirmado = false;
+                	} else {
+                    	cs.AumentarVelocidad(false);
+                    	cs.TiempoInicial = TiempoUltimaRecepcion;
+                	}
                 }
             } else if (ASFA_version >= 3){
                 c = new ControlPreanuncioParada(ControlSeñal.TiempoInicial, param);

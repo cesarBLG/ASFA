@@ -8,6 +8,36 @@ public class ControlAnuncioParada extends ControlFASF implements ControlReanudo 
         Curvas();
     }
     @Override
+	Curva[] getCurvas_AESF(int T, int v) {
+    	double vfc=0,v0c=0;
+    	if (Modo == ASFA.Modo.AV) {
+			if (T>=120) {
+				vfc = 100;
+				if (v > 180) v0c = 200;
+				else if (v > 160) v0c = 180;
+				else if (v > 140) v0c = 160;
+				else if (v > 120) v0c = 140;
+				else v0c = 120;
+			} else {
+				v0c = vfc = T;
+			}
+		} else if (Modo == ASFA.Modo.CONV){
+			if (T>=120) {
+				vfc = 80;
+				if (v > 140) v0c = 160;
+				else if (v > 120) v0c = 140;
+				else v0c = 120;
+			} else {
+				v0c = T;
+				vfc = 60;
+			}
+		} else if (Modo == ASFA.Modo.RAM){
+			v0c = T;
+			vfc = 30;
+		}
+    	return Curva.generarCurvas(this, v0c, vfc);
+    }
+    @Override
 	Curva[] getCurvas(int O) {
 		Curva VC = null;
 		Curva IF = null;

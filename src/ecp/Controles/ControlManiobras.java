@@ -11,4 +11,8 @@ public class ControlManiobras extends Control {
 		super(0,0,0,0,param);
 		Curvas();
 	}
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		return getCurvas(T);
+	}
 }

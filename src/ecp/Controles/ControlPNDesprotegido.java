@@ -59,6 +59,37 @@ public class ControlPNDesprotegido extends ControlPN implements ControlReanudo {
 		}
         return new Curva[] {VC, IF};
 	}
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		double vfc=0,v0c=0;
+		if (modoRAM) {
+			vfc = v0c = 30;
+		} else if ((Modo == ASFA.Modo.AV || Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BTS) && !basico) {
+			if (segundaCurva) {
+				v0c = vfc = 80;
+			} else {
+				vfc = 30;
+				if (T>=120) {
+					if (v > 140) v0c = 160;
+					else if (v > 120) v0c = 140;
+					else v0c = 120;
+				} else {
+					v0c = T;
+				}
+			}
+		} else {
+			if (T>=120) {
+				vfc = Modo == ASFA.Modo.AV ? 100 : 80;
+				if (v > 140) v0c = 160;
+				else if (v > 120) v0c = 140;
+				else v0c = 120;
+			} else {
+				vfc = Modo == ASFA.Modo.AV ? T : 60;
+				v0c = T;
+			}
+		}
+		return Curva.generarCurvas(this, v0c, vfc);
+	}
     public ControlPNDesprotegido(TrainParameters param, double time, double dist) {
         super(time, dist, 0, 1800, param);
         Curvas();
@@ -67,7 +98,7 @@ public class ControlPNDesprotegido extends ControlPN implements ControlReanudo {
     @Override
     public double getVC(double time) {
         double val = super.getVC(time);
-        if (val == 30 && !basico) {
+        if (val <= VC.OrdenadaFinal*3.6 && !basico) {
         	segundaCurva = true;
             Curvas();
             return super.getVC(time);

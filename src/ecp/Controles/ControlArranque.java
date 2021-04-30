@@ -1,6 +1,12 @@
 package ecp.Controles;
 
+import ecp.ASFA;
+
 public class ControlArranque extends ControlFASF {
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		return getCurvas(T);
+	}
 	Curva[] getCurvas(int O) {
 		Curva VC = new Curva(Math.min(T, 140));
 		Curva IF = new Curva(Math.min(T + 5, 145));

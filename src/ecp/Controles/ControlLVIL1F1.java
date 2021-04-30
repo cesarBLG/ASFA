@@ -126,6 +126,59 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
     	}
         return new Curva[] {VC, IF};
     }
+	
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		double vfc=0,v0c=0;
+		if (modoRAM) {
+			v0c = T;
+			vfc = AumentoVelocidad && !basico ? 50 : 30; 
+		} else if (Modo == ASFA.Modo.AV) {
+			if (basico) {
+				v0c = T;
+				vfc = Math.min(100, T);
+			} else {
+				if (T >= 160) {
+					vfc = AumentoVelocidad ? 160 : 100;
+					if (v > 180) v0c = 200;
+					else if (v > 160) v0c = 180;
+					else v0c = 160;
+				} else if (T == 140) {
+					vfc = AumentoVelocidad ? 140 : 100;
+					v0c = 140;
+				} else if (T == 120) {
+					vfc = AumentoVelocidad ? 120 : 100;
+					v0c = 120;
+				} else {
+					v0c = vfc = T;
+				}
+			}
+		} else if (Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.BTS) {
+			if (basico) {
+				if (T >= 120) {
+					vfc = 80;
+					if (v > 140) v0c = 160;
+					else if (v > 120) v0c = 140;
+					else v0c = 120;
+				} else {
+					v0c = T;
+					vfc = 60;
+				}
+			} else {
+				if (T >= 120) {
+					vfc = AumentoVelocidad ? 100 : 60;
+					if (v > 140) v0c = 160;
+					else if (v > 120) v0c = 140;
+					else v0c = 120;
+				} else {
+					v0c = T;
+					vfc = AumentoVelocidad ? T : 60;
+				}
+			}
+		}
+		if (Reached) v0c = vfc;
+		return Curva.generarCurvas(this, v0c, vfc);
+	}
     public int aum = 0;
     Curva vc0;
     Curva if0;

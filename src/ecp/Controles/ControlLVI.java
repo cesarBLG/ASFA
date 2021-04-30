@@ -1,5 +1,7 @@
 package ecp.Controles;
 
+import ecp.ASFA;
+
 public class ControlLVI extends Control implements ControlReanudo {
 
     public boolean Reached = false;
@@ -47,6 +49,10 @@ public class ControlLVI extends Control implements ControlReanudo {
             IF = new Curva(IF.OrdenadaFinal);
     	}
         return new Curva[] {VC, IF};
+    }
+    @Override
+	Curva[] getCurvas_AESF(int T, int v) {
+    	return Curva.generarCurvas(this, T, Vf);
     }
     public ControlLVI(TrainParameters param, int Vf, boolean aumentable, double time) {
         super(time, 0, 0, 0, param);

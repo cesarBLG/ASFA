@@ -1,5 +1,7 @@
 package ecp.Controles;
 
+import ecp.ASFA;
+
 public class ControlPNProtegido extends ControlPN {
 
 	Curva[] getCurvas(int O)
@@ -20,6 +22,19 @@ public class ControlPNProtegido extends ControlPN {
             VC = new Curva(Math.min(T, 155));
         }
         return new Curva[] {VC, IF};
+	}
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		double vfc=0,v0c=0;
+		if (T>=160) {
+			vfc = 155;
+			if (v > 180) v0c = 200;
+			else if (v > 160) v0c = 180;
+			else v0c = 160;
+		} else {
+			v0c = vfc = T;
+		}
+		return Curva.generarCurvas(this, v0c, vfc);
 	}
     public ControlPNProtegido(TrainParameters param, double time, double dist) {
         super(time, dist, 0, 1800, param);

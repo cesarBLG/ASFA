@@ -45,6 +45,18 @@ public class ControlPreviaSeñalParada extends ControlFASF implements ControlRea
         }
 		return new Curva[] {VC, IF};
 	}
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+    	double vfc=0,v0c=0;
+		if (Modo == ASFA.Modo.AV || Modo == ASFA.Modo.CONV) {
+			v0c = T>100 ? 50 : 40;
+			vfc = 15;
+		} else {
+			v0c = T>100 ? 50 : 40;
+			vfc = 10;
+		}
+    	return Curva.generarCurvas(this, v0c, vfc);
+	}
     boolean activado = false;
 	@Override
 	public void Activar(boolean val) {

@@ -22,4 +22,10 @@ public class ControlZonaLimiteParada extends ControlFASF {
         }
 		return new Curva[] {VC, IF};
 	}
+
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		int vel = Modo == ASFA.Modo.RAM ? 10 : 15;
+		return Curva.generarCurvas(this, vel, vel);
+	}
 }

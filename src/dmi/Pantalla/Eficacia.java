@@ -7,6 +7,7 @@ import javax.swing.Timer;
 
 import dmi.DMI;
 import ecp.ASFA;
+import ecp.Config;
 import ecp.Main;
 
 import javax.swing.ImageIcon;
@@ -46,7 +47,8 @@ public class Eficacia extends JLabel {
         for (int i = 0; i < 8; i++) {
             iconos[i] = new Icono(true, Fase.concat(Integer.toString(i).concat(".png")));
         }
-        if (eficacia) setIcon(iconos[state].getIcon());
+        if (eficacia || !Config.Fabricante.equals("")) setIcon(iconos[state].getIcon());
+        else setIcon(null);
     }
 
     public void set(boolean e) {
@@ -57,7 +59,14 @@ public class Eficacia extends JLabel {
         if (eficacia) {
             switchstate();
         } else {
-            setIcon(null);
+        	if (Config.Fabricante.equals(""))
+			{
+                setIcon(null);
+			}
+        	else
+        	{
+                setIcon(iconos[state].getIcon());
+        	}
         }
     }
 

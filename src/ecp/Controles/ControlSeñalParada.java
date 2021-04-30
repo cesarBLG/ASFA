@@ -8,7 +8,7 @@ public class ControlSeñalParada extends ControlFASF implements ControlAumentabl
 	public double recStart = -1;
 	public double lastTimeRec = -1;
 	public double lastDistRec = -1;
-    private boolean AumentoVelocidad = false;
+    boolean AumentoVelocidad = false;
     public boolean conRebase = false;
 
     public ControlSeñalParada(TrainParameters param, double time, double dist, boolean conRebase) {
@@ -59,4 +59,15 @@ public class ControlSeñalParada extends ControlFASF implements ControlAumentabl
     public double getVC(double time) {
         return VC.valor(time - TiempoInicial);
     }
+
+	@Override
+	Curva[] getCurvas_AESF(int T, int v) {
+		int vel;
+		if (Modo == ASFA.Modo.AV || Modo == ASFA.Modo.CONV) {
+			vel = ((ControlSeñalParada)this).AumentoVelocidad ? Math.min(T, 100) : 40;
+		} else {
+			vel = ((ControlSeñalParada)this).AumentoVelocidad ? Math.min(T, 70) : 30;
+		}
+		return Curva.generarCurvas(this, vel, vel);
+	}
 }
