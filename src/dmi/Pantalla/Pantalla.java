@@ -296,7 +296,7 @@ public class Pantalla extends JPanel {
         ModoASFA.setBounds(getScale(39), getScale(205), getScale(51), getScale(16));
         pane.add(ModoASFA);
         controles = new InfoControles();
-        controles.setBounds(getScale(106), getScale(140), getScale(165), getScale(98));
+        controles.setBounds(getScale(106), getScale(123), getScale(165), getScale(98));
         pane.add(controles);
         intervención = new Intervención();
         intervención.setBounds(getScale(0), getScale(76), getScale(106), getScale(59));

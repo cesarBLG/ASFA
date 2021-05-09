@@ -2,7 +2,7 @@ package ecp.Controles;
 
 public class ControlBTS extends Control {
 	int Vbts;
-	Curva[] getCurvas(int O) {
+	Curva[] getCurvas_ADIF(int O) {
 		Curva VC = new Curva(Math.min(T, Vbts));
 		Curva IF = new Curva(Math.min(T + 5, Vbts + 5));
 		return new Curva[] {VC, IF};
@@ -14,7 +14,7 @@ public class ControlBTS extends Control {
     }
 	@Override
 	Curva[] getCurvas_AESF(int T, int v) {
-		return getCurvas(T);
+		return getCurvas_ADIF(T);
 	}
 
 }

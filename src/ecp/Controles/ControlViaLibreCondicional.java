@@ -2,14 +2,14 @@ package ecp.Controles;
 
 public class ControlViaLibreCondicional extends ControlFASF {
 
-	boolean Fixed;
+	public boolean Fixed;
     public ControlViaLibreCondicional(double time, TrainParameters param, boolean Fixed) {
         super(time, 0, 0, 0, param);
         this.Fixed = Fixed;
         Curvas();
     }
 	@Override
-	Curva[] getCurvas(int O) {
+	Curva[] getCurvas_ADIF(int O) {
 		Curva VC = null;
 		Curva IF = null;
         if (Fixed || T <= 160 || O <= 160) {

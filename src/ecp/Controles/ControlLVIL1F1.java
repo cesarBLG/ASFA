@@ -8,8 +8,19 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
         super(time, param);
         Curvas();
     }
-
-    Curva[] getCurvas(int O) {
+    @Override
+    public Curva[] getCurvas(int T)
+    {
+    	Curva[] curvas = super.getCurvas(T);
+    	if (Reached) {
+    		int val = (int) (curvas[0].OrdenadaFinal+aum);
+        	if (aum > 0 && (val > 160 || val > T)) SpeedDown();
+            curvas[0] = new Curva(curvas[0].OrdenadaFinal+aum);
+            curvas[1] = new Curva(curvas[1].OrdenadaFinal+aum);
+    	}
+    	return curvas;
+    }
+    Curva[] getCurvas_ADIF(int O) {
     	Curva VC = null;
     	Curva IF = null;
         if(modoRAM)
@@ -186,20 +197,14 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
         if (!Reached) {
             return;
         }
-        if(aum == 0)
-        {
-        	vc0 = VC;
-        	if0 = IF;
-        }
         aum += 20;
-        int val = (int) (vc0.OrdenadaFinal + aum);
+        int val = (int) (VC.OrdenadaFinal + 20);
         if(val>T || val > 160)
         {
         	aum -= 20;
         	return;
         }
-        VC = new Curva(val);
-        IF = new Curva(if0.OrdenadaFinal + aum);
+        Curvas();
     }
 
     public final void SpeedDown() {
@@ -208,14 +213,7 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
         }
         if(aum == 0) return;
         aum -= 20;
-        if(aum<=0)
-        {
-        	VC = vc0;
-        	IF = if0;
-        	return;
-        }
-        VC = new Curva(vc0.OrdenadaFinal + aum);
-        IF = new Curva(if0.OrdenadaFinal + aum);
+        Curvas();
     }
 
     @Override

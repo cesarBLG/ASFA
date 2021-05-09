@@ -1,5 +1,12 @@
 package ecp.Controles;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import ecp.ASFA;
 
 public class ControlAnuncioParada extends ControlFASF implements ControlReanudo {
@@ -7,6 +14,37 @@ public class ControlAnuncioParada extends ControlFASF implements ControlReanudo 
         super(time, 0, 0, 0, param);
         Curvas();
     }
+    /*void generarCurvasAFichero(BufferedWriter w)
+    {
+    	try {
+        int[] ls = {160,140,120,100,90,80};
+        TablaCurva conv = new TablaCurva();
+        conv.Control = "ANUNCIO DE PARADA";
+        conv.Validez = Arrays.asList(new String[]{"CONV", "BAS CONV"});
+        for (int i : ls) {
+        	Modo = Modo.CONV;
+        	conv.tabla.put(i, getCurvas_AESF(i,i));
+        }
+        conv.ToFile(w);
+        conv.tabla.clear();
+        ls = new int[]{200,180,160,140,120,100,90,80};
+        conv.Validez = Arrays.asList(new String[]{"AV", "BAS AV"});
+        for (int i : ls) {
+        	Modo = Modo.AV;
+        	conv.tabla.put(i, getCurvas_AESF(i,i));
+        }
+        conv.ToFile(w);
+        conv.tabla.clear();
+        ls = new int[]{120,110,100,90,80,70,60,50};
+        conv.Validez = Arrays.asList(new String[]{"RAM", "BAS RAM"});
+        for (int i : ls) {
+        	Modo = Modo.RAM;
+        	conv.tabla.put(i, getCurvas_AESF(i,i));
+        }
+        conv.ToFile(w);
+        conv.tabla.clear();
+		}catch(Exception e) {e.printStackTrace();}
+    }*/
     @Override
 	Curva[] getCurvas_AESF(int T, int v) {
     	double vfc=0,v0c=0;
@@ -38,7 +76,7 @@ public class ControlAnuncioParada extends ControlFASF implements ControlReanudo 
     	return Curva.generarCurvas(this, v0c, vfc);
     }
     @Override
-	Curva[] getCurvas(int O) {
+	Curva[] getCurvas_ADIF(int O) {
 		Curva VC = null;
 		Curva IF = null;
 		if (Modo == ASFA.Modo.CONV) {

@@ -10,7 +10,7 @@ public class ControlZonaLimiteParada extends ControlFASF {
     }
 
 	@Override
-	Curva[] getCurvas(int O) {
+	Curva[] getCurvas_ADIF(int O) {
 		Curva VC = null;
 		Curva IF = null;
         if (Modo == ASFA.Modo.CONV || Modo == ASFA.Modo.AV) {

@@ -8,7 +8,7 @@ public class ControlLVI extends Control implements ControlReanudo {
 
     public boolean AumentoVelocidad = false;
     
-    public final boolean isReached(double time, double speed) {
+    public boolean isReached(double time, double speed) {
         if (Reached) {
             return true;
         }
@@ -19,9 +19,23 @@ public class ControlLVI extends Control implements ControlReanudo {
         }
         return Reached;
     }
+    @Override
+	public Curva[] obtenerCurvasAlmacen(int T)
+    {
+    	return obtenerCurvasAlmacen(T, AumentoVelocidad, null);
+    }
+    @Override
+    public Curva[] getCurvas(int T) {
+    	Curva[] curvas = super.getCurvas(T);
+    	if (Reached) {
+            curvas[0] = new Curva(curvas[0].OrdenadaFinal);
+            curvas[1] = new Curva(curvas[1].OrdenadaFinal);
+    	}
+    	return curvas;
+    }
     public boolean Aumentable;
     int Vf;
-    Curva[] getCurvas(int O) {
+    Curva[] getCurvas_ADIF(int O) {
     	Curva VC = null;
     	Curva IF = null;
     	if (O > 160) {

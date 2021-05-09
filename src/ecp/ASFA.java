@@ -34,7 +34,6 @@ public class ASFA {
     }
     public DIV div;
     int T;
-    int O;
     public int selectorT = 0;
     public boolean ASFAanulado = false;
     public boolean ASFAconectado = true;
@@ -110,7 +109,7 @@ public class ASFA {
         Runtime.getRuntime().addShutdownHook(shutdown);
         
         watchdog = new Timer(500, (ev) ->  {
-            display.orclient.sendData("asfa::conectado=");
+            /*display.orclient.sendData("asfa::conectado=");
             display.orclient.sendData("asfa::emergency=true");
             display.iluminarTodos(false);
             display.iluminar(TipoBotón.Conex, false);
@@ -124,7 +123,7 @@ public class ASFA {
 				e.printStackTrace();
 			}
             Runtime.getRuntime().removeShutdownHook(shutdown);
-            System.exit(1);
+            System.exit(1);*/
         });
         watchdog.setRepeats(false);
         Thread t = new Thread(new Runnable() {
@@ -341,6 +340,9 @@ public class ASFA {
         param.ASFA_version = ASFA_version;
         param.basico = basico && !curvasBasicoDigital;
         display.orclient.sendData("asfa::fase=" + (Fase2 ? "2" : "1"));
+        
+        if (Config.UsarCurvasExternas) Control.generarFamiliaCurvas(Control.cargarCurgasConfigurables());
+        
         for (Entry<TipoBotón, EstadoBotón> b : display.botones.entrySet())
         {
         	if (b.getKey() != TipoBotón.ASFA_básico && b.getKey() != TipoBotón.Conex && b.getValue().averiado(4))
@@ -529,7 +531,6 @@ public class ASFA {
             FE = true;
         }
         if (!CON && modo != Modo.EXT && estadoInicio == 0) {
-            modo = Modo.EXT;
             if (modoRAM) modo_ext = Modo.RAM;
             else if (!modoAV && modoCONV) modo_ext = Modo.CONV;
             else if (modoAV && !modoCONV) modo_ext = Modo.AV;
@@ -538,6 +539,7 @@ public class ASFA {
             	if (modo == Modo.AV) modo_ext = Modo.AV;
             	else modo_ext = Modo.CONV;
             }
+            modo = Modo.EXT;
             if (basico) display.start();
         	ApagarSonidos();
         	display.led_basico(0, 0);
@@ -796,15 +798,21 @@ public class ASFA {
                         if (display.pulsado(TipoBotón.LVI, RecStart)) {
                             display.stopSound("S2-1");
                             display.startSound("S2-6");
-                            ControlLVIL1F1 c = new ControlLVIL1F1(TiempoUltimaRecepcion, param);
-                            ControlesLVI.add(c);
-                            Controles.add(c);
-                            UltimoControl = c;
+                            LVIFase1();
                             RecStart = 0;
                         }
                     }
                 }
                 if (UltimaFrecValida == FrecASFA.L2) {
+                    if (ASFA_version <= 2 && display.pulsado(TipoBotón.LVI, RecStart)) {
+                        display.stopSound("S2-1");
+                        display.startSound("S2-6");
+                        ControlPreanuncioLTV c = new ControlPreanuncioLTV(TiempoUltimaRecepcion, DistanciaUltimaRecepcion, param);
+                        ControlesLVI.add(c);
+                        Controles.add(c);
+                        UltimoControl = c;
+                        RecStart = 0;
+                    }
                     if (display.pulsado(TipoBotón.VLCond, RecStart)) {
                         display.stopSound("S2-1");
                         display.startSound("S2-2");
@@ -860,10 +868,7 @@ public class ASFA {
                     } else if (!Fase2 && display.pulsado(TipoBotón.LVI, RecStart)) {
                         display.stopSound("S2-1");
                         display.startSound("S2-6");
-                        ControlLVIL1F1 c = new ControlLVIL1F1(TiempoUltimaRecepcion, param);
-                        ControlesLVI.add(c);
-                        Controles.add(c);
-                        UltimoControl = c;
+                        LVIFase1();
                         RecStart = 0;
                     }
                 }
@@ -900,20 +905,25 @@ public class ASFA {
                 RebaseAuto = false;
             }
             if (AlarmaStart != 0) {
-                display.iluminar(TipoBotón.Alarma, true);
             	if(Eficacia)
             	{
+                    display.iluminar(TipoBotón.Alarma, true);
             		display.esperarPulsado(TipoBotón.Alarma, AlarmaStart);
-            		if (display.botones.get(TipoBotón.Alarma).pulsado && AlarmaEnd-AlarmaStart<=3) AlarmaEnd = Clock.getSeconds() + 0.5;
-            		if (display.pulsado(TipoBotón.Alarma, AlarmaStart))
-            		{
-                        AlarmaStart = 0;
-                        display.iluminar(TipoBotón.Alarma, false);
-                        display.stopSound("S5");
-                        if (UltimaFrecValida == FrecASFA.L7)
-                        	RecStart = 0;
-            		}
             	}
+            	else if (RecStart == 0 || UltimaFrecValida != FrecASFA.L7)
+            	{
+                    display.iluminar(TipoBotón.Alarma, false);
+                    display.botones.get(TipoBotón.Alarma).lector = null;
+            	}
+        		if (display.botones.get(TipoBotón.Alarma).pulsado && AlarmaEnd-AlarmaStart<=3) AlarmaEnd = Clock.getSeconds() + 0.5;
+        		if (display.pulsado(TipoBotón.Alarma, AlarmaStart))
+        		{
+                    AlarmaStart = 0;
+                    display.iluminar(TipoBotón.Alarma, false);
+                    display.stopSound("S5");
+                    if (UltimaFrecValida == FrecASFA.L7)
+                    	RecStart = 0;
+        		}
             }
         }
         actualizarControles();
@@ -991,7 +1001,8 @@ public class ASFA {
             if (frecRecibida != UltimaFrecProcesada && UltimaFrecProcesada != FrecASFA.FP) {
                 if (AlarmaStart == 0 && UltimoCambio + 0.5 < Clock.getSeconds()) {
                     Eficacia = false;
-                    EficaciaIrrecuperable = true;
+                    EficaciaIrrecuperable = ASFA_version < 4 || Odometer.getSpeed() > 5/3.6;
+                    Urgencias();
                     Alarma();
                 }
                 return;
@@ -1078,15 +1089,30 @@ public class ASFA {
             	if(modo == Modo.RAM) Alarma();
             	else
             	{
-                    if (Vmax > 160) {
-                        display.iluminar(TipoBotón.VLCond, true);
-                    	display.esperarPulsado(TipoBotón.VLCond, TiempoUltimaRecepcion);
-                        display.startSound("S2-1");
+            		if (ASFA_version <= 2) {
+            			if (Vmax > 160) {
+                            display.iluminar(TipoBotón.VLCond, true);
+                        	display.esperarPulsado(TipoBotón.VLCond, TiempoUltimaRecepcion);
+                            display.iluminar(TipoBotón.LVI, true);
+                        	display.esperarPulsado(TipoBotón.LVI, TiempoUltimaRecepcion);
+                            display.startSound("S2-1");
+            			} else {
+                            display.iluminar(TipoBotón.LVI, true);
+                        	display.esperarPulsado(TipoBotón.LVI, TiempoUltimaRecepcion);
+                            display.startSound("S1-1");
+            			}
                         StartRec(TiempoUltimaRecepcion);
-                    } else {
-                        display.startSound("S1-1");
-                    }
-                    ViaLibreCondicional();
+            		} else {
+                        if (Vmax > 160) {
+                            display.iluminar(TipoBotón.VLCond, true);
+                        	display.esperarPulsado(TipoBotón.VLCond, TiempoUltimaRecepcion);
+                            display.startSound("S2-1");
+                            StartRec(TiempoUltimaRecepcion);
+                        } else {
+                            display.startSound("S1-1");
+                        }
+                        ViaLibreCondicional();
+            		}
             	}
             }
             if (frecRecibida == FrecASFA.L3) {
@@ -1338,6 +1364,14 @@ public class ASFA {
             }
             Caducados.add(candidato);
         }
+        for (ControlLVI c : ControlesLVI) {
+        	if (c instanceof ControlPreanuncioLTV && c.DistanciaInicial + 1800 < Odometer.getDistance()) {
+        		Urgencias();
+        		LVIFase1();
+        		Velo(false);
+        		break;
+        	}
+        }
         boolean liberarOcultacion = true;
         if (ControlesLVI.size() != 0) {
             ControlLVI lvi = null;
@@ -1414,6 +1448,7 @@ public class ASFA {
             }
             if(modo == Modo.RAM)
             {
+            	boolean algunoEliminable = false;
                 for (Control c : ControlesPN) {
                     if (c instanceof ControlPNDesprotegido) {
                     	if(!((ControlPNDesprotegido) c).Rec && c.DistanciaInicial + 100 < Odometer.getDistance())
@@ -1446,21 +1481,26 @@ public class ASFA {
                     			}
                     		}
                     	}
-                        if(c.DistanciaInicial + 400 < Odometer.getDistance())
+                        if(c.DistanciaInicial + 400 < Odometer.getDistance() && !algunoEliminable)
                         {
                         	if(RecStart==0 && RecPNStart==0)
                         	{
                         		display.esperarPulsado(TipoBotón.PN, c);
                         		display.iluminar(TipoBotón.PN, true);
-                        		if(display.pulsado(TipoBotón.PN, c))
+                        		algunoEliminable = true;
+                        		if(display.botones.get(TipoBotón.PN).flancoPulsado(c, 3))
                         		{
                         			display.iluminar(TipoBotón.PN, false);
                         			Caducados.add(c);
                         		}
-                        		else break;
                         	}
                         }
                     }
+                }
+                if (RecStart == 0 && RecPNStart == 0 && !algunoEliminable)
+                {
+        			display.iluminar(TipoBotón.PN, false);
+        			display.botones.get(TipoBotón.PN).lector = null;
                 }
             }
         }
@@ -1512,7 +1552,7 @@ public class ASFA {
         		ControlSeñalParada csp = (ControlSeñalParada) c;
         		if(csp.TiempoVAlcanzada==0 && ((modo == Modo.CONV && csp.recCount<2) || (modo == Modo.AV && csp.recCount<3)))
         		{
-        			if((csp.recCount == 0 && csp.DistanciaInicial + 200 < Odometer.getDistance()) || (csp.recCount > 0 && ((distanciaRecParada > 0 && csp.lastDistRec + distanciaRecParada < Odometer.getDistance()) || (tiempoRecParada > 0 && csp.lastTimeRec + (csp.Aumentado() ? tiempoRecParada/2 : tiempoRecParada) < Clock.getSeconds()))))
+        			if(!RebaseAuto && ((csp.recCount == 0 && csp.DistanciaInicial + 200 < Odometer.getDistance()) || (csp.recCount > 0 && ((distanciaRecParada > 0 && csp.lastDistRec + distanciaRecParada < Odometer.getDistance()) || (tiempoRecParada > 0 && csp.lastTimeRec + (csp.Aumentado() ? tiempoRecParada/2 : tiempoRecParada) < Clock.getSeconds())))))
         			{
         				if(csp.recStart < 0)
         				{
@@ -1779,7 +1819,9 @@ public class ASFA {
         int targetdisplay;
         if (controlDisplay instanceof ControlViaLibre || modo == Modo.MBRA || (modo == Modo.BTS && !(controlDisplay instanceof ControlPN || controlDisplay instanceof ControlLVI))) {
             targetdisplay = 0;
-        } else if (controlDisplay instanceof ControlPreviaSeñalParada || controlDisplay.VC.OrdenadaFinal == controlDisplay.getVC(Clock.getSeconds())) {
+        } else if (controlDisplay instanceof ControlPreviaSeñalParada || 
+        	(controlDisplay instanceof ControlViaLibreCondicional && ((ControlViaLibreCondicional)controlDisplay).Fixed) || 
+        	controlDisplay.VC.OrdenadaFinal == controlDisplay.getVC(Clock.getSeconds())) {
             targetdisplay = 1;
         } else {
             targetdisplay = 2;
@@ -1838,7 +1880,7 @@ public class ASFA {
             }
         }
         display.display("LVI", lvi);
-        display.display("Eficacia", Eficacia ? 1 : 0);
+        display.display("Eficacia", Eficacia ? 1 : (modo == Modo.MBRA ? 0 : -1));
         display.display("Velo", VeloActivo ? 1 : 0);
         double vel = MpS.ToKpH(Odometer.getSpeed());
         if(estadoInicio != 0)
@@ -1904,7 +1946,13 @@ public class ASFA {
         {
         	Parada();
         }
-        else {
+        else if (frec == FrecASFA.L2 && ASFA_version < 2)
+        {
+        	if (Vmax > 160) Urgencias();
+        	ViaLibreCondicional();
+        }
+        else 
+        {
             Urgencias();
             if (frec == FrecASFA.L1) {
                 if (!Fase2) AnuncioParada();
@@ -1969,6 +2017,7 @@ public class ASFA {
                 {
                 	if (control.DistanciaInicial == 0) {
                         control.DistanciaInicial = DistanciaUltimaRecepcion;
+                        control.DistanciaVigencia = 200;
                     }
                 }
                 else {
@@ -2191,6 +2240,19 @@ public class ASFA {
         addControlSeñal(c);
     }
 
+    private void LVIFase1() {
+    	List<ControlLVI> Caducados = new ArrayList<>();
+    	for (ControlLVI c : ControlesLVI) {
+    		if (c instanceof ControlPreanuncioLTV) Caducados.add(c);
+    	}
+    	Controles.removeAll(Caducados);
+    	ControlesLVI.removeAll(Caducados);
+        ControlLVIL1F1 c = new ControlLVIL1F1(TiempoUltimaRecepcion, param);
+        ControlesLVI.add(c);
+        Controles.add(c);
+        UltimoControl = c;
+    }
+    
     private void PNProtegido() {
         ControlPNProtegido c = new ControlPNProtegido(param, TiempoUltimaRecepcion, DistanciaUltimaRecepcion);
         Controles.add(c);

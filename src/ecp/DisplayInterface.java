@@ -45,8 +45,12 @@ class EstadoBotón {
     }
     public boolean flancoPulsado(Object detector)
     {
+    	return flancoPulsado(detector, tiempoPulsar);
+    }
+    public boolean flancoPulsado(Object detector, double tiempo)
+    {
     	if(!detector.equals(lector)) return false;
-    	boolean val = startTime!=0 && Clock.getSeconds() - startTime >= tiempoPulsar;
+    	boolean val = startTime!=0 && Clock.getSeconds() - startTime >= tiempo;
     	if(val)
     	{
     		startTime = 0;

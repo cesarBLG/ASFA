@@ -12,8 +12,13 @@ public class ControlSecuenciaAN_A extends ControlFASF implements ControlReanudo 
         this.FirstBalise = FirstBalise;
         Curvas();
     }
+    @Override
+    public Curva[] obtenerCurvasAlmacen(int T)
+    {
+    	return obtenerCurvasAlmacen(T, AnteriorAumVel, FirstBalise ? "PRIMERA BALIZA" : "SEGUNDA BALIZA");
+    }
 	@Override
-	Curva[] getCurvas(int O) {
+	Curva[] getCurvas_ADIF(int O) {
 		Curva VC = null;
 		Curva IF = null;
 		if (Modo == ASFA.Modo.CONV) {
@@ -106,7 +111,6 @@ public class ControlSecuenciaAN_A extends ControlFASF implements ControlReanudo 
         }
 		return new Curva[] {VC, IF};
 	}
-	
 	@Override
 	Curva[] getCurvas_AESF(int T, int v) {
 		double vfc=0,v0c=0;

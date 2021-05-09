@@ -9,8 +9,13 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
     public boolean AumentoConfirmado;
     
     public ControlAnuncioPrecaución(double time, TrainParameters param) {
-        super(time, 0, 0, param.Modo == ASFA.Modo.RAM ? 200 : 0, param);
+        super(time, 0, 0, 0, param);
         Curvas();
+    }
+    @Override
+	public Curva[] obtenerCurvasAlmacen(int T)
+    {
+    	return obtenerCurvasAlmacen(T, AumentoVelocidad, null);
     }
     @Override
 	Curva[] getCurvas_AESF(int T, int v) {
@@ -54,7 +59,7 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
 		}
     	return Curva.generarCurvas(this, v0c, vfc);
     }
-    Curva[] getCurvas(int O) {
+    Curva[] getCurvas_ADIF(int O) {
     	Curva VC = null;
     	Curva IF = null;
         if (Modo == ASFA.Modo.CONV) {

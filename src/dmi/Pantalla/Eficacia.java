@@ -17,6 +17,7 @@ import javax.swing.JOptionPane;
 public class Eficacia extends JLabel {
 
     int state = 0;
+    boolean mostrar = false;
     boolean eficacia = false;
     Icono[] iconos;
 
@@ -47,19 +48,20 @@ public class Eficacia extends JLabel {
         for (int i = 0; i < 8; i++) {
             iconos[i] = new Icono(true, Fase.concat(Integer.toString(i).concat(".png")));
         }
-        if (eficacia || !Config.Fabricante.equals("")) setIcon(iconos[state].getIcon());
+        if (eficacia || mostrar) setIcon(iconos[state].getIcon());
         else setIcon(null);
     }
 
-    public void set(boolean e) {
-        if (eficacia == e) {
+    public void set(boolean e, boolean mos) {
+        if (eficacia == e && mos == mostrar) {
             return;
         }
         eficacia = e;
+        mostrar = mos;
         if (eficacia) {
             switchstate();
         } else {
-        	if (Config.Fabricante.equals(""))
+        	if (!mostrar)
 			{
                 setIcon(null);
 			}

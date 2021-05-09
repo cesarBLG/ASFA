@@ -12,8 +12,12 @@ public class ControlPreanuncioParada extends ControlFASF implements ControlAumen
         super(time, 0, 0, 0, param);
         Curvas();
     }
-
-    Curva[] getCurvas(int O) {
+    @Override
+    public Curva[] obtenerCurvasAlmacen(int T)
+    {
+    	return obtenerCurvasAlmacen(T, AumentoVelocidad, null);
+    }
+    Curva[] getCurvas_ADIF(int O) {
     	Curva VC = null;
     	Curva IF = null;
         if (Modo == ASFA.Modo.CONV) {

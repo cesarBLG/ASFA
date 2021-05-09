@@ -4,7 +4,7 @@ import ecp.ASFA;
 
 public class ControlPNProtegido extends ControlPN {
 
-	Curva[] getCurvas(int O)
+	Curva[] getCurvas_ADIF(int O)
 	{
 		Curva VC = null;
 		Curva IF = null;

@@ -1,13 +1,23 @@
 package ecp.Controles;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
+import ecp.ASFA;
 import ecp.ASFA.Modo;
 
 public class Curva {
-
+	
     public double OrdenadaOrigen;
     public double OrdenadaFinal;
-    private double Deceleracion;
-    private double TiempoReaccion;
+    double Deceleracion;
+    double TiempoReaccion;
 
     public Curva(double O0, double Of, double Dec, double TReac) {
         OrdenadaOrigen = O0;
@@ -24,7 +34,12 @@ public class Curva {
     }
 
     public final double valor(double d) {
-        return Math.max(OrdenadaFinal, Math.min(OrdenadaOrigen, 3.6 * ((OrdenadaOrigen / 3.6) - Deceleracion * (d - TiempoReaccion))));
+        return Math.max(OrdenadaFinal, Math.min(OrdenadaOrigen, OrdenadaOrigen - 3.6 * Deceleracion * (d - TiempoReaccion)));
+    }
+    
+    public boolean equals(Curva c) {
+    	if (c == null) return this == c;
+    	return c.Deceleracion == Deceleracion && c.TiempoReaccion == TiempoReaccion && c.OrdenadaOrigen == OrdenadaOrigen && c.OrdenadaFinal == OrdenadaFinal;
     }
     
     public static Curva[] generarCurvas(Control c, double v0c, double vfc) {
@@ -63,6 +78,17 @@ public class Curva {
     			ac = 0.6;
     			ai = 0.5;
     		}
+			if (v0c >= 180) {
+				if (c instanceof ControlViaLibreCondicional || c instanceof ControlPNProtegido || 
+					(c instanceof ControlAnuncioParada && c.Modo == ASFA.Modo.AV))
+					ac = 0.55;
+			} else if (v0c >= 160) {
+				if (c instanceof ControlPNProtegido) ac = 0.55;
+			}
+			if (v0c >= 120 && v0c < 140 && c instanceof ControlAnuncioPrecaución && c.basico && c.Modo == ASFA.Modo.AV) {
+				ac = 0.6;
+				ai = 0.5;
+			}
         	if (c instanceof ControlSecuenciaAN_A) {
         		ControlSecuenciaAN_A sec = (ControlSecuenciaAN_A)c;
         		if (sec.FirstBalise || sec.Modo != Modo.CONV || !sec.AnteriorAumVel) {

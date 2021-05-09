@@ -8,7 +8,7 @@ public class ControlTransicion extends ControlFASF {
     }
 
 	@Override
-	Curva[] getCurvas(int O) {
+	Curva[] getCurvas_ADIF(int O) {
 		Curva VC = null;
 		Curva IF = null;
         VC = new Curva(T, T, 0, 0);

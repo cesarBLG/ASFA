@@ -11,6 +11,8 @@ import javax.swing.Timer;
 
 import dmi.DMI;
 import ecp.ASFA;
+import ecp.Config;
+import ecp.Main;
 
 public class InfoControles extends JPanel {
 
@@ -34,7 +36,7 @@ public class InfoControles extends JPanel {
         add(area1);
         add(area2);
         add(area3);
-        IconoLVI = new Icono(false, "LVI.png");
+        IconoLVI = new Icono(false, Config.Version < 3 ? "LTV.png" : "LVI.png");
         IconoPNdesp = new Icono(false, "PNdesp.png");
         IconoSecAA = new Icono(false, "SecAA.png");
         IconoDesvío = new Icono(true, "Desvío.png");

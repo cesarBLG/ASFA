@@ -4,7 +4,12 @@ import ecp.ASFA;
 
 public class ControlPasoDesvío extends Control {
 	boolean AnteriorAumVel;
-	Curva[] getCurvas(int O)
+	@Override
+    public Curva[] obtenerCurvasAlmacen(int T)
+    {
+    	return obtenerCurvasAlmacen(T, AnteriorAumVel, null);
+    }
+	Curva[] getCurvas_ADIF(int O)
 	{
 		Curva VC = null;
 		Curva IF = null;

@@ -6,7 +6,7 @@ public class ControlPNDesprotegido extends ControlPN implements ControlReanudo {
 
 	public boolean segundaCurva = false;
 	public boolean Rec = false;
-	Curva[] getCurvas(int O)
+	Curva[] getCurvas_ADIF(int O)
 	{
 		Curva VC = null;
 		Curva IF = null;

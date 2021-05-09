@@ -1,7 +1,7 @@
 package ecp.Controles;
 
 public class ControlManiobras extends Control {
-	Curva[] getCurvas(int O)
+	Curva[] getCurvas_ADIF(int O)
 	{
 		if(modoRAM) return new Curva[] {new Curva(10), new Curva(15)};
 		return new Curva[] {new Curva(30), new Curva(35)};
@@ -13,6 +13,6 @@ public class ControlManiobras extends Control {
 	}
 	@Override
 	Curva[] getCurvas_AESF(int T, int v) {
-		return getCurvas(T);
+		return getCurvas_ADIF(T);
 	}
 }

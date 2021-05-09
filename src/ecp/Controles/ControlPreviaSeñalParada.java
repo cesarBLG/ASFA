@@ -10,7 +10,7 @@ public class ControlPreviaSeñalParada extends ControlFASF implements ControlRea
         Curvas();
     }
 	@Override
-	Curva[] getCurvas(int O) {
+	Curva[] getCurvas_ADIF(int O) {
 		Curva VC = null;
 		Curva IF = null;
         if (Modo == ASFA.Modo.AV || Modo == ASFA.Modo.CONV) {

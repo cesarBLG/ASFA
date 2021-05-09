@@ -113,7 +113,7 @@ public class ECPinterface {
 				}
 				else if (s.startsWith("asfa::indicador::eficacia="))
 				{
-	            	dmi.pantalla.eficacia.set(val.equals("1"));
+	            	dmi.pantalla.eficacia.set(val.equals("1"), !val.equals("0"));
 				}
 				else if (s.startsWith("asfa::indicador::control_desvio="))
 				{
