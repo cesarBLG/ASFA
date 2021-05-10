@@ -109,7 +109,7 @@ public class ASFA {
         Runtime.getRuntime().addShutdownHook(shutdown);
         
         watchdog = new Timer(500, (ev) ->  {
-            /*display.orclient.sendData("asfa::conectado=");
+            display.orclient.sendData("asfa::conectado=");
             display.orclient.sendData("asfa::emergency=true");
             display.iluminarTodos(false);
             display.iluminar(TipoBotón.Conex, false);
@@ -123,7 +123,7 @@ public class ASFA {
 				e.printStackTrace();
 			}
             Runtime.getRuntime().removeShutdownHook(shutdown);
-            System.exit(1);*/
+            System.exit(1);
         });
         watchdog.setRepeats(false);
         Thread t = new Thread(new Runnable() {
@@ -1213,9 +1213,7 @@ public class ASFA {
                 if (VentanaL11 != -1 && VentanaL11 + 8 > DistanciaUltimaRecepcion) {
                     display.iluminar(TipoBotón.LVI, true);
                     display.startSound("S1-1");
-                    int Vf = 50;
-                    if(modoRAM) Vf = 40;
-                    ControlLVI c = new ControlLVI(param, Vf, modo != Modo.RAM, ControlTransitorio.TiempoInicial);
+                    ControlLVI c = new ControlLVI(param, FrecASFA.L11, FrecASFA.L10, modo != Modo.RAM, ControlTransitorio.TiempoInicial);
                     Controles.add(c);
                     ControlesLVI.add(c);
                     VentanaL11 = -1;
@@ -1224,9 +1222,7 @@ public class ASFA {
                 } else if (VentanaL10 != -1 && VentanaL10 + 8 > DistanciaUltimaRecepcion) {
                     display.iluminar(TipoBotón.LVI, true);
                     display.startSound("S1-1");
-                    int Vf = 120;
-                    if(modoRAM) Vf = 70;
-                    ControlLVI c = new ControlLVI(param, Vf, false, ControlTransitorio.TiempoInicial);
+                    ControlLVI c = new ControlLVI(param, FrecASFA.L10, FrecASFA.L10, modo != Modo.RAM, ControlTransitorio.TiempoInicial);
                     Controles.add(c);
                     ControlesLVI.add(c);
                     VentanaL10 = -1;
@@ -1241,7 +1237,7 @@ public class ASFA {
                 	display.esperarPulsado(TipoBotón.LVI, TiempoUltimaRecepcion);
                     display.startSound("S2-1");
                     StartRec(TiempoUltimaRecepcion);
-                    ControlTransitorio = new ControlLVI(param, 30, false, TiempoUltimaRecepcion);
+                    ControlTransitorio = new ControlLVI(param, FrecASFA.L11, FrecASFA.L11, false, TiempoUltimaRecepcion);
                     UltimoControl = ControlTransitorio;
                 }
             }
@@ -1249,8 +1245,7 @@ public class ASFA {
                 if (VentanaL11 != -1 && VentanaL11 + 8 > DistanciaUltimaRecepcion) {
                     display.iluminar(TipoBotón.LVI, true);
                     display.startSound("S1-1");
-                    int Vf = (int) ControlTransitorio.VC.OrdenadaFinal;
-                    ControlLVI c = new ControlLVI(param, Vf, modo != Modo.RAM, ControlTransitorio.TiempoInicial);
+                    ControlLVI c = new ControlLVI(param, FrecASFA.L11, FrecASFA.L11, modo != Modo.RAM, ControlTransitorio.TiempoInicial);
                     Controles.add(c);
                     ControlesLVI.add(c);
                     VentanaL11 = -1;
@@ -1259,9 +1254,7 @@ public class ASFA {
                 } else if (VentanaL10 != -1 && VentanaL10 + 8 > DistanciaUltimaRecepcion) {
                     display.iluminar(TipoBotón.LVI, true);
                     display.startSound("S1-1");
-                    int Vf = 80;
-                    if(modoRAM) Vf = 50;
-                    ControlLVI c = new ControlLVI(param, Vf, modo != Modo.RAM, ControlTransitorio.TiempoInicial);
+                    ControlLVI c = new ControlLVI(param, FrecASFA.L10, FrecASFA.L11, modo != Modo.RAM, ControlTransitorio.TiempoInicial);
                     Controles.add(c);
                     ControlesLVI.add(c);
                     VentanaL10 = -1;
@@ -1276,7 +1269,7 @@ public class ASFA {
                 	display.esperarPulsado(TipoBotón.LVI, TiempoUltimaRecepcion);
                     display.startSound("S2-1");
                     StartRec(TiempoUltimaRecepcion);
-                    ControlTransitorio = new ControlLVI(param, 30, false, TiempoUltimaRecepcion);
+                    ControlTransitorio = new ControlLVI(param, FrecASFA.L11, FrecASFA.L11, false, TiempoUltimaRecepcion);
                     UltimoControl = ControlTransitorio;
                 }
             }
@@ -1938,7 +1931,7 @@ public class ASFA {
         {
         	if(b.lector!=null && b.lector.equals(RecStart)) b.lector = null;
         }
-        desactivarControlTransitorio();
+        if (frec != FrecASFA.L10 && frec != FrecASFA.L11) desactivarControlTransitorio();
         if (frec == FrecASFA.L3) {
         	ViaLibre();
         }
@@ -1956,6 +1949,8 @@ public class ASFA {
             Urgencias();
             if (frec == FrecASFA.L1) {
                 if (!Fase2) AnuncioParada();
+            } else if (frec == FrecASFA.L9) {
+            	if (!Fase2) PNDesprotegido();
             }
         }
         RecStart = 0;

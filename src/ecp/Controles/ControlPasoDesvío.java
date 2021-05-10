@@ -42,6 +42,7 @@ public class ControlPasoDesvío extends Control {
     }
 	@Override
 	Curva[] getCurvas_AESF(int T, int v) {
+		if (Modo == ASFA.Modo.RAM) return null;
     	double vfc=0,v0c=0;
 		if (Modo == ASFA.Modo.AV) {
 			if (T>=160) v0c = vfc = ((ControlPasoDesvío)this).AnteriorAumVel ? 160 : 100;

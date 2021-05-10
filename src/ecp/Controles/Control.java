@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import ecp.ASFA;
 import ecp.Clock;
 import ecp.Config;
+import ecp.FrecASFA;
 import ecp.Controles.TablaCurva.ModoCurvas;
 
 public abstract class Control {
@@ -124,23 +125,35 @@ public abstract class Control {
     	else Ts = new int[] {80,90,100,120,140,160,180,200};
     	for (int t : Ts) {
     		T = t;
-    		c.tabla.put(t, getCurvas_AESF(t, t));
+    		Curva[] curvas = getCurvas_AESF(t, t);
+    		if (curvas == null) continue;
+    		if (ASFA_version < 3) curvas = getCurvas_ADIF(t);
+    		c.tabla.put(t, curvas);
     	}
+    	if (c.tabla.isEmpty()) return null;
     	return c;
     }
     List<TablaCurva> generarTablasControl()
     {
+    	if (this instanceof ControlLVI && !(this instanceof ControlLVIL1F1) && !(this instanceof ControlPreanuncioLTV))
+    	{
+    		ControlLVI lvi = (ControlLVI)this;
+        	List<TablaCurva> l = generarTablasControl(false, lvi.Frecuencia1.name()+"-"+lvi.Frecuencia2.name());
+        	lvi.AumentarVelocidad();
+        	l.addAll(generarTablasControl(true, lvi.Frecuencia1.name()+"-"+lvi.Frecuencia2.name()));
+        	return l;
+    	}
     	List<TablaCurva> l = generarTablasControl(false, null);
     	if (this instanceof ControlAumentable && ((ControlAumentable)this).Aumentable())
     	{
     		((ControlAumentable)this).AumentarVelocidad(true);
         	l.addAll(generarTablasControl(true, null));
     	}
-    	if (this instanceof ControlLVI && ((ControlLVI)this).Aumentable)
+    	if (this instanceof ControlLVIL1F1)
     	{
     		((ControlLVI)this).AumentarVelocidad();
         	l.addAll(generarTablasControl(true, null));
-    	}
+		}
     	return l;
     }
     List<TablaCurva> generarTablasControl(boolean aumento, String especial)
@@ -154,8 +167,10 @@ public abstract class Control {
     		if (mc == ModoCurvas.RAM || mc == ModoCurvas.BAS_RAM) Modo = ASFA.Modo.RAM;
     		if (mc == ModoCurvas.BTS || mc == ModoCurvas.BTS_RAM) Modo = ASFA.Modo.BTS;
     		modoRAM = mc == ModoCurvas.BTS_RAM || Modo == ASFA.Modo.RAM;
-    		if (this instanceof ControlFASF && (mc == ModoCurvas.BTS || mc == ModoCurvas.BTS_RAM)) continue;
+    		if ((this instanceof ControlFASF || this instanceof ControlSecuenciaAA || this instanceof ControlPasoDesvío) && (mc == ModoCurvas.BTS || mc == ModoCurvas.BTS_RAM)) continue;
+    		if (this instanceof ControlLVI && !(this instanceof ControlLVIL1F1) && !(this instanceof ControlPreanuncioLTV) && aumento && modoRAM) continue;
         	TablaCurva c = construirTablaPorDefecto(new ArrayList<ModoCurvas>(Arrays.asList(new ModoCurvas[] {mc})), aumento, especial);
+        	if (c == null) continue;
         	boolean exists = false;
         	for (TablaCurva t : lista) {
         		if (t.tabla.size() != c.tabla.size()) continue;
@@ -202,6 +217,10 @@ public abstract class Control {
 			tablas.addAll(new ControlPasoDesvío(p,0,false).generarTablasControl(false, null));
 			tablas.addAll(new ControlPasoDesvío(p,0,true).generarTablasControl(true, null));
 			tablas.addAll(new ControlPreanuncioLTV(0,0,p).generarTablasControl());
+			tablas.addAll(new ControlLVI(p, FrecASFA.L11, FrecASFA.L11, true, 0).generarTablasControl());
+			tablas.addAll(new ControlLVI(p, FrecASFA.L11, FrecASFA.L10, true, 0).generarTablasControl());
+			tablas.addAll(new ControlLVI(p, FrecASFA.L10, FrecASFA.L11, true, 0).generarTablasControl());
+			tablas.addAll(new ControlLVI(p, FrecASFA.L10, FrecASFA.L10, true, 0).generarTablasControl());
 			tablas.addAll(new ControlLVIL1F1(0,p).generarTablasControl());
 			tablas.addAll(new ControlPNProtegido(p,0,0).generarTablasControl());
 			tablas.addAll(new ControlPNDesprotegido(p,0,0).generarTablasControl());

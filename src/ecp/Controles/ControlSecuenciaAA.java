@@ -25,6 +25,7 @@ public class ControlSecuenciaAA extends Control {
 
 	@Override
 	Curva[] getCurvas_AESF(int T, int v) {
+		if (Modo == ASFA.Modo.RAM) return null;
 		int vel;
 		if (Modo == ASFA.Modo.AV) {
 			vel = Math.min(T, 100);

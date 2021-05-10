@@ -9,6 +9,11 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
         Curvas();
     }
     @Override
+	public Curva[] obtenerCurvasAlmacen(int T)
+    {
+    	return obtenerCurvasAlmacen(T, AumentoVelocidad, null);
+    }
+    @Override
     public Curva[] getCurvas(int T)
     {
     	Curva[] curvas = super.getCurvas(T);

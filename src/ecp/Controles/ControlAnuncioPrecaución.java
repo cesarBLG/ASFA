@@ -56,6 +56,7 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
 		} else if (Modo == ASFA.Modo.RAM) {
 			v0c = T;
 			vfc = 30;
+			if (AumentoVelocidad) return null;
 		}
     	return Curva.generarCurvas(this, v0c, vfc);
     }
@@ -136,7 +137,7 @@ public class ControlAnuncioPrecaución extends ControlFASF implements ControlAum
         	if (O == 120) {
                 IF = new Curva(123, 33, 0.36, 12);
                 VC = new Curva(120, 30, 0.46, 7.5);
-            } else if (O <= 100) {
+            } else {
                 IF = new Curva(O + 3, 33, 0.26, 11);
                 VC = new Curva(O, 30, 0.36, 7.5);
             }

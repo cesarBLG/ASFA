@@ -1,9 +1,13 @@
 package ecp.Controles;
 
 import ecp.ASFA;
+import ecp.FrecASFA;
 
 public class ControlLVI extends Control implements ControlReanudo {
 
+	FrecASFA Frecuencia1;
+	FrecASFA Frecuencia2;
+	
     public boolean Reached = false;
 
     public boolean AumentoVelocidad = false;
@@ -22,7 +26,8 @@ public class ControlLVI extends Control implements ControlReanudo {
     @Override
 	public Curva[] obtenerCurvasAlmacen(int T)
     {
-    	return obtenerCurvasAlmacen(T, AumentoVelocidad, null);
+    	Curva[] c = obtenerCurvasAlmacen(T, AumentoVelocidad, Frecuencia1.name()+"-"+Frecuencia2.name());
+    	return c;
     }
     @Override
     public Curva[] getCurvas(int T) {
@@ -34,8 +39,16 @@ public class ControlLVI extends Control implements ControlReanudo {
     	return curvas;
     }
     public boolean Aumentable;
-    int Vf;
     Curva[] getCurvas_ADIF(int O) {
+    	int Vf;
+    	if (Frecuencia1 == FrecASFA.L10 && Frecuencia2 == FrecASFA.L10)
+    		Vf = modoRAM ? 70 : AumentoVelocidad ? 150 : 120;
+    	else if (Frecuencia1 == FrecASFA.L10 && Frecuencia2 == FrecASFA.L11)
+    		Vf = modoRAM ? 50 : AumentoVelocidad ? 100 : 80;
+    	else if (Frecuencia1 == FrecASFA.L11 && Frecuencia2 == FrecASFA.L10)
+    		Vf = modoRAM ? 40 : AumentoVelocidad ? 70 : 50;
+    	else
+    		Vf = modoRAM ? 30 : AumentoVelocidad ? 40 : 30;
     	Curva VC = null;
     	Curva IF = null;
     	if (O > 160) {
@@ -50,7 +63,7 @@ public class ControlLVI extends Control implements ControlReanudo {
         } else if (O == 120) {
             IF = new Curva(123, Vf + 3, 0.36, 12);
             VC = new Curva(120, Vf, 0.46, 7.5);
-        } else if (O <= 100) {
+        } else if (O < 120) {
             IF = new Curva(O + 3, Vf + 3, 0.26, 11);
             VC = new Curva(O, Vf, 0.36, 7.5);
         }
@@ -66,25 +79,31 @@ public class ControlLVI extends Control implements ControlReanudo {
     }
     @Override
 	Curva[] getCurvas_AESF(int T, int v) {
+    	int Vf;
+    	if (Frecuencia1 == FrecASFA.L10 && Frecuencia2 == FrecASFA.L10)
+    		Vf = modoRAM ? 70 : AumentoVelocidad ? 150 : 120;
+    	if (Frecuencia1 == FrecASFA.L10 && Frecuencia2 == FrecASFA.L11)
+    		Vf = modoRAM ? 50 : AumentoVelocidad ? 100 : 80;
+    	if (Frecuencia1 == FrecASFA.L11 && Frecuencia2 == FrecASFA.L10)
+    		Vf = modoRAM ? 40 : AumentoVelocidad ? 70 : 50;
+    	else
+    		Vf = modoRAM ? 30 : AumentoVelocidad ? 40 : 30;
+    	if (modoRAM && AumentoVelocidad) return null;
     	return Curva.generarCurvas(this, T, Vf);
     }
-    public ControlLVI(TrainParameters param, int Vf, boolean aumentable, double time) {
+    public ControlLVI(TrainParameters param, FrecASFA frec1, FrecASFA frec2, boolean aumentable, double time) {
         super(time, 0, 0, 0, param);
-        this.Vf = Vf;
-        this.Aumentable = aumentable;
+        Frecuencia1 = frec1;
+        Frecuencia2 = frec2;
+        Aumentable = aumentable;
         Curvas();
     }
 
     public void AumentarVelocidad() {
         if (Aumentable) {
-        	int velAum = 0;
-        	if (VC.OrdenadaFinal == 30) velAum = 10;
-        	else if (VC.OrdenadaFinal == 50) velAum = 20;
-        	else if (VC.OrdenadaFinal == 80) velAum = 30;
-        	else if (VC.OrdenadaFinal == 120) velAum = 30;
-            IF.OrdenadaFinal = Math.min(IF.OrdenadaFinal + velAum, IF.valor(0));
-            VC.OrdenadaFinal = Math.min(VC.OrdenadaFinal + velAum, VC.valor(0));
+        	AumentoVelocidad = true;
             Aumentable = false;
+            Curvas();
         }
     }
 

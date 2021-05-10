@@ -113,6 +113,7 @@ public class ControlSecuenciaAN_A extends ControlFASF implements ControlReanudo 
 	}
 	@Override
 	Curva[] getCurvas_AESF(int T, int v) {
+		if (Modo == ASFA.Modo.RAM) return null;
 		double vfc=0,v0c=0;
 		if (Modo == ASFA.Modo.AV) {
 			if (T>=140) {

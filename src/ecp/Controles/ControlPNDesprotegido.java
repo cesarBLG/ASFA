@@ -6,6 +6,14 @@ public class ControlPNDesprotegido extends ControlPN implements ControlReanudo {
 
 	public boolean segundaCurva = false;
 	public boolean Rec = false;
+	@Override
+	Curva[] getCurvas(int T)
+	{
+		if (segundaCurva) {
+			return new Curva[] {new Curva(80), new Curva(83)};
+		}
+		return super.getCurvas(T);
+	}
 	Curva[] getCurvas_ADIF(int O)
 	{
 		Curva VC = null;
@@ -98,7 +106,7 @@ public class ControlPNDesprotegido extends ControlPN implements ControlReanudo {
     @Override
     public double getVC(double time) {
         double val = super.getVC(time);
-        if (val <= VC.OrdenadaFinal*3.6 && !basico) {
+        if (val <= VC.OrdenadaFinal && !basico && !modoRAM) {
         	segundaCurva = true;
             Curvas();
             return super.getVC(time);
