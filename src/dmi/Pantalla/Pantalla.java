@@ -90,7 +90,7 @@ public class Pantalla extends JPanel {
         repaint();
     }
     
-    public void splash_logytel()
+    public void splash_sepsa()
     {
         removeAll();
     	setLayout(new BorderLayout());
@@ -104,7 +104,7 @@ public class Pantalla extends JPanel {
     
     public void encender()
     {
-    	if (Config.Fabricante.contentEquals("LOGYTEL")) splash_logytel();
+    	if (Config.Fabricante.contentEquals("SEPSA")) splash_sepsa();
 		Timer t = new Timer(0, (arg0) -> {
 	    	Main.dmi.ecp.subscribe("asfa::ecp::estado");
 		});
@@ -290,10 +290,10 @@ public class Pantalla extends JPanel {
         eficacia.setBounds(getScale(16), getScale(202), getScale(19), getScale(19));
         pane.add(eficacia);
         tipoTren = new TipoTren();
-        tipoTren.setBounds(getScale(39), getScale(182), getScale(51), getScale(16));
+        tipoTren.setBounds(getScale(39), getScale(182), getScale(52), getScale(16));
         pane.add(tipoTren);
         ModoASFA = new ModeInfo();
-        ModoASFA.setBounds(getScale(39), getScale(205), getScale(51), getScale(16));
+        ModoASFA.setBounds(getScale(39), getScale(205), getScale(52), getScale(16));
         pane.add(ModoASFA);
         controles = new InfoControles();
         controles.setBounds(getScale(106), getScale(123), getScale(165), getScale(98));

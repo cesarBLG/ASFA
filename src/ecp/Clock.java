@@ -8,6 +8,7 @@ public class Clock {
     
     public static void set_external_time(double time)
     {
+    	if (!Config.UsarHoraExterna) return;
     	Calendar date = Calendar.getInstance();
     	date.set(Calendar.HOUR_OF_DAY, 0);
     	date.set(Calendar.MINUTE, 0);

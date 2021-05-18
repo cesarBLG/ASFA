@@ -3,27 +3,29 @@ package dmi.Pantalla;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
 import dmi.Pantalla.Pantalla.ModoDisplay;
 import ecp.ASFA;
+import ecp.Config;
 import ecp.ASFA.Modo;
 import ecp.Main;
 
-public class ModeInfo extends JLabel {
-
+public class ModeInfo extends TipoModo {
     public ModeInfo() {
-        setHorizontalAlignment(JLabel.LEFT);
-        try {
-            setFont(Font.createFont(Font.TRUETYPE_FONT, new File("HelveticaCdBd.ttf")).deriveFont((float)Main.dmi.pantalla.getScale(15)));
-        } catch(FontFormatException | IOException e) {
-        	setFont(new Font("Arial Narrow", 1, Main.dmi.pantalla.getScale(15)));
-        }
-        setForeground(Color.white);
-        update();
+        construct();
+        setValue("");
     }
 
     public void update(Modo m) {
@@ -34,10 +36,6 @@ public class ModeInfo extends JLabel {
         	t += mod.charAt(i);
         	if (mod.length()>i+1) t += " ";
         }
-        setText(t);
-        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Pantalla.blanco);
-    }
-    public void update() {
-        setForeground(Main.dmi.pantalla.modo == ModoDisplay.Día ? Color.black : Pantalla.blanco);
+        setValue(mod);
     }
 }

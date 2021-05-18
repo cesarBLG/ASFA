@@ -150,8 +150,7 @@ public class ECPinterface {
 					int num = Integer.parseInt(val);
 					if (num < 0)
 					{
-						dmi.pantalla.ModoASFA.setText("");
-						dmi.pantalla.ModoASFA.update();
+						dmi.pantalla.ModoASFA.setValue("");
 					}
 					else
 					{

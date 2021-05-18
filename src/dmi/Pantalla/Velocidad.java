@@ -7,11 +7,13 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -32,7 +34,7 @@ class JDigit extends JLabel
 	public void paint(Graphics g)
 	{
 		if (getIcon() == null) return;
-		if (!g.drawImage(((ImageIcon)getIcon()).getImage(), 0, 0, this)) System.out.println("A");;
+		g.drawImage(((ImageIcon)getIcon()).getImage(), 0, 0, this);
 	}
 }
 
@@ -64,16 +66,10 @@ public class Velocidad extends JPanel {
         g2d.setFont(noche ? fontnoche : fontdia);
         FontMetrics fm = g2d.getFontMetrics();
         String text = Integer.toString(num);
-        if (Config.Fabricante.equals("DIMETRONIC"))
-        {
-        	g2d.drawString(text, (Main.dmi.pantalla.getScale(19)-fm.stringWidth(text))/2, (Main.dmi.pantalla.getScale(31)+(noche ? digits_height_noche : digits_height_dia))/2);
-        }
-        else
-        {
-            float sc = Main.dmi.pantalla.getScale(30)/(noche ? digits_height_noche : digits_height_dia);
-            g2d.transform(AffineTransform.getScaleInstance(1, sc));
-            g2d.drawString(text, (Main.dmi.pantalla.getScale(19)-fm.stringWidth(text))/2, Main.dmi.pantalla.getScale(30)/sc);
-        }
+
+        float sc = Main.dmi.pantalla.getScale(30)/(noche ? digits_height_noche : digits_height_dia);
+        g2d.transform(AffineTransform.getScaleInstance(1, sc));
+        g2d.drawString(text, (Main.dmi.pantalla.getScale(19)-fm.stringWidth(text))/2, Main.dmi.pantalla.getScale(30)/sc);
         g2d.dispose();
         return new ImageIcon(bi);
     }
@@ -164,8 +160,7 @@ public class Velocidad extends JPanel {
     	Font font;
     	int sz = Main.dmi.pantalla.getScale(30);
 		try {
-			font = Font.createFont(Font.TRUETYPE_FONT, new File(Config.Fabricante+".ttf")).deriveFont((float)sz);
-			if (!noche && Config.Fabricante.equals("")) font = font.deriveFont(1); // TODO: comprobar qué fabricantes cumplen
+			font = Font.createFont(Font.TRUETYPE_FONT, new File(noche ? "ASFA.ttf" : "ASFAB.ttf")).deriveFont((float)sz);
 		} catch (FontFormatException | IOException e) {
 			font = new Font("Lucida Sans", noche ? 0 : 1, sz);
 			e.printStackTrace();

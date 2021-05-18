@@ -34,14 +34,24 @@ public class ConjuntoCurvas
 	{
 		for (ModoCurvas m : t.Modos)
 		{
-			w.write("		[\""+m.toString()+(t.ConAumento ? "-AUMENTO" : "")+"\"]={\n");
+			if ((m == ModoCurvas.BAS_CONV && t.Modos.contains(ModoCurvas.CONV)) ||
+					(m == ModoCurvas.BAS_AV && t.Modos.contains(ModoCurvas.AV)) ||
+					(m == ModoCurvas.BAS_RAM && t.Modos.contains(ModoCurvas.RAM)))
+				continue;
+			TablaCurva taum = getTabla(m, true);
+			w.write("			[\""+m.toString()+"\"]={\n");
 			for (Entry<Integer,Curva[]> e : t.tabla.entrySet())
 			{
-				w.write("			["+e.getKey()+"] = {\n");
-				for (int i=0; i<2; i++)
+				w.write("				["+e.getKey()+"] = {\n");
+				Curva[] curvas = e.getValue();
+				Curva[] curvas_aum = taum!=null ? taum.getCurvas(e.getKey()) : null;
+				for (int i=0; i<4; i++)
 				{
-					Curva c = e.getValue()[i];
-					w.write("				["+i+"] = {");
+					Curva c = null;
+					if (i%2 == 0) c =  curvas[i/2];
+					else if (curvas_aum != null) c = curvas_aum[i/2];
+					if (c == null) continue;
+					w.write("					["+(i+1)+"] = {");
 					w.write(Integer.toString((int)c.OrdenadaOrigen));
 					w.write(",");
 					DecimalFormat fmt = new DecimalFormat("0.##");
@@ -55,27 +65,34 @@ public class ConjuntoCurvas
 					w.write(Integer.toString((int)c.OrdenadaFinal));
 					w.write("},\n");
 				}
-				w.write("			},\n");
+				w.write("				},\n");
 			}
-			w.write("		},\n");
+			w.write("			},\n");
 		}
 	}
+	static int index = 0;
 	void ToLua(BufferedWriter w)
 	{
 		try {
-			w.write("	Nombre=\""+Control.substring(7));
+			w.write("	--Control: "+Control.substring(7));
 			if(Extra != null) w.write("-"+Extra);
-			w.write("\",\n");
-			w.write("	CFreno = {\n");
+			w.write("\n");
+			w.write("	["+index+"]={\n");
+			w.write("		Aumento			= {");
+			w.write("[\"CONV\"]=");
+			w.write(getTabla(ModoCurvas.CONV, true)!=null ? "true" : "false");
+			w.write(", [\"AV\"]=");
+			w.write(getTabla(ModoCurvas.AV, true)!=null ? "true" : "false");
+			w.write(", [\"RAM\"]=");
+			w.write(getTabla(ModoCurvas.RAM, true)!=null ? "true" : "false");
+			w.write("},\n");
+			w.write("		CFreno = {\n");
 			for (TablaCurva t : Tablas)
 			{
 				formatearTablaLua(w,t);
 			}
-			for (TablaCurva t : TablasAumento)
-			{
-				formatearTablaLua(w,t);
-			}
-			w.write("	}\n");
+			w.write("		}\n");
+			w.write("	},\n");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

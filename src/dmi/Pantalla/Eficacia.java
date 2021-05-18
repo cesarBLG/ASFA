@@ -32,6 +32,7 @@ public class Eficacia extends JLabel {
                 }
             }
         });
+        this.setVerticalAlignment(JLabel.BOTTOM);
         iconos = new Icono[8];
         create(false);
         t.setRepeats(true);

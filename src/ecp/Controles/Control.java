@@ -87,17 +87,15 @@ public abstract class Control {
     	try {
     		FileWriter file = new FileWriter("curvas.lua");
 			BufferedWriter w = new BufferedWriter(file);
-			int i=0;
+			w.write("ASFADcurva = {\n");
 			for (ConjuntoCurvas conj : AlmacenCurvas.values())
 			{
-				w.write("["+i+"]={\n");
 				conj.ToLua(w);
-				w.write("},\n");
-				i++;
 			}
+			w.write("}\n");
 			w.flush();
 			file.close();
-    	}catch(Exception e) {}
+    	}catch(Exception e) {e.printStackTrace();}
     }
     public Curva[] obtenerCurvasAlmacen(int T)
     {
@@ -262,7 +260,7 @@ public abstract class Control {
             if (O > T) O = T;
             if (this instanceof ControlViaLibreCondicional || this instanceof ControlPreanuncioParada ||
             		this instanceof ControlAnuncioParada || this instanceof ControlAnuncioPrecaución || 
-            		this instanceof ControlPN || this instanceof ControlLVI || ASFA_version >= 4) {
+            		this instanceof ControlPN || this instanceof ControlLVI || ASFA_version == 3) {
             	Teff = O;
             }
     	}

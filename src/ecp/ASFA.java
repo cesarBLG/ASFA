@@ -268,10 +268,11 @@ public class ASFA {
             display.stopSound("S2-1");
             display.led_basico(2, 0);
             asfa_wait(1000);
-            display.startSound("S2-1", false);
+            String segundoSonido = Config.Fabricante.equals("DIMETRONIC") ? "S3-3" : "S2-1";
+            display.startSound(segundoSonido, false);
             display.led_basico(2, 1);
             asfa_wait(2000);
-            display.stopSound("S2-1");
+            display.stopSound(segundoSonido);
             display.iluminarTodos(false);
             display.led_basico(0, 0);
             display.led_basico(1, 0);
@@ -386,7 +387,7 @@ public class ASFA {
 		        param.basico = !curvasBasicoDigital;
             }
     	}
-        if (basico && Config.Fabricante.equalsIgnoreCase("LOGYTEL"))
+        if (basico && Config.Fabricante.equalsIgnoreCase("SEPSA"))
         {
             try {
             	display.startSound("S1-1", true);
@@ -574,7 +575,7 @@ public class ASFA {
         		EficaciaIrrecuperable = true;
         		Eficacia = false;
         		averia = true;
-        		FE = true;
+        		Urgencias();
         	}
         }
         
@@ -611,6 +612,20 @@ public class ASFA {
 		        else T = selectorT<3 ? (70 + selectorT * 10) : (40 + selectorT * 20);
 		        T = Math.min(T, Vmax);
 		        if (basico && T>Vbasico) T = Vbasico;
+		        if (modo == Modo.MBRA || modo == Modo.BTS)
+		        {
+            		ControlesGuardados = null;
+            		modo = modoRAM ? Modo.RAM : (modoCONV ? Modo.CONV : Modo.AV);
+            		param.Modo = modo;
+            		Controles.clear();
+            		ControlesLVI.clear();
+            		ControlesPN.clear();
+        			ControlSeñal = AnteriorControlSeñal = null;
+        	        SigNo = 2;
+        	        PrevDist = 0;
+        			Controles.add(new ControlArranque(param));
+        			UltimaInfo = Info.Desconocido;
+		        }
 		        param.T = T;
 		        param.basico = basico && !curvasBasicoDigital;
 		        display.controles.clear();
@@ -633,7 +648,7 @@ public class ASFA {
 				}
 				PaqueteRegistro.modo();
 			}
-			else FE = true;
+			else Urgencias();
 		}
 		if (!basico && !display.pantallaconectada) FE = true;
 		if (!basico) display.iluminar(TipoBotón.Modo, MpS.ToKpH(Odometer.getSpeed())<5 && display.botones.get(TipoBotón.Modo).siguientePulsacion < Clock.getSeconds());
@@ -816,7 +831,7 @@ public class ASFA {
                     if (display.pulsado(TipoBotón.VLCond, RecStart)) {
                         display.stopSound("S2-1");
                         display.startSound("S2-2");
-                        ViaLibreCondicional();
+                        if (ASFA_version <= 2) ViaLibreCondicional();
                         RecStart = 0;
                     }
                 }
@@ -848,6 +863,7 @@ public class ASFA {
                     if (AlarmaStart == 0) display.esperarPulsado(TipoBotón.Alarma, RecStart);
                     if (display.pulsado(TipoBotón.Alarma, RecStart)) {
                         RecStart = 0;
+                        if (ASFA_version >= 4) display.startSound("S6");
                     }
                 }
                 if (UltimaFrecValida == FrecASFA.L8)
@@ -900,7 +916,7 @@ public class ASFA {
                 InicioRebase = Clock.getSeconds();
                 display.iluminar(TipoBotón.Rebase, true);
             }
-            if (InicioRebase + 10 < Clock.getSeconds()) {
+            if (RebaseAuto && InicioRebase + 10 < Clock.getSeconds()) {
                 display.iluminar(TipoBotón.Rebase, false);
                 RebaseAuto = false;
             }
@@ -922,7 +938,10 @@ public class ASFA {
                     display.iluminar(TipoBotón.Alarma, false);
                     display.stopSound("S5");
                     if (UltimaFrecValida == FrecASFA.L7)
+                    {
                     	RecStart = 0;
+                        if (ASFA_version >= 4) display.startSound("S6");
+                    }
         		}
             }
         }
@@ -1682,7 +1701,7 @@ public class ASFA {
                 display.stopSound("S3-1");
         	}
             sobrevelocidad = 0;
-        } else if (vreal >= max && !FE) {
+        } else if (vreal >= max) {
         	if(sobre2)
         	{
         		sobre2=false;
@@ -1881,7 +1900,7 @@ public class ASFA {
             display.display("Tipo", 0);
             display.display("Modo", -1);
         	display.display("Velocidad", T);
-            if (Config.Fabricante.equalsIgnoreCase("LOGYTEL"))
+            if (Config.Fabricante.equalsIgnoreCase("SEPSA"))
            	{
                 display.display("Info", infoMostrada.ordinal()<<1 | (parpInfo ? 1 : 0));
                 display.display("Velocidad Objetivo", (controlDisplay instanceof ControlPreviaSeñalParada || controlDisplay instanceof ControlZonaLimiteParada) ? 0 : (int) controlDisplay.VC.OrdenadaFinal);
@@ -2003,7 +2022,7 @@ public class ASFA {
         ArrayList<Control> Caducados = new ArrayList<Control>();
         for (Control control : Controles) {
             if(control instanceof ControlFASF) {
-            	if (InfoSeñalDistinta && control instanceof ControlSeñalParada && !(c instanceof ControlPreviaSeñalParada)) {
+            	if (control instanceof ControlSeñalParada && !(c instanceof ControlPreviaSeñalParada || c instanceof ControlSeñalParada)) {
                     if (control.TiempoVAlcanzada == 0) {
                         control.TiempoVAlcanzada = TiempoUltimaRecepcion;
                     }
@@ -2020,6 +2039,8 @@ public class ASFA {
                 }
                 if(control instanceof ControlSeñalParada)
                 {
+                	ControlSeñalParada csp = (ControlSeñalParada)control;
+                	csp.recStart = -1;
                 	display.botones.get(TipoBotón.Rebase).lector = null;
                 	display.stopSound("S3-5");
     				display.iluminar(TipoBotón.Rebase, false);
