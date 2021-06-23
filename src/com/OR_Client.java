@@ -19,11 +19,14 @@ import ecp.Clock;
 import ecp.FrecASFA;
 import ecp.Main;
 import ecp.Odometer;
+import ecp.ASFA;
 
 public class OR_Client {
+	ASFA ASFA;
 	Socket s;
 	OutputStream out;
 	BufferedReader in;
+	static boolean startServer=true;
 	public static Socket getSocket()
 	{
 		Socket s = null;
@@ -57,6 +60,16 @@ public class OR_Client {
 			if(s == null || !s.isConnected())
 			{
 				s = null;
+				if (startServer)
+				{
+			    	try {
+						Runtime.getRuntime().exec("./server");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			    	startServer = false; 
+				}
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
@@ -67,42 +80,54 @@ public class OR_Client {
 		}
 		return s;
 	}
-	public OR_Client()
+	void setup()
 	{
+		s = getSocket();
+		try {
+			in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+			out = s.getOutputStream();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		subscribe("asfa::frecuencia");
+		subscribe("asfa::selector_tipo");
+		subscribe("asfa::cg::conectado");
+		subscribe("asfa::cg::anulado");
+		subscribe("asfa::akt");
+		subscribe("asfa::con");
+		subscribe("asfa::pulsador::*");
+		subscribe("speed");
+		subscribe("simulator_time");
+		subscribe("asfa::pantalla::conectada");
+		while(true)
+		{
+			String s = readData();
+			if (s == null) return;
+			parse(s);
+		}
+	}
+	public OR_Client(ASFA asfa)
+	{
+		ASFA = asfa;
 		new Thread(() -> {
-			s = getSocket();
-			try {
-				in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-				out = s.getOutputStream();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			subscribe("asfa::frecuencia");
-			subscribe("asfa::selector_tipo");
-			subscribe("asfa::cg::conectado");
-			subscribe("asfa::cg::anulado");
-			subscribe("asfa::akt");
-			subscribe("asfa::con");
-			subscribe("asfa::pulsador::*");
-			subscribe("speed");
-			subscribe("simulator_time");
-			subscribe("asfa::pantalla::conectada");
-			while(true)
+			while (true)
 			{
-				String s = readData();
-				if (s == null) return;
-				parse(s);
+				setup();
+				in = null;
+				out = null;
+				s = null;
 			}
 		}).start();
 	}
 	void parse(String s)
 	{
 		if(s==null) return;
-		if (matches(s, "asfa::conectado")) sendData("asfa::conectado="+(Main.ASFA.ASFAconectado&&!Main.ASFA.ASFAanulado?"1":"0"));
-		if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (Main.ASFA.Fase2 ? "2" : "1"));
-		if (matches(s, "asfa::ecp::estado") && Main.ASFA.display.estadoecp != -1) sendData("asfa::ecp::estado=" + Main.ASFA.display.estadoecp);
-		if (matches(s, "asfa::pantalla::activa")) sendData("asfa::pantalla::activa=" + (Main.ASFA.display.pantallaactiva ? 1 : 0));
+		if (matches(s, "asfa::conectado")) sendData("asfa::conectado="+(ASFA.ASFAconectado&&!ASFA.ASFAanulado?"1":"0"));
+		if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (ASFA.Fase2 ? "2" : "1"));
+		if (matches(s, "asfa::ecp::estado") && !ASFA.display.estadoecp.isEmpty()) sendData("asfa::ecp::estado=" + ASFA.display.estadoecp);
+		if (matches(s, "asfa::pantalla::activa")) sendData("asfa::pantalla::activa=" + (ASFA.display.pantallaactiva ? 1 : 0));
+		if (matches(s, "asfa::dmi::activo")) sendData("asfa::dmi::activo=" + (ASFA.Connected ? 1 : 0));
 		int index = s.indexOf('=');
 		if (index < 0) return;
 		String[] topics = s.substring(0, index).split("::");
@@ -113,7 +138,7 @@ public class OR_Client {
 			try
 			{
 				int freqHz = (int) Double.parseDouble(val);
-				f = Main.ASFA.captador.procesarFrecuencia(freqHz);
+				f = ASFA.captador.procesarFrecuencia(freqHz);
 			}
 			catch (NumberFormatException e1)
 			{
@@ -126,7 +151,7 @@ public class OR_Client {
 					e.printStackTrace(); 
 				}
 			}
-            Main.ASFA.captador.nuevaFrecuencia(f);
+            ASFA.captador.nuevaFrecuencia(f);
 		}
 		else if(s.startsWith("speed="))
 		{
@@ -148,15 +173,15 @@ public class OR_Client {
 				}
 			}
 			if (tb == null) return;
-            Main.ASFA.display.pulsar(tb, val.equals("1"));
+            ASFA.display.pulsar(tb, val.equals("1"));
             if(tb==TipoBotón.Conex)
             {
-            	synchronized(Main.ASFA)
+            	synchronized(ASFA)
             	{
-            		Main.ASFA.notify();
+            		ASFA.notify();
             	}
             }
-            if(tb==TipoBotón.PrePar) Main.ASFA.display.pulsar(TipoBotón.VLCond, val.equals("1"));
+            if(tb==TipoBotón.PrePar) ASFA.display.pulsar(TipoBotón.VLCond, val.equals("1"));
 		}
 		else if(s.startsWith("simulator_time="))
 		{
@@ -167,31 +192,31 @@ public class OR_Client {
 			for(int i=0; i<64; i++)
 			{
 				byte b = Integer.decode("0x"+val.substring(2*i, 2*i+2)).byteValue();
-				Main.ASFA.div.add(b);
+				ASFA.div.add(b);
 			}
 		}
 		else if(s.startsWith("asfa::akt="))
 		{
-			Main.ASFA.AKT = val.equals("1");
+			ASFA.AKT = val.equals("1");
 		}
 		else if(s.startsWith("asfa::con="))
 		{
-			Main.ASFA.CON = !val.equals("0");
+			ASFA.CON = !val.equals("0");
 		}
 		else if(s.startsWith("asfa::cg::conectado="))
 		{
-			Main.ASFA.ASFAconectado = val.equals("1");
-			synchronized(Main.ASFA)
+			ASFA.ASFAconectado = val.equals("1");
+			synchronized(ASFA)
         	{
-        		Main.ASFA.notify();
+        		ASFA.notify();
         	}
 		}
 		else if(s.startsWith("asfa::cg::anulado="))
 		{
-			Main.ASFA.ASFAanulado = val.equals("1");
-			synchronized(Main.ASFA)
+			ASFA.ASFAanulado = val.equals("1");
+			synchronized(ASFA)
         	{
-        		Main.ASFA.notify();
+        		ASFA.notify();
         	}
 		}
 		else if(s.startsWith("asfa::selector_tipo="))
@@ -207,14 +232,11 @@ public class OR_Client {
 			else if (speed > 80) selectorT = 2;
 			else if (speed > 10) selectorT = 1;
 			else if (speed > 0) selectorT = speed;
-			if (selectorT > 0) Main.ASFA.selectorT = selectorT;
+			if (selectorT > 0) ASFA.selectorT = selectorT;
 		}
 		else if(s.startsWith("asfa::pantalla::conectada="))
 		{
-			if (val.equals("1"))
-			{
-				Main.ASFA.display.pantallaconectada = true;
-			}
+			ASFA.display.pantallaconectada = val.equals("1");
 		}
 	}
 	static boolean matches(String topic, String var)

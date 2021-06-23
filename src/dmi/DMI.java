@@ -10,6 +10,9 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Comparator;
 
 import javax.swing.BoxLayout;
@@ -30,6 +33,7 @@ import dmi.Pantalla.ÚltimaInfo.Info;
 import ecp.ASFA;
 import ecp.ASFA.Modo;
 import ecp.Config;
+import ecp.DisplayInterface;
 import ecp.FrecASFA;
 import ecp.Main;
 import ecp.Odometer;
@@ -48,6 +52,26 @@ public class DMI extends JFrame {
 
     public DMI() {
         Main.dmi = this;
+        new Thread(() -> {Icono.cargarIconos();}).start();
+        try {
+    		Process p = Runtime.getRuntime().exec("./sound");
+    		new Thread(() -> {
+    			try {
+    				BufferedReader in = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+    				String line;
+    				while ((line = in.readLine()) != null) {
+    				     System.out.println(line);
+    				}
+    			    in.close();
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+    		}).start();
+    	} catch (IOException e) {
+    		// TODO Auto-generated catch block
+    		e.printStackTrace();
+    	}
         singleScreen = Config.SoloPantalla;
         fullScreen = Config.PantallaCompleta;
     	if(singleScreen)
@@ -66,17 +90,24 @@ public class DMI extends JFrame {
         pantalla = new Pantalla();
         add(pantalla, g);
         g.gridwidth = 1;
-        g.insets = new Insets(0, 0, 10, 0);
-        JButton modonoche = new JButton("D/N");
-        modonoche.addActionListener((ActionEvent) -> {
-        	pantalla.set();
-        }); 
         if(!singleScreen)
         {
+            JButton modonoche = new JButton("D/N");
+            modonoche.addActionListener((ActionEvent) -> {
+            	pantalla.set();
+            }); 
         	g.insets = new Insets(0, 5, 0, 0);
         	g.gridx = 0;
         	add(modonoche, g);
+            /*JButton volup = new JButton("V+");
+            volup.addActionListener((ActionEvent) -> {
+            	ecp.sendData("asfa::volumen=");
+            }); 
+        	g.insets = new Insets(0, 0, 0, 0);
+        	g.gridx = 2;
+        	add(volup, g);*/
         	g.gridwidth = 3;
+        	g.gridx = 0;
         }
         g.gridy++;
         g.insets = new Insets(5, 5, 5, 5);

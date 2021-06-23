@@ -30,12 +30,13 @@ public class Intervención extends JPanel {
         IconoF1 = new Icono(false, "Frenado1.png");
         IconoF2 = new Icono(false, "Frenado2.png");
         IconoU = new Icono(false, "Urgencia.png");
-        update(0, false);
+        update();
     }
     public int frenado;
     public boolean urgencia;
 
     public void update(int f, boolean urg) {
+    	if (frenado == f && urgencia == urg) return;
         frenado = f;
         urgencia = urg;
         update();

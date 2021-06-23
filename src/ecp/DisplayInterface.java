@@ -2,17 +2,20 @@ package ecp;
 
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import javax.swing.JOptionPane;
 
 import com.COM;
+import com.ECPStateSerializer;
 import com.OR_Client;
 
 import dmi.Sonidos;
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.*;
 import ecp.ASFA.Modo;
+import ecp.EstadoBotón.LectorBoton;
 
 class EstadoBotón {
 
@@ -22,7 +25,25 @@ class EstadoBotón {
     public double tiempoPulsar = 0.5;
     public double siguientePulsacion = -1;
     double rawPress = 0;
-    Object lector;
+    
+    enum LectorBoton
+    {
+    	Ninguno,
+    	Reconocimiento,
+    	Alarma,
+    	Rearme,
+    	Reanudo,
+    	FinParada,
+    	ReconocimientoPeriodico,
+    	Rebase,
+    	CambioModo,
+    	EliminarControles,
+    	Aumento,
+    	VelocidadLVI,
+    	Velo
+    }
+    
+    LectorBoton lector = LectorBoton.Ninguno;
     
     public EstadoBotón(boolean p, boolean i) {
         iluminado = i;
@@ -33,28 +54,28 @@ class EstadoBotón {
     	if(p == pulsado) return;
     	pulsado = p;
     	rawPress = Clock.getSeconds();
-    	if(pulsado && lector != null && siguientePulsacion < Clock.getSeconds()) startTime = Clock.getSeconds();
+    	if(pulsado && lector != LectorBoton.Ninguno && siguientePulsacion < Clock.getSeconds()) startTime = Clock.getSeconds();
     	else startTime = 0;
     }
-    public void esperarPulsado(Object detector)
+    public void esperarPulsado(LectorBoton detector)
     {
-    	if(lector!=null && detector != null && detector.equals(lector)) return;
+    	if(detector == lector) return;
     	if (pulsado && Config.Fabricante.equalsIgnoreCase("DIMETRONIC")) return;
     	startTime = 0;
     	lector = detector;
     }
-    public boolean flancoPulsado(Object detector)
+    public boolean flancoPulsado(LectorBoton detector)
     {
     	return flancoPulsado(detector, tiempoPulsar);
     }
-    public boolean flancoPulsado(Object detector, double tiempo)
+    public boolean flancoPulsado(LectorBoton detector, double tiempo)
     {
-    	if(!detector.equals(lector)) return false;
+    	if(detector != lector) return false;
     	boolean val = startTime!=0 && Clock.getSeconds() - startTime >= tiempo;
     	if(val)
     	{
     		startTime = 0;
-    		lector = null;
+    		lector = LectorBoton.Ninguno;
     	}
     	return val;
     }
@@ -69,10 +90,13 @@ class EstadoBotón {
 }
 
 public class DisplayInterface {
+	public ASFA ASFA;
     OR_Client orclient;
+    ECPStateSerializer serialClient;
     public boolean pantallaconectada=false;
+    
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
-
+    
     byte controlByte(int n1, int n2) {
         int number = (n1 << 8) | n2;
         int control = 0;
@@ -83,8 +107,10 @@ public class DisplayInterface {
         return (byte) control;
     }
 
-    public DisplayInterface() {
-    	orclient = new OR_Client();
+    public DisplayInterface(ASFA asfa) {
+    	ASFA = asfa;
+    	orclient = new OR_Client(ASFA);
+    	serialClient = new ECPStateSerializer(this);
     }
 
     void reset()
@@ -94,9 +120,10 @@ public class DisplayInterface {
             EstadoBotón e = botones.get(t[i]);
             if (e == null) continue;
             e.iluminado = false;
-            e.lector = null;
+            e.lector = LectorBoton.Ninguno;
         }
         controles.clear();
+        serialClient.cambio();
     }
     
     public void iluminar(TipoBotón botón, boolean state) {
@@ -112,6 +139,7 @@ public class DisplayInterface {
 		else if(name.equals("ocultación")) name = "ocultacion";
 		else if(name.equals("asfa_básico")) name = "basico";
         write("asfa::pulsador::ilum::"+name, state ? 1 : 0);
+        serialClient.cambioRepetidor();
     }
 
     public void iluminarTodos(boolean state) {
@@ -122,13 +150,13 @@ public class DisplayInterface {
     }
 
     public void pulsar(TipoBotón botón, boolean state) {
-    	synchronized(Main.ASFA) {
+    	synchronized(ASFA) {
 	        if (!botones.containsKey(botón)) {
 	            botones.put(botón, new EstadoBotón(state, false));
-	            PaqueteRegistro.pulsador(botón, 1, state);
+	            ASFA.Registro.pulsador(botón, 1, state);
 	        } else {
 	        	EstadoBotón b = botones.get(botón);
-	        	if(b.pulsado != state) PaqueteRegistro.pulsador(botón, 1, state);
+	        	if(b.pulsado != state) ASFA.Registro.pulsador(botón, 1, state);
 	            b.pulsar(state);
 	        }
     	}
@@ -140,23 +168,28 @@ public class DisplayInterface {
         }
         return botones.get(botón).pulsado;
     }
-    public void esperarPulsado(TipoBotón botón, Object detector)
+    public void esperarPulsado(TipoBotón botón, LectorBoton detector)
     {
     	if (!botones.containsKey(botón)) {
             botones.put(botón, new EstadoBotón(false, false));
         }
     	botones.get(botón).esperarPulsado(detector);
     }
-    public boolean pulsado(TipoBotón botón, Object detector) {
+    public boolean pulsado(TipoBotón botón, LectorBoton detector) {
         return botones.get(botón).flancoPulsado(detector);
     }
-    public boolean algunoPulsando(Object detector)
+    public boolean algunoPulsando(LectorBoton detector)
     {
     	for(EstadoBotón b : botones.values())
     	{
-    		if(b.startTime != 0 && detector.equals(b.lector)) return true;
+    		if(b.startTime != 0 && detector == b.lector) return true;
     	}
     	return false;
+    }
+    public boolean iluminado(TipoBotón boton)
+    {
+    	EstadoBotón e = botones.get(boton);
+    	return e != null && e.iluminado;
     }
     Hashtable<String, Integer> controles = new Hashtable<String, Integer>();
 
@@ -221,9 +254,16 @@ public class DisplayInterface {
                 write("asfa::indicador::velo", state);
             	break;
         }
+        serialClient.cambioDisplay();
     }
+	public int getDisplayValue(String name)
+	{
+		Integer i = controles.get(name);
+		if (i == null) return 0;
+		return i;
+	}
     
-    int leds[] = new int[3];
+    public int leds[] = new int[3];
     public void led_basico(int led, int state)
     {
     	if (leds[led]!=state)
@@ -231,6 +271,7 @@ public class DisplayInterface {
     		leds[led] = state;
             write("asfa::leds::"+led, state);
     	}
+        serialClient.cambioRepetidor();
     }
     
     /*public void poweron()
@@ -249,42 +290,57 @@ public class DisplayInterface {
     	pantallaactiva=false;
     	orclient.sendData("asfa::pantalla::activa=0");
     }
-    public int estadoecp = -1;
-    public void set(int num, int errno)
+    public String estadoecp = "";
+    public void set(int num, List<Integer> errors)
     {
-    	estadoecp = num;
     	String msg = "";
-    	switch (errno)
+    	if (errors != null)
     	{
-	    	case 1:
-	    		msg = "<html>Fallo de comunicacion con DIV<br/><center>Informacion redundante</center></html>";
-	    		break;
-	    	case 2:
-	    		msg = "Fallo de comunicación con DIV";
-	    		break;
-	    	case 3:
-	    		msg = "Fallo de pulsador";
-	    		break;
+    		msg += "<html>";
+        	for (int i=0; i<errors.size(); i++)
+        	{
+        		if (i>0) msg += "<br/>";
+            	switch (errors.get(i))
+            	{
+        	    	case 1:
+        	    		msg += "Fallo de comunicacion con DIV<br/><center>(Informacion redundante)</center>";
+        	    		break;
+        	    	case 2:
+        	    		msg += "Fallo de comunicacion con DIV";
+        	    		break;
+        	    	case 3:
+        	    		msg += "Fallo de pulsador";
+        	    		break;
+        	    	case 4:
+        	    		msg += "Fallo subsistema de captacion";
+        	    			break;
+            	}
+        	}
+        	msg += "</html>";
     	}
+    	estadoecp = num+","+msg;
     	orclient.sendData("asfa::ecp::estado="+num+","+msg);
     }
     public void startSound(String num)
     {
-    	startSound(num, Main.ASFA.basico);
+    	startSound(num, ASFA.basico);
     }
     public void startSound(String num, boolean basic)
     {
         orclient.sendData("noretain(asfa::sonido::iniciar=" + num + "," + (basic ? 1 : 0) + ")");
-        PaqueteRegistro.sonido(num, basic);
+        ASFA.Registro.sonido(num, basic);
+        serialClient.sendSonido(num, basic, true);
     }
     public void stopSound(String num)
     {
         orclient.sendData("noretain(asfa::sonido::detener="+num+")");
-        PaqueteRegistro.sonido("", false);
+        ASFA.Registro.sonido("", false);
+        serialClient.sendSonido(num, false, false);
     }
     public void stopSoundNoLog(String num)
     {
         orclient.sendData("noretain(asfa::sonido::detener="+num+")");
+        serialClient.sendSonido(num, false, false);
     }
     public void write(String fun, int val)
     {

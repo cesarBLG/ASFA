@@ -40,6 +40,7 @@ public class Velo extends JPanel {
 	}
     public void setActivo(boolean activo)
     {
+    	if (this.activo == activo) return;
     	this.activo = activo;
     	repaint();
     }

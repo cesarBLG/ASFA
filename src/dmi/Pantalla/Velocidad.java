@@ -152,7 +152,7 @@ public class Velocidad extends JPanel {
     }
     public void setValue(int val) {
     	if (value == val) return;
-        value = val;
+        value = Math.min(Math.abs(val), 999);
         update();
     }
     public Font getFont(boolean noche)

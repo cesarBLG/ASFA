@@ -35,35 +35,40 @@ import ecp.Controles.ControlViaLibre;
 import ecp.Controles.ControlViaLibreCondicional;
 import ecp.Controles.ControlZonaLimiteParada;
 
-public class PaqueteRegistro
+public class RegistroDatos
 {
-	int Codigo;
-	int Fecha;
-	int Milisegundos;
-	double Distancia;
-	int Valor;
-	int Vreal;
-	int Vcontrol;
-	int Vif;
-	static LinkedList<PaqueteRegistro> paquetes = new LinkedList<PaqueteRegistro>();
-	PaqueteRegistro(int codigo, int valor)
+	class PaqueteRegistro
 	{
-		Codigo = codigo;
-		Valor = valor;
-		Fecha = (int) Clock.getSeconds();
-		Milisegundos = (int)(((long)(Clock.getSeconds()*1000))%1000);
-		Distancia = (int)Odometer.getDistance();
-		Vreal = (int)(Odometer.getSpeed()*3.6);
-		if(Main.ASFA.ControlActivo != null)
-		{	
-			Vcontrol = (int)(Main.ASFA.ControlActivo.getVC(Clock.getSeconds()));
-			Vif = (int)(Main.ASFA.ControlActivo.getIF(Clock.getSeconds()));
+		int Codigo;
+		int Fecha;
+		int Milisegundos;
+		double Distancia;
+		int Valor;
+		int Vreal;
+		int Vcontrol;
+		int Vif;
+		PaqueteRegistro(int codigo, int valor, int VC, int IF)
+		{
+			Codigo = codigo;
+			Valor = valor;
+			Fecha = (int) Clock.getSeconds();
+			Milisegundos = (int)(((long)(Clock.getSeconds()*1000))%1000);
+			Distancia = (int)Odometer.getDistance();
+			Vreal = (int)(Odometer.getSpeed()*3.6);
+			Vcontrol = VC;
+			Vif = IF;
 		}
 	}
-	static FileOutputStream writer = null;
-	static BufferedWriter excel = null;
-	static Hashtable<Integer,String> codigos = new Hashtable<>();
-	static String format_value(int codigo, int valor)
+	ASFA ASFA;
+	LinkedList<PaqueteRegistro> paquetes = new LinkedList<PaqueteRegistro>();
+	FileOutputStream writer = null;
+	BufferedWriter excel = null;
+	Hashtable<Integer,String> codigos = new Hashtable<>();
+	public RegistroDatos(ASFA asfa)
+	{
+		ASFA = asfa;
+	}
+	String format_value(int codigo, int valor)
 	{
 		if(codigo == 0xFF02)
 		{
@@ -78,9 +83,16 @@ public class PaqueteRegistro
 		
 		return Integer.toString(valor);
 	}
-	static void add(int codigo, int valor)
+	void add(int codigo, int valor)
 	{
-		PaqueteRegistro p = new PaqueteRegistro(codigo, valor);
+		int VC = 0;
+		int IF = 0;
+		if (ASFA.ControlActivo!=null)
+		{
+			VC = (int)(ASFA.ControlActivo.getVC(Clock.getSeconds()));
+			IF = (int)(ASFA.ControlActivo.getIF(Clock.getSeconds()));
+		}
+		PaqueteRegistro p = new PaqueteRegistro(codigo, valor, VC, IF);
 		if (writer == null)
 		{
 			codigos.put(0xFF02,"Cambio fecha/hora");
@@ -94,8 +106,16 @@ public class PaqueteRegistro
 			codigos.put(0xFF13,"Tipo de tren");
 			codigos.put(0xFF14,"Modo de funcionamiento");
 			codigos.put(0xFF20,"Freno de emergencia");
+			codigos.put(0xFF30,"Fallo canal 1 ECP");
+			codigos.put(0xFF31,"Fallo canal 2 ECP");
+			codigos.put(0xFF31,"Fallo config. interna sistema");
+			codigos.put(0xFF37,"Fallo lectura DIV en arranque");
+			codigos.put(0xFF3A,"Fallo panel repetidor 1");
+			codigos.put(0xFF3B,"Fallo panel repetidor 2");
 			codigos.put(0xFF42,"Ocultación cab 1");
 			codigos.put(0xFF43,"Ocultación cab 2");
+			codigos.put(0xFF44,"Estado salida ASFA conectado");
+			codigos.put(0xFF45,"Valor señal CON de ETCS/LZB");
 			codigos.put(0xFF50,"Interruptor ASFA básico cab 1");
 			codigos.put(0xFF51,"Interruptor ASFA básico cab 2");
 			codigos.put(0xFF52,"Pulsador anuncio parada cab 1");
@@ -165,6 +185,8 @@ public class PaqueteRegistro
 				public void run()
 				{
 					try {
+						writer.flush();
+						excel.flush();
 						writer.close();
 						excel.close();
 					} catch (IOException e) {
@@ -222,47 +244,47 @@ public class PaqueteRegistro
 		}
 		paquetes.add(p);
 	}
-	static void cambio_hora(double horantigua)
+	void cambio_hora(double horantigua)
 	{
 		add(0xFF02, (int)horantigua);
 	}
-	static void encendido()
+	void encendido()
 	{
 		add(0xFF03, 1);
 	}
-	static void apagado()
+	void apagado()
 	{
 		add(0xFF04, 1);
 	}
-	static void frecuencia(int freqHz)
+	void frecuencia(int freqHz)
 	{
 		add(0xFF05, freqHz/500);
 	}
-	static void codigo_fallo(int codigo)
+	void codigo_fallo(int codigo)
 	{
 		add(0xFF06, codigo);
 	}
-	static void cambio_vreal()
+	void cambio_vreal()
 	{
 		add(0xFF10, (int)(Odometer.getSpeed()*3.6));
 	}
-	static void inicio_vcontrol()
+	void inicio_vcontrol()
 	{
-		add(0xFF11, (int)(Main.ASFA.ControlActivo.VC.OrdenadaOrigen));
+		add(0xFF11, (int)(ASFA.ControlActivo.VC.OrdenadaOrigen));
 	}
-	static void fin_vcontrol()
+	void fin_vcontrol()
 	{
-		add(0xFF12, (int)(Main.ASFA.ControlActivo.VC.OrdenadaFinal));
+		add(0xFF12, (int)(ASFA.ControlActivo.VC.OrdenadaFinal));
 	}
-	static void tipo_tren()
+	void tipo_tren()
 	{
-		add(0xFF13, Main.ASFA.selectorT);
+		add(0xFF13, ASFA.selectorT);
 	}
-	static void modo()
+	void modo()
 	{
 		int modo = 0;
-		boolean b = Main.ASFA.basico;
-		switch(Main.ASFA.modo)
+		boolean b = ASFA.basico;
+		switch(ASFA.modo)
 		{
 			case CONV:
 				if(b) modo=5;
@@ -294,18 +316,18 @@ public class PaqueteRegistro
 		}
 		add(0xFF14, modo);
 	}
-	static void estado_urgencia()
+	void estado_urgencia()
 	{
-		add(0xFF20, Main.ASFA.FE ? 1 : 0);
+		add(0xFF20, ASFA.FE ? 1 : 0);
 	}
-	static void baliza_recibida(FrecASFA freq)
+	void baliza_recibida(FrecASFA freq)
 	{
 		add(0xFFF0, freq.ordinal());
 	}
-	static void control_activo()
+	void control_activo()
 	{
 		int num=18;
-		Control c = Main.ASFA.ControlActivo;
+		Control c = ASFA.ControlActivo;
 		if (c instanceof ControlArranque) num = 0;
 		else if (c instanceof ControlTransicion) num = 1;
 		else if (c instanceof ControlViaLibre) num = 2;
@@ -332,7 +354,7 @@ public class PaqueteRegistro
 		else if (c instanceof ControlLVI && ((ControlLVI)c).AumentoVelocidad) num += 32;
 		add(0xFFF1, num);
 	}
-	static void pulsador(TipoBotón pulsador, int display, boolean pulsado)
+	void pulsador(TipoBotón pulsador, int display, boolean pulsado)
 	{
 		int num=0;
 		switch(pulsador)
@@ -381,7 +403,23 @@ public class PaqueteRegistro
 		if(display == 2) num++;
 		add(num, pulsado ? 1 : 0);
 	}
-	static void sonido(String snd, boolean basic)
+	void falloConfiguracion(boolean fallo)
+	{
+		add(0xFF35, fallo ? 1 : 0);
+	}
+	void falloDIV(boolean fallo)
+	{
+		add(0xFF37, fallo ? 1 : 0);
+	}
+	void falloPulsadores(int display, boolean fallo)
+	{
+		add(display==2 ? 0xFF3B : 0xFF3A, fallo ? 1 : 0);
+	}
+	void falloECP(int canal, boolean fallo)
+	{
+		add(canal==2 ? 0xFF31 : 0xFF30, fallo ? 1 : 0);
+	}
+	void sonido(String snd, boolean basic)
 	{
 		int num=0;
 		if (snd.equals("S1-1")) num = 1;
@@ -402,8 +440,16 @@ public class PaqueteRegistro
 		if (basic) num += 32;
 		add(0xFFF2, num);
 	}
-	static void ocultacion(int display, boolean activo)
+	void ocultacion(int display, boolean activo)
 	{
 		add(display == 2 ? 0xFF43 : 0xFF42, activo ? 1 : 0);
+	}
+	void ASFAconectado(boolean activo)
+	{
+		add(0xFF44, activo ? 1 : 0);
+	}
+	void señalCON(boolean activo)
+	{
+		add(0xFF45, activo ? 1 : 0);
 	}
 }

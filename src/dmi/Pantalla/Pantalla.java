@@ -14,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,6 +24,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import dmi.DMI;
@@ -52,6 +54,8 @@ public class Pantalla extends JPanel {
     public boolean activa = false;
     public boolean conectada = false;
     
+    public PantallaSerializer serialClient = new PantallaSerializer(this);
+    
     static Color blanco = new Color(248, 248, 248);
     
     public int getScale(float val) {
@@ -59,10 +63,11 @@ public class Pantalla extends JPanel {
     	return Math.round(Main.dmi.singleScreen ? val*scale : val);
     }
     public Pantalla() {
-        setSize(getScale(350), getScale(263));
-        setMinimumSize(new Dimension(getScale(350), getScale(263)));
-        setMaximumSize(new Dimension(getScale(350), getScale(263)));
-        setPreferredSize(new Dimension(getScale(350), getScale(263)));
+    	int sizex = Config.Fabricante.equals("SIEMENS") ? 370 : 350;
+        setSize(getScale(sizex), getScale(263));
+        setMinimumSize(new Dimension(getScale(sizex), getScale(263)));
+        setMaximumSize(new Dimension(getScale(sizex), getScale(263)));
+        setPreferredSize(new Dimension(getScale(sizex), getScale(263)));
         setBackground(Color.black);
         this.addMouseListener(new MouseListener() {
 
@@ -82,12 +87,23 @@ public class Pantalla extends JPanel {
 
     public void stop()
     {
+    	if (Main.dmi.fullScreen)
+    	{
+            try {
+    			Runtime.getRuntime().exec("vcgencmd display_power 0");
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+    	}
         setBackground(Color.black);
     	Main.dmi.ecp.unsubscribe("asfa::indicador::*");
     	Main.dmi.ecp.unsubscribe("asfa::fase");
         removeAll();
         validate();
         repaint();
+        SwingUtilities.invokeLater(() -> {
+        	Main.dmi.ecp.sendData("noretain(asfa::pantalla::conectada=0)");
+        });
     }
     
     public void splash_sepsa()
@@ -110,11 +126,6 @@ public class Pantalla extends JPanel {
 		});
 		t.setRepeats(false);
 		t.start();
-    	if(Main.dmi.fullScreen)
-    	{
-    		GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(Main.dmi);
-    		Main.dmi.setVisible(true);
-    	}
     }
     
     public void apagar()
@@ -126,11 +137,23 @@ public class Pantalla extends JPanel {
     	if(Main.dmi.fullScreen)
     	{
     		Main.dmi.setVisible(false);
+            try {
+				Runtime.getRuntime().exec("vcgencmd display_power 0");
+			} catch (IOException e) {
+			}
     	}
     }
     
     public void setup(int state, String msg) {
-    	conectada = true;
+    	if(Main.dmi.fullScreen)
+    	{
+            Main.dmi.setVisible(true);
+            try {
+				Runtime.getRuntime().exec("vcgencmd display_power 1");
+			} catch (IOException e) {
+			}
+    		GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(Main.dmi);
+    	}
         removeAll();
         setup_sepsa(state, msg);
         validate();
@@ -139,9 +162,9 @@ public class Pantalla extends JPanel {
         {
     		Timer t = new Timer(1800, (arg0) -> {
     			conectada = true;
-    			stop();
+    			if (activa) start();
+    			else stop();
     	    	Main.dmi.ecp.subscribe("asfa::pantalla::activa");
-    			Main.dmi.ecp.sendData("noretain(asfa::pantalla::conectada=1)");
     		});
     		t.setRepeats(false);
     		t.start();
@@ -150,7 +173,6 @@ public class Pantalla extends JPanel {
     
     public void setup_sepsa(int state, String msg)
     {
-
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         Date date = new Date();
         DateFormat df = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
@@ -187,6 +209,15 @@ public class Pantalla extends JPanel {
             m.setForeground(Color.white);
             m.setFont(new Font(m.getFont().getName(), Font.PLAIN, getScale(m.getFont().getSize())));
             add(m);
+            add(Box.createRigidArea(new Dimension(0, 5)));
+        }
+        if (state == 2)
+        {
+            j = new JLabel("Averia grave - Avisar a mantenimiento");
+            j.setAlignmentX(Component.CENTER_ALIGNMENT);
+            j.setForeground(Color.red);
+            j.setFont(new Font(j.getFont().getName(), Font.PLAIN, getScale(j.getFont().getSize())));
+            add(j);
             add(Box.createRigidArea(new Dimension(0, 5)));
         }
         j = new JLabel("Versión Software EV V"+Config.Version);
@@ -264,13 +295,22 @@ public class Pantalla extends JPanel {
     }
 
     public void start() {
-        removeAll();
+    	if(Main.dmi.fullScreen)
+    	{
+            Main.dmi.setVisible(true);
+            try {
+				Runtime.getRuntime().exec("vcgencmd display_power 1");
+			} catch (IOException e) {
+			}
+    		GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(Main.dmi);
+    	}
+    	removeAll();
         setLayout(null);
         JLayeredPane pane = new JLayeredPane();
-        pane.setBounds(0,0,getScale(350),getScale(263));
+        pane.setBounds(0,0,getWidth(), getHeight());
         add(pane);
         info = new ÚltimaInfo();
-        info.setBounds(getScale(271), getScale(0), getScale(79), getScale(263));
+        info.setBounds(getScale(271), getScale(0), getScale(Config.Fabricante.equals("SIEMENS") ? 99 : 79), getScale(263));
         pane.add(info);
         vreal = new Velocidad(Color.black, blanco);
         vreal.LeadingZeros = Config.Fabricante.equals("DIMETRONIC");
@@ -307,7 +347,8 @@ public class Pantalla extends JPanel {
     	Main.dmi.ecp.subscribe("asfa::indicador::*");
     	Main.dmi.ecp.subscribe("asfa::fase");
         set(ModoDisplay.Día);
-        repaint();
+        repaint(0);
+        Main.dmi.ecp.sendData("noretain(asfa::pantalla::conectada=1)");
     }
 
     public void set(ModoDisplay m) {

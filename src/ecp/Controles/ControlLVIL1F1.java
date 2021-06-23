@@ -19,7 +19,7 @@ public class ControlLVIL1F1 extends ControlLVI implements ControlAumentable {
     	Curva[] curvas = super.getCurvas(T);
     	if (Reached) {
     		int val = (int) (curvas[0].OrdenadaFinal+aum);
-        	if (aum > 0 && (val > 160 || val > T)) SpeedDown();
+        	if (aum > 0 && (val > 160 || val > this.T)) SpeedDown();
             curvas[0] = new Curva(curvas[0].OrdenadaFinal+aum);
             curvas[1] = new Curva(curvas[1].OrdenadaFinal+aum);
     	}

@@ -51,7 +51,7 @@ std::map<soundid, Mix_Chunk*> sndbuf;
 #define NCHANNELS 8
 Uint32 updateVolume(Uint32 interval, void *param);
 int numactivo[NCHANNELS];
-
+double volumen=0.5;
 string fabricante = "INDRA";
 
 ParameterManager manager;
@@ -113,6 +113,7 @@ int main(int argc, char** argv)
     
     Parameter trig("asfa::sonido::iniciar");
     Parameter stop("asfa::sonido::detener");
+    Parameter vol("asfa::sonido::volumen");
     Parameter fabr("asfa::fabricante");
     
     trig.SetValue = [](string val) {
@@ -137,6 +138,9 @@ int main(int argc, char** argv)
                 handle_sound(i, bas, false);
         }
     };
+    vol.SetValue = [](string val) {
+        volumen = stof(val);
+    };
     fabr.SetValue = [](string val) {
         fabricante = val;
         cargar_sonidos();
@@ -144,6 +148,7 @@ int main(int argc, char** argv)
     
     manager.AddParameter(&trig);
     manager.AddParameter(&stop);
+    manager.AddParameter(&vol);
     manager.AddParameter(&fabr);
     
     SDL_AddTimer(100, updateVolume, nullptr);
@@ -221,7 +226,7 @@ Uint32 updateVolume(Uint32 interval, void *param)
     bool mute = false;
     for (int i=0; i<NCHANNELS; i++)
     {
-        Mix_Volume(i, mute ? 0 : 64);
+        Mix_Volume(i, mute ? 0 : (int)(MIX_MAX_VOLUME*volumen));
         if (Mix_Playing(i)!=0) mute = true;
     }
     return interval;

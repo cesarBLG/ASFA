@@ -7,17 +7,23 @@ import ecp.ASFA.Modo;
 
 public class Captador {
     
+	ASFA ASFA;
     public Queue<FrecASFA> frecs = new LinkedList<>();
     
 	//FrecASFA captador = FrecASFA.FP;
+    
+    public Captador(ASFA asfa)
+    {
+    	ASFA = asfa;
+    }
 	
     public void nuevaFrecuencia(FrecASFA f)
     {
     	//captador = f;
-        synchronized(Main.ASFA)
+        synchronized(ASFA)
         {
     		frecs.add(f);
-        	Main.ASFA.notify();
+        	ASFA.notify();
         }
     }
     
@@ -48,7 +54,7 @@ public class Captador {
     //FrecASFA ultimaprocesada = FrecASFA.FP;
     public FrecASFA procesarFrecuencia(int freqHz)
     {
-    	int num = Main.ASFA.captacionAV ? 1 : 0;
+    	int num = ASFA.captacionAV ? 1 : 0;
     	FrecASFA nueva = FrecASFA.AL;
     	for (int i=0; i<frecuencias.length; i++)
     	{

@@ -65,15 +65,17 @@ public class Luces extends JPanel {
 		g.gridy = 3;
 		g.gridwidth = 2;
 		add(labelasfa, g);
-		timer_luces = new Timer(500, new ActionListener() {
+		timer_luces = new Timer(250, new ActionListener() {
             boolean state = false;
+            boolean state2 = false;
 
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                if (leds[0]==2) eficacia.setEnabled(state);
+                if (leds[0]==2) eficacia.setEnabled(state2);
                 if (leds[1]==2) frenar.setEnabled(state);
                 if ((leds[2]&2) != 0) multi.setEnabled(state);
                 state = !state;
+                if (!state) state2 = !state2;
             }
         });
 	}

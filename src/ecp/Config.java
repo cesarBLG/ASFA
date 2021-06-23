@@ -12,6 +12,8 @@ public class Config {
 	public static boolean ApagarOrdenador=false;
 	public static boolean UsarCurvasExternas=false;
 	public static boolean UsarHoraExterna=true;
+	public static String SerialECP="";
+	public static String SerialPantalla="";
 	public static void load()
 	{
     	try
@@ -74,6 +76,7 @@ public class Config {
     		}
     		bufferedReader.close();
 		} catch (Exception e) {
+			Main.ASFA.Registro.falloConfiguracion(true);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

@@ -290,7 +290,7 @@ public abstract class Control {
     Curva[] getCurvas(int T)
     {
     	Curva[] curvas = null;
-    	if (Config.UsarCurvasExternas) obtenerCurvasAlmacen(T);
+    	if (Config.UsarCurvasExternas) curvas = obtenerCurvasAlmacen(T);
     	if (curvas == null) curvas = ASFA_version >= 4 ? getCurvas_AESF(T, T) : getCurvas_ADIF(T);
     	return curvas;
     }

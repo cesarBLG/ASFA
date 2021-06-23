@@ -16,19 +16,9 @@ public class Main {
 
     public static void main(String args[]) {
     	Config.load();
-    	try {
-			Runtime.getRuntime().exec("./server");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
     	if(args.length!=0) num = Integer.parseInt(args[0]);
     	else num = Config.Modo;
-        if(num!=2)
-        {
-        	ASFA = new ASFA();
-        	new Sound();
-        }
+        if(num!=2) ASFA = new ASFA();
     	if(num!=1) dmi = new DMI();
     }
 }

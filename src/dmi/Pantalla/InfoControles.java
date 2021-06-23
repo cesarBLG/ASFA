@@ -41,7 +41,7 @@ public class InfoControles extends JPanel {
         IconoSecAA = new Icono(false, "SecAA.png");
         IconoDesvío = new Icono(true, "Desvío.png");
         IconoPNprot = new Icono(true, "PNprot.png");
-        TimerLVI = new Timer(500, new ActionListener() {
+        TimerLVI = new Timer(250, new ActionListener() {
             boolean Displayed = false;
 
             @Override
@@ -52,7 +52,7 @@ public class InfoControles extends JPanel {
             }
 
         });
-        TimerPN = new Timer(500, new ActionListener() {
+        TimerPN = new Timer(250, new ActionListener() {
             boolean Displayed = false;
 
             @Override
@@ -63,7 +63,7 @@ public class InfoControles extends JPanel {
             }
 
         });
-        update(0, 0, 0, 0, 0);
+        update();
     }
     public int PNdesp;
     public int SecAA;
@@ -110,6 +110,8 @@ public class InfoControles extends JPanel {
     }
 
     public void update(int PNdesp, int PNprot, int Desv, int SecAA, int LVI) {
+    	if (this.PNdesp == PNdesp && this.PNprot == PNprot && this.Desv == Desv && 
+    			this.SecAA == SecAA && this.LVI == LVI) return;
         this.PNdesp = PNdesp;
         this.PNprot = PNprot;
         this.Desv = Desv;

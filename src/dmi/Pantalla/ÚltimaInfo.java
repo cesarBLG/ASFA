@@ -44,7 +44,7 @@ public class ÚltimaInfo extends JPanel {
 
     public ÚltimaInfo() {
         j = new JLabel();
-        t = new Timer(500, new ActionListener() {
+        t = new Timer(250, new ActionListener() {
             boolean state = false;
 
             @Override
@@ -99,11 +99,12 @@ public class ÚltimaInfo extends JPanel {
             t.setRepeats(true);
         }
         if (j.getIcon() != null) {
-            j.setBounds(getWidth() / 2 - j.getIcon().getIconWidth() / 2, 42, j.getIcon().getIconWidth(), j.getIcon().getIconHeight());
+            j.setBounds(Main.dmi.pantalla.getScale(79) / 2 - j.getIcon().getIconWidth() / 2, 42, j.getIcon().getIconWidth(), j.getIcon().getIconHeight());
         }
     }
 
     public void setInfo(Info i, boolean blink) {
+    	if (info == i && this.blink == blink) return;
         info = i;
         this.blink = blink;
         update();

@@ -46,13 +46,15 @@ public class VelocidadObjetivo extends JPanel {
         add(Triángulo);
         IconoTriángulo = new Icono(true, "Triángulo.png");
         IconoTriánguloNaranja = new Icono(true, "TriánguloLVI.png");
-        set(0, 0);
+        update();
     }
 
-    public void set(int visible, int val) {
-        figureVisible = visible;
+    public void set(int visible, int val, boolean lvi) {
+        if (figureVisible == visible && veloc.value == val && this.lvi == lvi) return;
+    	figureVisible = visible;
         veloc.value = val;
         veloc_lvi.value = val;
+        this.lvi = lvi;
         update();
     }
 

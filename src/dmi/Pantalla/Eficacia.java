@@ -19,6 +19,7 @@ public class Eficacia extends JLabel {
     int state = 0;
     boolean mostrar = false;
     boolean eficacia = false;
+    boolean fase2 = false;
     Icono[] iconos;
 
     public Eficacia() {
@@ -34,12 +35,13 @@ public class Eficacia extends JLabel {
         });
         this.setVerticalAlignment(JLabel.BOTTOM);
         iconos = new Icono[8];
-        create(false);
+        fase(false);
         t.setRepeats(true);
         t.start();
     }
-    public void create(boolean Fase2)
+    public void fase(boolean Fase2)
     {
+    	fase2 = Fase2;
     	String Fase = "Eficacia/";
         if (Fase2) {
             Fase += "Fase2/";

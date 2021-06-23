@@ -18,7 +18,7 @@ public class Clock {
     	{
     		double prevTime = getSeconds();
         	external_time = time + date.getTimeInMillis()/1000.0;
-    		PaqueteRegistro.cambio_hora(prevTime);
+        	Main.ASFA.Registro.cambio_hora(prevTime);
     	}
     	else external_time = time + date.getTimeInMillis()/1000.0;
     	passedRef = System.currentTimeMillis();
@@ -28,7 +28,7 @@ public class Clock {
     {
     	double prevTime = getSeconds();
 		external_time = 0;
-		PaqueteRegistro.cambio_hora(prevTime);
+		Main.ASFA.Registro.cambio_hora(prevTime);
     }
     
     public static double getSeconds() {
