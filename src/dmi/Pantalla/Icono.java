@@ -66,18 +66,18 @@ public class Icono {
     static void cargar(boolean var, String path)
     {
     	new Icono(var, path);
-    	//new Thread(() -> {new Icono(var, path);}).start();;
     }
     
     public static void cargarIconos()
     {
+    	new Thread(() -> {
         for (int i = 0; i < 8; i++) {
         	cargar(true, "Eficacia/Fase1/".concat(Integer.toString(i).concat(".png")));
         	cargar(true, "Eficacia/Fase2/".concat(Integer.toString(i).concat(".png")));
         }
     	for (int i = 0; i < Info.values().length; i++) {
     		cargar(true, Info.values()[i].name().concat(".png"));
-        }
+        }}).start();
     	cargar(false, "LTV.png");
     	cargar(false, "LVI.png");
     	cargar(false, "PNdesp.png");

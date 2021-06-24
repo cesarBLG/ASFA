@@ -82,9 +82,9 @@ public class ControlLVI extends Control implements ControlReanudo {
     	int Vf;
     	if (Frecuencia1 == FrecASFA.L10 && Frecuencia2 == FrecASFA.L10)
     		Vf = modoRAM ? 70 : AumentoVelocidad ? 150 : 120;
-    	if (Frecuencia1 == FrecASFA.L10 && Frecuencia2 == FrecASFA.L11)
+    	else if (Frecuencia1 == FrecASFA.L10 && Frecuencia2 == FrecASFA.L11)
     		Vf = modoRAM ? 50 : AumentoVelocidad ? 100 : 80;
-    	if (Frecuencia1 == FrecASFA.L11 && Frecuencia2 == FrecASFA.L10)
+    	else if (Frecuencia1 == FrecASFA.L11 && Frecuencia2 == FrecASFA.L10)
     		Vf = modoRAM ? 40 : AumentoVelocidad ? 70 : 50;
     	else
     		Vf = modoRAM ? 30 : AumentoVelocidad ? 40 : 30;
