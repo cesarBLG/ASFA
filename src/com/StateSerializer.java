@@ -5,8 +5,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortInvalidPortException;
 
 import dmi.Pantalla.PantallaSerializer;
+import ecp.Main;
 
 public abstract class StateSerializer {
 	protected enum TipoPaquete
@@ -14,7 +16,19 @@ public abstract class StateSerializer {
 		LucesPR,
 		PulsadoresPR,
 		IconosDisplay,
-		Sonido
+		Sonido,
+		EstadoECP,
+		ConexionDisplay,
+	}
+	protected class Paquete
+	{
+		public TipoPaquete tipo;
+		public byte[] data;
+		public Paquete(TipoPaquete t, byte[] d)
+		{
+			tipo = t;
+			data = d;
+		}
 	}
 	boolean ready = false;
 	String puerto;
@@ -25,12 +39,14 @@ public abstract class StateSerializer {
 			SerialPort sp = SerialPort.getCommPort(puerto);
 			sp.setBaudRate(115200);
 			sp.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
+			sp.setDTR();
 			sp.openPort();
 			in = sp.getInputStream();
 			out = sp.getOutputStream();
 			in.skip(in.available());
 			return true;
 		} catch (Exception e) {
+			if (e instanceof SerialPortInvalidPortException) return false;
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -49,17 +65,26 @@ public abstract class StateSerializer {
 					e.printStackTrace();
 				}
 			}
+			/*try {
+				Thread.sleep(250);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			ready = true;*/
 			read();
 			}).start();
 	}
 	InputStream in;
 	OutputStream out;
-	protected void write(TipoPaquete paquete, byte[] packet)
+	protected void write(Paquete p)
 	{
+		byte[] packet = p.data;
+		//try{Main.dmi.pantalla.serialClient.parse(p);}catch(Exception e) {}
 		if (!ready) return;
 		byte[] data = new byte[packet.length + 4];
 		data[0] = (byte) 0xAD;
-		data[1] = (byte) paquete.ordinal();
+		data[1] = (byte) p.tipo.ordinal();
 		data[2] = (byte) packet.length;
 		System.arraycopy(packet, 0, data, 3, packet.length);
 
@@ -96,7 +121,7 @@ public abstract class StateSerializer {
 					}
 					if (control == control_expected)
 					{
-						parse(TipoPaquete.values()[pacno], data);
+						parse(new Paquete(TipoPaquete.values()[pacno], data));
 						ready = true;
 					}
 				}
@@ -112,5 +137,5 @@ public abstract class StateSerializer {
 			}
 		}
 	}
-	protected abstract void parse(TipoPaquete paquete, byte[] data);
+	protected abstract void parse(Paquete paquete);
 }

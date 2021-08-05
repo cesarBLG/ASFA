@@ -52,6 +52,10 @@ public class Icono {
             iconos = new ImageIcon[1];
             iconos[0] = createScaledIcon(route.concat(halfroute));
         }
+        for (int i=0; i<iconos.length; i++)
+        {
+        	if (iconos[i] == null) return;
+        }
         AlmacenIconos.put(halfroute, this);
     }
 

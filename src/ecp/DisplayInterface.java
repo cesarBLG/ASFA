@@ -1,5 +1,6 @@
 package ecp;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -92,7 +93,7 @@ class EstadoBotón {
 public class DisplayInterface {
 	public ASFA ASFA;
     OR_Client orclient;
-    ECPStateSerializer serialClient;
+    List<ECPStateSerializer> serialClients = new ArrayList<ECPStateSerializer>();
     public boolean pantallaconectada=false;
     
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
@@ -110,7 +111,8 @@ public class DisplayInterface {
     public DisplayInterface(ASFA asfa) {
     	ASFA = asfa;
     	orclient = new OR_Client(ASFA);
-    	serialClient = new ECPStateSerializer(this);
+    	serialClients.add(new ECPStateSerializer(this/*, "/dev/ttyUSB0"*/));
+    	//serialClients.add(new ECPStateSerializer(this, "/dev/ttyUSB1"));
     }
 
     void reset()
@@ -123,7 +125,7 @@ public class DisplayInterface {
             e.lector = LectorBoton.Ninguno;
         }
         controles.clear();
-        serialClient.cambio();
+        serialClients.forEach((c) -> c.cambio());
     }
     
     public void iluminar(TipoBotón botón, boolean state) {
@@ -139,7 +141,7 @@ public class DisplayInterface {
 		else if(name.equals("ocultación")) name = "ocultacion";
 		else if(name.equals("asfa_básico")) name = "basico";
         write("asfa::pulsador::ilum::"+name, state ? 1 : 0);
-        serialClient.cambioRepetidor();
+        serialClients.forEach((c) -> c.cambioRepetidor());
     }
 
     public void iluminarTodos(boolean state) {
@@ -254,7 +256,7 @@ public class DisplayInterface {
                 write("asfa::indicador::velo", state);
             	break;
         }
-        serialClient.cambioDisplay();
+        serialClients.forEach((c) -> c.cambioDisplay());
     }
 	public int getDisplayValue(String name)
 	{
@@ -271,14 +273,9 @@ public class DisplayInterface {
     		leds[led] = state;
             write("asfa::leds::"+led, state);
     	}
-        serialClient.cambioRepetidor();
+        serialClients.forEach((c) -> c.cambioRepetidor());
     }
     
-    /*public void poweron()
-    {
-    	if (Main.ASFA.basico) return;
-    	orclient.sendData("noretain(asfa::pantalla::encender=1)");
-    }*/
     public boolean pantallaactiva=false;
     public void start()
     {
@@ -293,6 +290,12 @@ public class DisplayInterface {
     public String estadoecp = "";
     public void set(int num, List<Integer> errors)
     {
+    	if (num < 0)
+    	{
+    		estadoecp = "";
+    		orclient.sendData("asfa::ecp::estado=");
+    		return;
+    	}
     	String msg = "";
     	if (errors != null)
     	{
@@ -329,18 +332,18 @@ public class DisplayInterface {
     {
         orclient.sendData("noretain(asfa::sonido::iniciar=" + num + "," + (basic ? 1 : 0) + ")");
         ASFA.Registro.sonido(num, basic);
-        serialClient.sendSonido(num, basic, true);
+        serialClients.forEach((c) -> c.queueSonido(num, basic, true));
     }
     public void stopSound(String num)
     {
         orclient.sendData("noretain(asfa::sonido::detener="+num+")");
         ASFA.Registro.sonido("", false);
-        serialClient.sendSonido(num, false, false);
+        serialClients.forEach((c) -> c.queueSonido(num, false, false));
     }
     public void stopSoundNoLog(String num)
     {
         orclient.sendData("noretain(asfa::sonido::detener="+num+")");
-        serialClient.sendSonido(num, false, false);
+        serialClients.forEach((c) -> c.queueSonido(num, false, false));
     }
     public void write(String fun, int val)
     {

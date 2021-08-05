@@ -48,7 +48,6 @@ public class DMI extends JFrame {
     public boolean separado = false;
     public boolean activo=false;
     public ECPinterface ecp;
-    public Modo modo;
 
     public DMI() {
         Main.dmi = this;

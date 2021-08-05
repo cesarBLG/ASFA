@@ -1,4 +1,5 @@
 #define BUFFER_SIZE_SERIAL 128
+#ifdef TEXT_SERIAL
 class SerialInterface
 {
   byte data[BUFFER_SIZE_SERIAL]; //Buffer de datos
@@ -53,11 +54,12 @@ class SerialInterface
     }
   } 
 };
-
+#else
+#define BIN_SIZE 32
 class BinaryInterface
 {
   Stream &serial;
-  byte buffer[64];
+  byte buffer[BIN_SIZE];
   int reindex;
   int windex;
   void (*parse)(int, const byte *, int);
@@ -91,17 +93,17 @@ class BinaryInterface
     {
       windex = reindex = 0;
     }
-    if (serial.available() && windex < 64) windex += serial.readBytes(buffer + windex, min(serial.available(), 64-windex));
+    if (serial.available() && windex < BIN_SIZE) windex += serial.readBytes(buffer + windex, min(serial.available(), BIN_SIZE-windex));
     while(reindex < windex)
     {
       int available = windex-reindex;
       if (buffer[reindex] == 0xAD)
       {
-        if (reindex + 3 >= 64) moveBuffer();
+        if (reindex + 3 >= BIN_SIZE) moveBuffer();
         if (available < 3) break;
         byte *data = buffer+reindex;
         int length = data[2];
-        if (reindex + length + 4 >= 64)
+        if (reindex + length + 4 >= BIN_SIZE)
         {
           if (reindex == 0) windex = 0;
           else moveBuffer();
@@ -120,3 +122,4 @@ class BinaryInterface
     }
   }
 };
+#endif

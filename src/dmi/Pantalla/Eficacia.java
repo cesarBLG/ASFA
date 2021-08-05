@@ -23,21 +23,14 @@ public class Eficacia extends JLabel {
     Icono[] iconos;
 
     public Eficacia() {
-        Timer t = new Timer(500, new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-                // TODO Auto-generated method stub
-                if (eficacia) {
-                    switchstate();
-                }
-            }
-        });
+    	Main.dmi.pantalla.Blinker.Blinker2Hz.add((e) -> {
+    		if (eficacia) {
+    			switchstate();
+    		}
+    	});
         this.setVerticalAlignment(JLabel.BOTTOM);
         iconos = new Icono[8];
         fase(false);
-        t.setRepeats(true);
-        t.start();
     }
     public void fase(boolean Fase2)
     {

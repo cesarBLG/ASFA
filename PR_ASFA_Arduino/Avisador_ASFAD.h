@@ -1,4 +1,3 @@
-#include <AltSoftSerial.h>
 enum Sonidos
 {
   SinSonido,
@@ -18,26 +17,261 @@ enum Sonidos
   S5,
   S6
 };
+enum ErrorAvisador
+{
+  SUCCESS,
+  ERR_MALFUNCTION,
+  ERR_DISCONNECTED
+};
+class ControladorAvisador
+{
+  public:
+  int volumen = 15;
+  int status = SUCCESS;
+  virtual void begin() = 0;
+  virtual void play(int sonido) = 0;
+  virtual void playLoop(int sonido) = 0;
+  virtual void stop() = 0;
+  virtual void setVolume(int vol) = 0;
+  virtual bool canSend() = 0;
+  virtual void update() = 0;
+};
+template<class T>
+class ControladorOpenSmart : public ControladorAvisador
+{
+  T &serial;
+  bool waitingAck=false;
+  unsigned long ultimoEnvio = 0;
+  void send(int num)
+  {
+    serial.write(0x7E);
+    serial.write(2);
+    serial.write(num);
+    serial.write(0xEF);
+    ultimoEnvio = millis();
+    waitingAck=true;
+    waitingPacketLength = 0;
+  }
+  void send(int num, int d1)
+  {
+    serial.write(0x7E);
+    serial.write(3);
+    serial.write(num);
+    serial.write(d1);
+    serial.write(0xEF);
+    ultimoEnvio = millis();
+    waitingAck=true;
+    waitingPacketLength = 0;
+  }
+  void send(int num, int d1, int d2)
+  {
+    serial.write(0x7E);
+    serial.write(4);
+    serial.write(num);
+    serial.write(d1);
+    serial.write(d2);
+    serial.write(0xEF);
+    ultimoEnvio = millis();
+    waitingAck=true;
+    waitingPacketLength = 0;
+  }
+  public:
+  ControladorOpenSmart(T &serial) : serial(serial) {}
+  void begin()
+  {
+    serial.begin(9600);
+    send(0x35, 0x01);
+  }
+  void play(int sonido)
+  {
+    send(0x31, volumen, sonido);
+  }
+  void playLoop(int sonido)
+  {
+    send(0x33,0,sonido);
+  }
+  void stop()
+  {
+    send(0x0E);
+  }
+  void setVolume(int vol)
+  {
+    volumen = vol;
+    send(0x31, volumen);
+  }
+  bool canSend()
+  {
+    unsigned long diff = millis()-ultimoEnvio;
+    return (!waitingAck || diff > 100) && diff > 50;
+  }
+  int waitingPacketLength = 0;
+  unsigned long statusRequestTime = 0;
+  unsigned long nextStateCheck = 0;
+  void update()
+  {
+    if (canSend() && nextStateCheck < millis())
+    {
+      send(0x10);
+      nextStateCheck = millis() + 10000;
+      statusRequestTime = millis();
+    }
+    if (statusRequestTime > 0 && statusRequestTime + 1000 < millis())
+    {
+      status = ERR_DISCONNECTED;
+    }
+    if (waitingPacketLength > 0)
+    {
+      if (serial.available() >= waitingPacketLength)
+      {
+        byte data[waitingPacketLength-1];
+        serial.readBytes(data, waitingPacketLength-1);
+        for (int i=0; i<waitingPacketLength-1; i++)
+        {
+          /*Serial.print(data[i], HEX);
+          Serial.print(" ");*/
+        }
+        int tail = serial.read();
+        //Serial.println(tail, HEX);
+        if (tail == 0xEF)
+        {
+          if (waitingPacketLength == 2 && data[0] == 0) waitingAck = false;
+          if (waitingPacketLength == 3 && data[0] == 0x10)
+          {
+            statusRequestTime = 0;
+            status = (data[1] == 0 || data[1] == 1) ? SUCCESS : ERR_MALFUNCTION;
+          }
+        }
+        waitingPacketLength = 0;
+      }
+    }
+    else if (serial.available() >= 2)
+    {
+      int head = serial.read();
+      if (head != 0x7E) return;
+      waitingPacketLength = serial.read();
+      /*Serial.print(head, HEX);
+      Serial.print(" ");
+      Serial.print(waitingPacketLength, HEX);
+      Serial.print(" ");*/
+    }
+  }
+};
+template<class T>
+class ControladorDF3Mini : public ControladorAvisador
+{
+  T &serial;
+  bool waitingAck=false;
+  unsigned long ultimoEnvio = 0;
+  void send(uint8_t command, uint16_t value = 0)
+  {
+     uint8_t out[] = {0x7E, 0xFF, 6, command, 1, value>>8, value&0xFF, 0, 0, 0xEF};
+     uint16_t sum = 0;
+     for (int i = 1; i<7; i++)
+     {
+      sum -= out[i];
+     }
+     out[7] = sum>>8;
+     out[8] = sum & 0xFF;
+     serial.write(out, 10);
+     ultimoEnvio = millis();
+     waitingAck = true;
+  }
+  public:
+  ControladorDF3Mini(T &serial) : serial(serial) {}
+  void begin()
+  {
+    serial.begin(9600);
+    send(0x09, 1);
+  }
+  void play(int sonido)
+  {
+    send(0x03, sonido);
+  }
+  void playLoop(int sonido)
+  {
+    send(0x08, sonido);
+  }
+  void stop()
+  {
+    send(0x16);
+  }
+  void setVolume(int vol)
+  {
+    volumen = vol;
+    send(0x06, volumen);
+  }
+  bool canSend()
+  {
+    unsigned long diff = millis()-ultimoEnvio;
+    return (!waitingAck || diff > 100) && diff > 50;
+  }
+  unsigned long statusRequestTime = 0;
+  unsigned long nextStateCheck = 0;
+  void update()
+  {
+    if (canSend() && nextStateCheck < millis())
+    {
+      send(0x42);
+      nextStateCheck = millis() + 10000;
+      statusRequestTime = millis();
+    }
+    if (statusRequestTime > 0 && statusRequestTime + 1000 < millis())
+    {
+      status = ERR_DISCONNECTED;
+    }
+    if (serial.available() >= 10)
+    {
+      int head = serial.read();
+      if (head != 0x7E) return;
+      byte data[10];
+      data[0] = head;
+      serial.readBytes(data + 1, 9);
+      if (data[1] != 0xFF || data[2] != 6 || data[9] != 0xEF) return;
+      uint16_t sum = 0;
+      for (int i = 1; i<7; i++)
+      {
+       sum -= data[i];
+      }
+      if ((sum>>8) != data[7] || (sum & 0xFF) != data[8]) return;
+      switch(data[3])
+      {
+        case 0x40:
+          status = ERR_MALFUNCTION;
+        case 0x41:
+          waitingAck = false;
+          status = SUCCESS;
+          break;
+        case 0x42:
+          statusRequestTime = 0;
+          status = SUCCESS;
+          break;
+        default:
+          break;
+      }
+    }
+  }
+};
 class AvisadorASFAD
 {
   unsigned long sonidos[16];
   bool enviado[16];
   int sonando;
-  Stream *serial;
-  bool soft;
+  ControladorAvisador &controlador;
   public:
   int volumen = 15;
-  void begin(HardwareSerial &s)
+  bool eficacia = false;
+  AvisadorASFAD(ControladorAvisador &c) : controlador(c)
   {
-    soft = false;
-    s.begin(9600);
-    serial = &s;
   }
-  void begin(AltSoftSerial &s)
+  void begin()
   {
-    soft = true;
-    s.begin(9600);
-    serial = &s;
+    for (int i=0; i<16; i++)
+    {
+      sonidos[i] = 0;
+      enviado[i] = false;
+    }
+    sonando = 0;
+    controlador.begin();
   }
   void iniciar(int son)
   {
@@ -48,8 +282,11 @@ class AvisadorASFAD
   {
      sonidos[son] = 0; 
   }
+  unsigned long recordatorioPausa=0;
   void update()
   {
+    controlador.update();
+    eficacia = controlador.status == SUCCESS;
     int nuevo = 0;
     if (sonidos[S5]) {
       nuevo = S5;
@@ -102,68 +339,54 @@ class AvisadorASFAD
       if (sonando != 0 && nuevo != 0) stop();
       int son = nuevo;
       bool loop = (son == S31 || son == S32 || son == S34 || son == S35 || son == S5);
-      if (son == 0) stop();
+      if (son == 0)
+      {
+        stop();
+        recordatorioPausa = millis();
+      }
       else if (loop) playLoop(son);
       else play(son);
     }
+    else if (controlador.volumen != volumen)
+    {
+      setVolume(volumen);
+    }
+    else if (recordatorioPausa + 500 < millis() && controlador.canSend() && sonando == 0)
+    {
+      stop();
+      recordatorioPausa = millis(); 
+    }
   }
-  void write(byte data)
-  {
-    if (soft) ((AltSoftSerial*)serial)->write(data);
-    else ((HardwareSerial*)serial)->write(data);
-  }
-  unsigned long ultimoEnvio = 0;
   void play(int sonido) {
-    if (ultimoEnvio + 80 > millis())
+    if (!controlador.canSend())
     {
       if (!enviado[sonido])
       {
-        sonidos[sonido] += ultimoEnvio + 80 - millis();
-        enviado[sonido] = true;
+         sonidos[sonido] += 100;
+         enviado[sonido] = true;
       }
       return;
     }
     enviado[sonido] = true;
     sonando = sonido;
-    write(0x7E);
-    write(0x04);
-    write(0x41);
-    write(0x00);
-    write(sonido);
-    write(0xEF);
-    ultimoEnvio = millis();
+    controlador.play(sonido);
   }
   void playLoop(int sonido) {
-    if (ultimoEnvio + 80 > millis()) return;
+    if (!controlador.canSend()) return;
     sonando = sonido;
-    write(0x7E);
-    write(0x04);
-    write(0x33);
-    write(0x00);
-    write(sonido);
-    write(0xEF);
-    ultimoEnvio = millis();
+    controlador.playLoop(sonido);
   }
   void stop()
   {
-    if (ultimoEnvio + 80 > millis()) return;
+    if (!controlador.canSend()) return;
     sonando = 0;
-    write(0x7E);
-    write(0x02);
-    write(0x0E);
-    write(0xEF);
-    ultimoEnvio = millis();
+    controlador.stop();
   }
   void setVolume(int vol)
   {
-    if (ultimoEnvio + 80 > millis()) return;
+    if (!controlador.canSend()) return;
     volumen = vol;
-    write(0x7E);
-    write(0x03);
-    write(0x31);
-    write(volumen);
-    write(0xEF);
-    ultimoEnvio = millis();
+    controlador.setVolume(vol);
   }
 };
 #define AVISADOR_ASFAB_PIEZO 0

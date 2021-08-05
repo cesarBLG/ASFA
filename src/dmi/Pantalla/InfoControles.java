@@ -24,8 +24,6 @@ public class InfoControles extends JPanel {
     Icono IconoPNprot;
     Icono IconoSecAA;
     Icono IconoDesvío;
-    Timer TimerLVI;
-    Timer TimerPN;
 
     public InfoControles() {
         setLayout(new GridLayout(1, 3));
@@ -41,27 +39,17 @@ public class InfoControles extends JPanel {
         IconoSecAA = new Icono(false, "SecAA.png");
         IconoDesvío = new Icono(true, "Desvío.png");
         IconoPNprot = new Icono(true, "PNprot.png");
-        TimerLVI = new Timer(250, new ActionListener() {
-            boolean Displayed = false;
-
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-                // TODO Auto-generated method stub
-                area3.setVisible(!Displayed);
-                Displayed = !Displayed;
+        Main.dmi.pantalla.Blinker.Blinker4Hz.add((e) -> {
+            if (LVI == 2)
+            {
+               area3.setVisible("on".equals(e.getActionCommand()));
             }
-
         });
-        TimerPN = new Timer(250, new ActionListener() {
-            boolean Displayed = false;
-
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-                // TODO Auto-generated method stub
-                area1.setVisible(!Displayed);
-                Displayed = !Displayed;
+        Main.dmi.pantalla.Blinker.Blinker4Hz.add((e) -> {
+            if (PNdesp == 2)
+            {
+            	area1.setVisible("on".equals(e.getActionCommand()));
             }
-
         });
         update();
     }
@@ -73,14 +61,10 @@ public class InfoControles extends JPanel {
 
     public void update() {
         if (PNdesp == 2) {
-            TimerPN.start();
-            TimerPN.setRepeats(true);
             area1.setIcon(IconoPNdesp.getIcon());
         }
         else
         {
-            TimerPN.stop();
-            TimerPN.setRepeats(false);
             area1.setVisible(true);
         	if(PNdesp == 1) area1.setIcon(IconoPNdesp.getIcon());
         	else if(PNprot == 1) area1.setIcon(IconoPNprot.getIcon());
@@ -95,11 +79,7 @@ public class InfoControles extends JPanel {
         }
         if (LVI == 2) {
             area3.setIcon(IconoLVI.getIcon());
-            TimerLVI.start();
-            TimerLVI.setRepeats(true);
         } else {
-            TimerLVI.stop();
-            TimerLVI.setRepeats(false);
             area3.setVisible(true);
             if (LVI == 1) {
                 area3.setIcon(IconoLVI.getIcon());

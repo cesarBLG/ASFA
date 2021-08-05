@@ -22,7 +22,7 @@ const int PPN = 9; //Pulsador paso a nivel
 const int PAumento = 7; //Pulsador aumento de velocidad
 const int PConex = A1;
 const int PBasico = 12; //Selector ASFA basico
-const int AlimentacionPantalla = -1; //Alimentacion pantalla ASFA digital
+const int AlimentacionPantalla = 50; //Alimentacion pantalla ASFA digital
 const int HabilitacionPantalla = -1; //Habilitacion pantalla ASFA digital
 const int PinAvisadorBasico = 11; //Avisador acustico ASFA básico
 const int LuzBasico = 10; //Luz modo ASFA basico, no controlada
@@ -144,9 +144,12 @@ void setup() {
   Serial2.begin(115200);
   #endif
   Serial3.begin(115200);
+  digitalWrite(AlimentacionPantalla, HIGH);
   pinMode(AlimentacionPantalla, OUTPUT);
   pinMode(HabilitacionPantalla, OUTPUT);
   Serial.begin(115200);
+  digitalWrite(HabilitacionPantalla, LOW);
+  Serial1.begin(9600, SERIAL_8E1);
   while (!Serial) {}
 }
 #ifdef TEXT_SERIAL
@@ -318,21 +321,35 @@ void parseSound(byte *data)
     avisadorBasico.detener(son);
   }
 }
-void pantallaParser(int num, byte *data, int length);
-BinaryInterface pantallaInterface(Serial2, pantallaParser);
-BinaryInterface avisadorInterface(Serial3, 0);
+BinaryInterface pantallaInterface(Serial2, bridgeParser);
+BinaryInterface avisadorInterface(Serial3, bridgeParser);
 void dataParser(int num, byte *data, int length)
 {
-  if (num == 0) parseLeds(data);
-  else if (num == 2) pantallaInterface.write(num, data, length);
-  else if (num == 3)
+  switch(num)
   {
-    parseSound(data);
-    avisadorInterface.write(num, data, length);
+    case 0:
+      parseLeds(data);
+      break;
+    case 2:
+      pantallaInterface.write(num, data, length);
+      break;
+    case 3:
+      parseSound(data);
+      avisadorInterface.write(num, data, length);
+      break;
+    case 4:
+      pantallaInterface.write(num, data, length);
+      break;
+    case 5:
+      digitalWrite(AlimentacionPantalla, !(data[0]&1));
+      digitalWrite(HabilitacionPantalla, (data[0]>>1)&1);
+      break;
+    default:
+      break;
   }
 }
 BinaryInterface ecpInterface(Serial, dataParser);
-void pantallaParser(int num, byte *data, int length)
+void bridgeParser(int num, byte *data, int length)
 {
   ecpInterface.write(num, data, length);
 }
@@ -360,7 +377,7 @@ void loop_binary()
       EstadoPulsadores[i] = !digitalRead(PinesPulsadores[i]);
     }
   }
-  if (lastSentPulsadores + 500 < millis() || send)
+  if (lastSentPulsadores + 50 < millis() || send)
   {
     sendPulsadores();
     lastSentPulsadores = millis();
@@ -368,7 +385,17 @@ void loop_binary()
   ecpInterface.update();
 }
 #endif
+byte datosDIV[64];
+int indexLecturaDIV = 0;
 void loop() {
+  while (Serial1.available())
+  {
+    if (indexLecturaDIV == 64)
+    {
+      indexLecturaDIV = 0;
+    }
+    datosDIV[indexLecturaDIV++] = serial.read();
+  }
   #ifdef TEXT_SERIAL
   loop_text();
   #else

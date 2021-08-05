@@ -1,6 +1,7 @@
 package com;
 
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import dmi.Botones.Botón.TipoBotón;
 import ecp.Config;
@@ -19,6 +20,14 @@ public class ECPStateSerializer extends StateSerializer {
 			while(true) update();
 			}).start();
 	}
+	public ECPStateSerializer(DisplayInterface display, String port)
+	{
+		super(port);
+		this.display = display;
+		new Thread(() -> {
+			while(true) update();
+			}).start();
+	}
 	long lastPR;
 	long lastDisplay;
 
@@ -30,7 +39,6 @@ public class ECPStateSerializer extends StateSerializer {
     }
     public void cambioDisplay()
     {
-    	long prev = lastDisplay;
     	lastDisplay += - 510 + Math.max(0, lastDisplay + 50 - System.currentTimeMillis());
     	synchronized(this) { notify(); }
     }
@@ -40,6 +48,7 @@ public class ECPStateSerializer extends StateSerializer {
     	lastDisplay += - 510 + Math.max(0, lastDisplay + 50 - System.currentTimeMillis());
     	synchronized(this) { notify(); }
     }
+    ConcurrentLinkedQueue<Paquete> pendientes = new ConcurrentLinkedQueue<>();
 	void update()
 	{
 		long time = System.currentTimeMillis();
@@ -50,13 +59,19 @@ public class ECPStateSerializer extends StateSerializer {
 		}
 		if (lastDisplay + 500 <= time)
 		{
-			sendEstadoDisplay();
+			write(new Paquete(TipoPaquete.ConexionDisplay, new byte[] {(byte)((display.pantallaactiva?2:0)+(display.pressed(TipoBotón.Conex)?1:0))}));
+			if (display.pantallaactiva) sendEstadoDisplay();
 			lastDisplay = time;
+		}
+		while(!pendientes.isEmpty())
+		{
+			write(pendientes.poll());
 		}
 		try {
 			synchronized(this)
 			{
-				wait(Math.max(Math.min(lastDisplay + 500, lastPR + 500) - time, 0));
+				long sleep = Math.min(lastDisplay + 500, lastPR + 500) - time;
+				if (sleep > 0) wait(sleep);
 			}
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -79,11 +94,11 @@ public class ECPStateSerializer extends StateSerializer {
 		}
 		data[2] |= (display.leds[0]) | (display.leds[1] << 2) | 
 				((display.leds[2] == 4 ? 1 : (display.leds[2] == 3 ? 2 : 0)) << 4) | ((display.leds[2] < 3 ? display.leds[2] : 0) << 6); 
-		write(TipoPaquete.LucesPR, data);
+		write(new Paquete(TipoPaquete.LucesPR, data));
 	}
 	byte[] prevEstadoPR;
 	public void setEstadoPR(byte[] data)
-	{ 
+	{
 		if (Arrays.equals(prevEstadoPR, data)) return;
 		prevEstadoPR = data.clone();
 		TipoBotón[] botones = {
@@ -135,10 +150,9 @@ public class ECPStateSerializer extends StateSerializer {
 		data[9] |= (byte) (display.ASFA.Fase2 ? 4 : 0);
 		data[9] |= (byte) (display.getDisplayValue("Urgencia") == 1 ? 3 : display.getDisplayValue("Sobrevelocidad"))<<3;
 		data[9] |= (byte) (display.getDisplayValue("Velo") == 1 ? 32 : 0);
-		//try { Main.dmi.pantalla.serialClient.parse(TipoPaquete.IconosDisplay, data);}catch(Exception e) {/*e.printStackTrace();*/}
-		write(TipoPaquete.IconosDisplay, data);
+		write(new Paquete(TipoPaquete.IconosDisplay, data));
 	}
-	public void sendSonido(String snd, boolean basico, boolean iniciar)
+	public void queueSonido(String snd, boolean basico, boolean iniciar)
 	{
 		int num=0;
 		if (snd.equals("S1-1")) num = 1;
@@ -158,11 +172,17 @@ public class ECPStateSerializer extends StateSerializer {
 		else if (snd.equals("S6")) num = 15;
 		if (basico) num += 32;
 		if (iniciar) num += 64;
-		write(TipoPaquete.Sonido, new byte[] {(byte)num});
+		pendientes.add(new Paquete(TipoPaquete.Sonido, new byte[] {(byte)num}));
+		pendientes.add(new Paquete(TipoPaquete.Sonido, new byte[] {(byte)num}));
+		pendientes.add(new Paquete(TipoPaquete.Sonido, new byte[] {(byte)num}));
+		synchronized(this)
+		{
+			notify();
+		}
 	}
 	@Override
-	protected void parse(TipoPaquete paquete, byte[] data)
+	protected void parse(Paquete paquete)
 	{
-		if (paquete == TipoPaquete.PulsadoresPR) setEstadoPR(data);
+		if (paquete.tipo == TipoPaquete.PulsadoresPR) setEstadoPR(paquete.data);
 	}
 }

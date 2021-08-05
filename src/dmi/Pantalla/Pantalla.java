@@ -17,7 +17,9 @@ import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -28,6 +30,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import dmi.DMI;
+import dmi.Pantalla.Pantalla.ModoDisplay;
 import ecp.ASFA;
 import ecp.ASFA.Modo;
 import ecp.Config;
@@ -40,6 +43,7 @@ public class Pantalla extends JPanel {
     	Noche
 	}
 	public ModoDisplay modo = ModoDisplay.Día;
+	public Modo modo_asfa = null;
     public Velocidad vreal;
     public ÚltimaInfo info;
     public VelocidadObjetivo vtarget;
@@ -53,6 +57,40 @@ public class Pantalla extends JPanel {
     public float scale = 1.95f /*1.2f*/;
     public boolean activa = false;
     public boolean conectada = false;
+    
+    public class BlinkerASFA implements ActionListener
+    {
+    	public List<ActionListener> Blinker2Hz = new ArrayList<>();
+    	public List<ActionListener> Blinker4Hz = new ArrayList<>();
+    	int count;
+    	Timer t;
+    	BlinkerASFA()
+    	{
+    		t = new Timer(250, this);
+    		t.setRepeats(true);
+    		t.start();
+    	}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			boolean tic = count % 2 == 0; 
+			ActionEvent e1 = new ActionEvent(this, e.getID(), tic ? "on" : "off");
+			if (tic)
+			{
+				ActionEvent e2 = new ActionEvent(this, e.getID(), count==0 ? "on" : "off");
+				Blinker2Hz.forEach((l) -> l.actionPerformed(e2));
+			}
+			Blinker4Hz.forEach((l) -> l.actionPerformed(e1));
+			count = (count+1)%4;
+		}
+		public void stop()
+		{
+			t.removeActionListener(this);
+			t.stop();
+			Blinker2Hz.clear();
+			Blinker4Hz.clear();
+		}
+    }
+    public BlinkerASFA Blinker;
     
     public PantallaSerializer serialClient = new PantallaSerializer(this);
     
@@ -82,7 +120,16 @@ public class Pantalla extends JPanel {
 			@Override
 			public void mousePressed(MouseEvent arg0) {}
 			@Override
-			public void mouseReleased(MouseEvent arg0) {}});
+			public void mouseReleased(MouseEvent arg0) {}
+		});
+        
+
+    	if (Config.ApagarOrdenador)
+    	{
+			Main.dmi.activo = true;
+			Main.dmi.pantalla.encender();
+    	}
+    	new PantallaGPIO(this);
     }
 
     public void stop()
@@ -95,6 +142,7 @@ public class Pantalla extends JPanel {
     			e.printStackTrace();
     		}
     	}
+    	if (Blinker != null) Blinker.stop();
         setBackground(Color.black);
     	Main.dmi.ecp.unsubscribe("asfa::indicador::*");
     	Main.dmi.ecp.unsubscribe("asfa::fase");
@@ -104,6 +152,7 @@ public class Pantalla extends JPanel {
         SwingUtilities.invokeLater(() -> {
         	Main.dmi.ecp.sendData("noretain(asfa::pantalla::conectada=0)");
         });
+        try{Main.ASFA.display.pantallaconectada = true;}catch(Exception e) {}
     }
     
     public void splash_sepsa()
@@ -120,8 +169,15 @@ public class Pantalla extends JPanel {
     
     public void encender()
     {
+    	if(Main.dmi.fullScreen)
+    	{
+            try {
+				Runtime.getRuntime().exec("vcgencmd display_power 1");
+			} catch (IOException e) {
+			}
+    	}
     	if (Config.Fabricante.contentEquals("SEPSA")) splash_sepsa();
-		Timer t = new Timer(0, (arg0) -> {
+		Timer t = new Timer(100, (arg0) -> {
 	    	Main.dmi.ecp.subscribe("asfa::ecp::estado");
 		});
 		t.setRepeats(false);
@@ -133,7 +189,6 @@ public class Pantalla extends JPanel {
     	stop();
 		conectada = false;
     	Main.dmi.ecp.unsubscribe("asfa::ecp::estado");
-    	Main.dmi.ecp.unsubscribe("asfa::pantalla::activa");
     	if(Main.dmi.fullScreen)
     	{
     		Main.dmi.setVisible(false);
@@ -145,26 +200,22 @@ public class Pantalla extends JPanel {
     }
     
     public void setup(int state, String msg) {
-    	if(Main.dmi.fullScreen)
-    	{
-            Main.dmi.setVisible(true);
-            try {
-				Runtime.getRuntime().exec("vcgencmd display_power 1");
-			} catch (IOException e) {
-			}
-    		GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(Main.dmi);
-    	}
         removeAll();
-        setup_sepsa(state, msg);
+        if (Config.Fabricante.equals("INDRA")) setup_indra(state, msg);
+        else setup_sepsa(state, msg);
         validate();
         repaint();
+        if(Main.dmi.fullScreen)
+        {
+        	Main.dmi.setVisible(true);
+        	GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(Main.dmi);
+        }
         if (state == 0 || state == 1)
         {
     		Timer t = new Timer(1800, (arg0) -> {
-    			conectada = true;
     			if (activa) start();
     			else stop();
-    	    	Main.dmi.ecp.subscribe("asfa::pantalla::activa");
+    			conectada = true;
     		});
     		t.setRepeats(false);
     		t.start();
@@ -304,11 +355,9 @@ public class Pantalla extends JPanel {
 			}
     		GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(Main.dmi);
     	}
-    	removeAll();
-        setLayout(null);
+    	Blinker = new BlinkerASFA();
         JLayeredPane pane = new JLayeredPane();
         pane.setBounds(0,0,getWidth(), getHeight());
-        add(pane);
         info = new ÚltimaInfo();
         info.setBounds(getScale(271), getScale(0), getScale(Config.Fabricante.equals("SIEMENS") ? 99 : 79), getScale(263));
         pane.add(info);
@@ -334,6 +383,7 @@ public class Pantalla extends JPanel {
         pane.add(tipoTren);
         ModoASFA = new ModeInfo();
         ModoASFA.setBounds(getScale(39), getScale(205), getScale(52), getScale(16));
+        if (modo_asfa != null) ModoASFA.update(modo_asfa);
         pane.add(ModoASFA);
         controles = new InfoControles();
         controles.setBounds(getScale(106), getScale(123), getScale(165), getScale(98));
@@ -346,13 +396,17 @@ public class Pantalla extends JPanel {
         pane.add(velo, new Integer(12));
     	Main.dmi.ecp.subscribe("asfa::indicador::*");
     	Main.dmi.ecp.subscribe("asfa::fase");
-        set(ModoDisplay.Día);
         repaint(0);
+    	removeAll();
+        setLayout(null);
+        add(pane);
+        set(ModoDisplay.Día);
         Main.dmi.ecp.sendData("noretain(asfa::pantalla::conectada=1)");
+        try{Main.ASFA.display.pantallaconectada = true;}catch(Exception e) {}
     }
 
     public void set(ModoDisplay m) {
-    	if (!activa) return;
+    	if (!conectada) return;
         modo = m;
         setBackground(modo == ModoDisplay.Noche ? Color.black : blanco);
         vreal.update();
@@ -364,8 +418,39 @@ public class Pantalla extends JPanel {
         linea.setBackground(modo == ModoDisplay.Día ? Color.black : blanco);
         tipoTren.update();
     }
+    
+    public void setModo(Modo modo)
+    {
+    	if (modo_asfa == modo) return;
+
+		if (modo == Modo.EXT)
+		{
+			linea.setVisible(false);
+			vreal.setVisible(false);
+			vtarget.setVisible(false);
+			controles.setVisible(false);
+			info.setVisible(false);
+			velo.setVisible(false);
+			intervención.setVisible(false);
+			set(ModoDisplay.Noche);
+		}
+		else if (modo_asfa == Modo.EXT)
+		{
+			linea.setVisible(true);
+			vreal.setVisible(true);
+			vtarget.setVisible(true);
+			controles.setVisible(true);
+			info.setVisible(true);
+			velo.setVisible(true);
+			intervención.setVisible(true);
+			set(ModoDisplay.Día);
+		}
+    	modo_asfa = modo;
+		if (modo == null) ModoASFA.setValue("");
+		else ModoASFA.update(modo);
+    }
 
     public void set() {
-        if (Main.dmi.modo != Modo.EXT) set(modo == ModoDisplay.Día ? ModoDisplay.Noche : ModoDisplay.Día);
+        if (modo_asfa != Modo.EXT) set(modo == ModoDisplay.Día ? ModoDisplay.Noche : ModoDisplay.Día);
     }
 }

@@ -71,6 +71,14 @@ public class Config {
         				String val = token[1].trim().toLowerCase();
         				UsarHoraExterna = val.equals("true") || val.equals("1");
         			}
+        			else if (token[0].trim().equalsIgnoreCase("serialecp"))
+        			{
+        				SerialECP = token[1].trim();
+        			}
+        			else if (token[0].trim().equalsIgnoreCase("serialpantalla"))
+        			{
+        				SerialPantalla = token[1].trim();
+        			}
     			}
         		line = bufferedReader.readLine();
     		}

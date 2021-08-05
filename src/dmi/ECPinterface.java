@@ -46,6 +46,7 @@ public class ECPinterface {
 			e.printStackTrace();
 		}
 		subscribe("asfa::pulsador::conex");
+		subscribe("asfa::pantalla::activa");
 		subscribe("asfa::pulsador::basico");
 		subscribe("asfa::pulsador::ilum::*");
 		subscribe("asfa::dmi::activo");
@@ -146,38 +147,8 @@ public class ECPinterface {
 			else if (s.startsWith("asfa::indicador::modo="))
 			{
 				int num = Integer.parseInt(val);
-				if (num < 0)
-				{
-					dmi.pantalla.ModoASFA.setValue("");
-				}
-				else
-				{
-					Modo m = Modo.values()[num];
-					if (m == Modo.EXT)
-					{
-						dmi.pantalla.linea.setVisible(false);
-						dmi.pantalla.vreal.setVisible(false);
-						dmi.pantalla.vtarget.setVisible(false);
-						dmi.pantalla.controles.setVisible(false);
-						dmi.pantalla.info.setVisible(false);
-						dmi.pantalla.velo.setVisible(false);
-						dmi.pantalla.intervención.setVisible(false);
-						dmi.pantalla.set(ModoDisplay.Noche);
-					}
-					else if (dmi.modo == Modo.EXT)
-					{
-						dmi.pantalla.linea.setVisible(true);
-						dmi.pantalla.vreal.setVisible(true);
-						dmi.pantalla.vtarget.setVisible(true);
-						dmi.pantalla.controles.setVisible(true);
-						dmi.pantalla.info.setVisible(true);
-						dmi.pantalla.velo.setVisible(true);
-						dmi.pantalla.intervención.setVisible(true);
-						dmi.pantalla.set(ModoDisplay.Día);
-					}
-					dmi.modo = m;
-					dmi.pantalla.ModoASFA.update(m);
-				}
+				if (num < 0) dmi.pantalla.setModo(null);
+				else dmi.pantalla.setModo(Modo.values()[num]);
 			}
 			else if (s.startsWith("asfa::indicador::tipo_tren="))
 			{
@@ -206,17 +177,23 @@ public class ECPinterface {
 			}
 			else if(s.startsWith("asfa::ecp::estado="))
 			{
-				String[] spl = val.split(",");
-				dmi.pantalla.setup(Integer.parseInt(spl[0]), spl.length>1 ? spl[1] : "");
+				if (!val.isEmpty())
+				{
+					String[] spl = val.split(",");
+					dmi.pantalla.setup(Integer.parseInt(spl[0]), spl.length>1 ? spl[1] : "");
+				}
 			}
 			else if(s.startsWith("asfa::pantalla::activa="))
 			{
 				boolean act = val.equals("1");
-				if (act != dmi.pantalla.activa && dmi.pantalla.conectada)
+				if (act != dmi.pantalla.activa)
 				{
 					dmi.pantalla.activa = act;
-					if (act) dmi.pantalla.start();
-					else dmi.pantalla.stop();
+					if (dmi.pantalla.conectada)
+					{
+						if (act) dmi.pantalla.start();
+						else dmi.pantalla.stop();
+					}
 				}
 			}
 			else if(s.startsWith("asfa::conectado="))
@@ -316,8 +293,12 @@ public class ECPinterface {
 	{
 		if (botón == TipoBotón.Conex && !connected)
 		{
-			if (!state || dmi.pantalla.conectada) dmi.pantalla.apagar();
-			else dmi.pantalla.setup(3, "Fallo de comunicaciones con ECP");
+			if (!state || dmi.activo) dmi.pantalla.apagar();
+			else
+			{
+				dmi.activo = true;
+				dmi.pantalla.setup(3, "Fallo de comunicaciones con ECP");
+			}
 			return;
 		}
         String name = botón.name().toLowerCase();
