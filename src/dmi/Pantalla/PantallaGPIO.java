@@ -45,6 +45,10 @@ public class PantallaGPIO {
 		{
 			if (pantalla.modo_asfa != Modo.EXT) pantalla.set(b == 'd' ? ModoDisplay.Día : ModoDisplay.Noche);
 		}
+		if (b == 's')
+		{
+			pantalla.set();
+		}
 		if (b == '0' || b == '1')
 		{
 			boolean activa = b=='1';

@@ -400,19 +400,20 @@ public class Pantalla extends JPanel {
     	removeAll();
         setLayout(null);
         add(pane);
+        conectada = true;
         set(ModoDisplay.Día);
         Main.dmi.ecp.sendData("noretain(asfa::pantalla::conectada=1)");
         try{Main.ASFA.display.pantallaconectada = true;}catch(Exception e) {}
     }
 
     public void set(ModoDisplay m) {
-    	if (!conectada) return;
+    	if (!conectada || !activa) return;
         modo = m;
         setBackground(modo == ModoDisplay.Noche ? Color.black : blanco);
         vreal.update();
         info.update();
         vtarget.update();
-        eficacia.switchstate();
+        eficacia.update();
         ModoASFA.update();
         controles.update();
         linea.setBackground(modo == ModoDisplay.Día ? Color.black : blanco);

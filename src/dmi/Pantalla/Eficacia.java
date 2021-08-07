@@ -67,11 +67,16 @@ public class Eficacia extends JLabel {
         	}
         }
     }
+    void update()
+    {
+    	if(!eficacia) return;
+        setIcon(iconos[state].getIcon());
+    }
 
     void switchstate() {
     	if(!eficacia) return;
         state++;
         state = state % 8;
-        setIcon(iconos[state].getIcon());
+        update();
     }
 }
