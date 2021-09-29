@@ -113,7 +113,7 @@ int main(int argc, char** argv)
     
     Parameter trig("asfa::sonido::iniciar");
     Parameter stop("asfa::sonido::detener");
-    Parameter vol("asfa::sonido::volumen");
+    //Parameter vol("asfa::sonido::volumen");
     Parameter fabr("asfa::fabricante");
     
     trig.SetValue = [](string val) {
@@ -138,9 +138,9 @@ int main(int argc, char** argv)
                 handle_sound(i, bas, false);
         }
     };
-    vol.SetValue = [](string val) {
+    /*vol.SetValue = [](string val) {
         volumen = stof(val);
-    };
+    };*/
     fabr.SetValue = [](string val) {
         fabricante = val;
         cargar_sonidos();

@@ -1,6 +1,7 @@
 package dmi.Pantalla;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import com.StateSerializer;
 
@@ -12,15 +13,19 @@ import ecp.ASFA.Modo;
 public class PantallaSerializer extends StateSerializer {
 
 	Pantalla pantalla;
+	boolean ComunicacionECP;
 	public PantallaSerializer(Pantalla pantalla)
 	{
 		super(Config.SerialPantalla);
 		this.pantalla = pantalla;
 		if (Config.SerialPantalla == null || Config.SerialPantalla == "") return;
+		new Thread(() -> {
+			while(true) update();
+			}).start();
 	}
 	void setDisplay(byte[] data)
 	{
-		if (!pantalla.activa || !pantalla.conectada) return;
+		if (!pantalla.activa) return;
 		pantalla.vreal.setValue((data[0]&255) + ((int)(data[1]&255)<<8));
     	pantalla.vtarget.set(data[3] > 2 ? data[3]-2 : data[3], data[2] & 255, data[3] > 2);
     	pantalla.info.setInfo(Info.values()[(data[4]&255)>>1], (data[4] & 1) != 0);
@@ -39,12 +44,14 @@ public class PantallaSerializer extends StateSerializer {
 	void setConectada(byte[] data)
 	{
 		boolean conectada = (data[0]&1) != 0;
-		boolean activa = (data[0]&2) != 0;
+		boolean habilitada = (data[0]&2) != 0;
+		//System.out.println(data[0]+" "+ComunicacionECP+" "+pantalla.activa+" "+pantalla.conectada);
 		if (conectada != Main.dmi.activo)
 		{
 			Main.dmi.activo = conectada;
 			if (!conectada)
 			{
+				ComunicacionECP = false;
 				pantalla.apagar();
 	    		if (Config.ApagarOrdenador)
 	    		{
@@ -56,23 +63,53 @@ public class PantallaSerializer extends StateSerializer {
 					}
 	    		}
 			}
-			else pantalla.encender();
-		}
-		if (activa != pantalla.activa)
-		{
-			pantalla.activa = activa;
-			if (activa) pantalla.setup(0, "");
-			if (pantalla.conectada)
+			else
 			{
-				if (activa) pantalla.start();
-				else pantalla.stop();
+				pantalla.encender();
 			}
+		}
+		pantalla.habilitar(habilitada);
+	}
+	void setEstadoECP(byte[] data)
+	{
+		if (ComunicacionECP) return;
+		ComunicacionECP = true;
+		int state = data[3] & 0xFF;
+		pantalla.setup(state, new String(data, 4, data.length-5, StandardCharsets.UTF_8));
+	}
+	void update()
+	{
+		if (pantalla.conectada)
+		{
+			write(new Paquete(TipoPaquete.FeedbackDisplay, new byte[] {(byte) (pantalla.activa ? 1 : 0)}));
+			if (!ComunicacionECP) write(new Paquete(TipoPaquete.PeticionEstado, new byte[] {0}));
+		}
+		try {
+			synchronized(this)
+			{
+				wait(500);
+			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	@Override
 	public void parse(Paquete paquete) {
-		if (paquete.tipo == TipoPaquete.IconosDisplay) setDisplay(paquete.data);
-		if (paquete.tipo == TipoPaquete.ConexionDisplay) setConectada(paquete.data);
+		switch(paquete.tipo)
+		{
+			case IconosDisplay:
+				setDisplay(paquete.data);
+				break;
+			case ConexionCabina:
+				setConectada(paquete.data);
+				break;
+			case EstadoECP:
+				setEstadoECP(paquete.data);
+				break;
+			default:
+				break;
+		}
 	}
 
 }

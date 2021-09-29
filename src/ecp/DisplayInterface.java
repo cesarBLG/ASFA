@@ -80,10 +80,6 @@ class EstadoBotón {
     	}
     	return val;
     }
-    public boolean averiado()
-    {
-    	return averiado(10);
-    }
     public boolean averiado(double threshold)
     {
     	return (pulsado && rawPress + threshold < Clock.getSeconds());
@@ -93,8 +89,9 @@ class EstadoBotón {
 public class DisplayInterface {
 	public ASFA ASFA;
     OR_Client orclient;
-    List<ECPStateSerializer> serialClients = new ArrayList<ECPStateSerializer>();
+    public List<ECPStateSerializer> serialClients = new ArrayList<ECPStateSerializer>();
     public boolean pantallaconectada=false;
+    public boolean pantallaactiva=false;
     
     Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
     
@@ -111,8 +108,8 @@ public class DisplayInterface {
     public DisplayInterface(ASFA asfa) {
     	ASFA = asfa;
     	orclient = new OR_Client(ASFA);
-    	serialClients.add(new ECPStateSerializer(this/*, "/dev/ttyUSB0"*/));
-    	//serialClients.add(new ECPStateSerializer(this, "/dev/ttyUSB1"));
+    	/*if (ASFA.ASFA_Maestro) */serialClients.add(new ECPStateSerializer(this, "/dev/ttyUSB0"));
+    	/*else */serialClients.add(new ECPStateSerializer(this, "/dev/ttyUSB1"));
     }
 
     void reset()
@@ -276,16 +273,16 @@ public class DisplayInterface {
         serialClients.forEach((c) -> c.cambioRepetidor());
     }
     
-    public boolean pantallaactiva=false;
+    public boolean pantallahabilitada=false;
     public void start()
     {
-    	pantallaactiva=true;
-    	orclient.sendData("asfa::pantalla::activa=1");
+    	pantallahabilitada=true;
+    	orclient.sendData("asfa::pantalla::habilitada=1");
     }
     public void stop()
     {
-    	pantallaactiva=false;
-    	orclient.sendData("asfa::pantalla::activa=0");
+    	pantallahabilitada=false;
+    	orclient.sendData("asfa::pantalla::habilitada=0");
     }
     public String estadoecp = "";
     public void set(int num, List<Integer> errors)
@@ -322,7 +319,9 @@ public class DisplayInterface {
         	msg += "</html>";
     	}
     	estadoecp = num+","+msg;
+    	//String msg2 = msg;
     	orclient.sendData("asfa::ecp::estado="+num+","+msg);
+    	//serialClients.forEach((c) -> c.estadoECP(num, msg2));
     }
     public void startSound(String num)
     {

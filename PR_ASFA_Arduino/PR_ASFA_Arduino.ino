@@ -23,7 +23,7 @@ const int PAumento = 7; //Pulsador aumento de velocidad
 const int PConex = A1;
 const int PBasico = 12; //Selector ASFA basico
 const int AlimentacionPantalla = 50; //Alimentacion pantalla ASFA digital
-const int HabilitacionPantalla = -1; //Habilitacion pantalla ASFA digital
+const int HabilitacionPantalla = 52; //Habilitacion pantalla ASFA digital
 const int PinAvisadorBasico = 11; //Avisador acustico ASFA básico
 const int LuzBasico = 10; //Luz modo ASFA basico, no controlada
 
@@ -35,7 +35,7 @@ const int LuzVL = 3; //Luz verde pulsador preanuncio/VL
 const int LuzPrePar = 4; //Luz amarilla pulsador preanuncio/VL
 const int LuzRearme = 5; //Luz pulsador rearme (azul)
 const int LuzAlarma = 6; //Luz pulsador alarma (rojo)
-const int LuzModo = 7; //Luz pulsador rearme (azul)
+const int LuzModo = 7; //Luz pulsador modo (blanco)
 const int LuzRebase = 8; //Luz pulsador rebase
 const int LuzLVI = 9; //Luz pulsador limitacion velocidad por infraestructura
 const int LuzPN = 10; //Luz pulsador paso a nivel
@@ -143,11 +143,11 @@ void setup() {
   }
   Serial2.begin(115200);
   #endif
-  Serial3.begin(115200);
   digitalWrite(AlimentacionPantalla, HIGH);
   pinMode(AlimentacionPantalla, OUTPUT);
   pinMode(HabilitacionPantalla, OUTPUT);
   Serial.begin(115200);
+  Serial3.begin(115200);
   digitalWrite(HabilitacionPantalla, LOW);
   Serial1.begin(9600, SERIAL_8E1);
   while (!Serial) {}
@@ -331,18 +331,20 @@ void dataParser(int num, byte *data, int length)
       parseLeds(data);
       break;
     case 2:
+    case 4:
       pantallaInterface.write(num, data, length);
       break;
     case 3:
       parseSound(data);
       avisadorInterface.write(num, data, length);
-      break;
-    case 4:
       pantallaInterface.write(num, data, length);
       break;
     case 5:
       digitalWrite(AlimentacionPantalla, !(data[0]&1));
-      digitalWrite(HabilitacionPantalla, (data[0]>>1)&1);
+      digitalWrite(HabilitacionPantalla, !((data[0]>>1)&1));
+      pantallaInterface.write(num, data, length);
+      /*if (data[0] & 1) Serial3.begin(115200);
+      else Serial3.end();*/
       break;
     default:
       break;
@@ -383,19 +385,22 @@ void loop_binary()
     lastSentPulsadores = millis();
   }
   ecpInterface.update();
+  pantallaInterface.update();
 }
 #endif
 byte datosDIV[64];
-int indexLecturaDIV = 0;
+bool DIVconectado = false;
 void loop() {
-  while (Serial1.available())
+  if (Serial1.available())
   {
-    if (indexLecturaDIV == 64)
+    int num = Serial1.readBytes(datosDIV, 64);
+    if (num == 64)
     {
-      indexLecturaDIV = 0;
+      DIVconectado = true;
+      ecpInterface.write(8, datosDIV, 64);
     }
-    datosDIV[indexLecturaDIV++] = serial.read();
   }
+  
   #ifdef TEXT_SERIAL
   loop_text();
   #else

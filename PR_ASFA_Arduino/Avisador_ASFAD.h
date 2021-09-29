@@ -255,7 +255,7 @@ class AvisadorASFAD
 {
   unsigned long sonidos[16];
   bool enviado[16];
-  int sonando;
+  int sonando = 0;
   ControladorAvisador &controlador;
   public:
   int volumen = 15;
@@ -272,6 +272,8 @@ class AvisadorASFAD
     }
     sonando = 0;
     controlador.begin();
+    delay(100);
+    controlador.setVolume(volumen);
   }
   void iniciar(int son)
   {
@@ -369,7 +371,10 @@ class AvisadorASFAD
     }
     enviado[sonido] = true;
     sonando = sonido;
+    int v =  controlador.volumen;
+    controlador.volumen = volumen;
     controlador.play(sonido);
+    controlador.volumen = v;
   }
   void playLoop(int sonido) {
     if (!controlador.canSend()) return;

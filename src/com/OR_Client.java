@@ -100,6 +100,7 @@ public class OR_Client {
 		subscribe("speed");
 		subscribe("simulator_time");
 		subscribe("asfa::pantalla::conectada");
+		subscribe("asfa::pantalla::activa");
 		while(true)
 		{
 			String s = readData();
@@ -126,7 +127,7 @@ public class OR_Client {
 		if (matches(s, "asfa::conectado")) sendData("asfa::conectado="+(ASFA.ASFAconectado&&!ASFA.ASFAanulado?"1":"0"));
 		if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (ASFA.Fase2 ? "2" : "1"));
 		if (matches(s, "asfa::ecp::estado") && !ASFA.display.estadoecp.isEmpty()) sendData("asfa::ecp::estado=" + ASFA.display.estadoecp);
-		if (matches(s, "asfa::pantalla::activa")) sendData("asfa::pantalla::activa=" + (ASFA.display.pantallaactiva ? 1 : 0));
+		if (matches(s, "asfa::pantalla::habilitada")) sendData("asfa::pantalla::habilitada=" + (ASFA.display.pantallahabilitada ? 1 : 0));
 		if (matches(s, "asfa::dmi::activo")) sendData("asfa::dmi::activo=" + (ASFA.Connected ? 1 : 0));
 		int index = s.indexOf('=');
 		if (index < 0) return;
@@ -189,11 +190,12 @@ public class OR_Client {
 		}
 		else if(s.startsWith("asfa::div="))
 		{
+			byte[] DIV = new byte[64];
 			for(int i=0; i<64; i++)
 			{
-				byte b = Integer.decode("0x"+val.substring(2*i, 2*i+2)).byteValue();
-				ASFA.div.add(b);
+				DIV[i] = Integer.decode("0x"+val.substring(2*i, 2*i+2)).byteValue();
 			}
+			ASFA.div.setData(DIV, 0);
 		}
 		else if(s.startsWith("asfa::akt="))
 		{
@@ -238,6 +240,10 @@ public class OR_Client {
 		{
 			ASFA.display.pantallaconectada = val.equals("1");
 		}
+		else if(s.startsWith("asfa::pantalla::activa="))
+		{
+			ASFA.display.pantallaactiva = val.equals("1");
+		}
 	}
 	static boolean matches(String topic, String var)
 	{
@@ -260,6 +266,7 @@ public class OR_Client {
 	public void sendData(String s)
 	{
 		if(out==null) return;
+		if (!ASFA.ASFA_Maestro && !s.startsWith("register(")) return;
 		s = s+'\n';
 		char[] c = s.toCharArray();
 		try {

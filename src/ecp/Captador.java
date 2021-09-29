@@ -45,6 +45,7 @@ public class Captador {
         return frecs.peek();
     	//return captador;
     }
+    
     // Relacion de frecuencias. Indice 0 para SICVA, indice 1 para AVE
     public int[][] seguradesactivacionabajo = {{58560,62484,66671,71138,75904,80988,86447,93243,100572,108992,117006,126204}, {59160,63054,67212,71651,76380,81422,87042,93873,102001,108437,117065,126268}};
     public int[][] seguraactivacionabajo = {{59250,63220,67456,71976,76798,81943,87470,94346,101762,109325,118391,127698}, {59340,63246,67417,71871,76614,81670,87309,94160,102289,109714,118450,127762}};

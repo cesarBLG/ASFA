@@ -45,15 +45,15 @@ public class ECPinterface {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		subscribe("asfa::pulsador::conex");
-		subscribe("asfa::pantalla::activa");
 		subscribe("asfa::pulsador::basico");
 		subscribe("asfa::pulsador::ilum::*");
 		subscribe("asfa::dmi::activo");
+		subscribe("asfa::pantalla::habilitada");
 		subscribe("asfa::leds::*");
 		subscribe("asfa::fabricante");
 		while(true)
 		{
+			if (dmi.pantalla.serialClient.isReady()) break;
 			String s = readData();
 			if(s==null) return;
 			int index = s.indexOf('=');
@@ -183,18 +183,9 @@ public class ECPinterface {
 					dmi.pantalla.setup(Integer.parseInt(spl[0]), spl.length>1 ? spl[1] : "");
 				}
 			}
-			else if(s.startsWith("asfa::pantalla::activa="))
+			else if(s.startsWith("asfa::pantalla::habilitada="))
 			{
-				boolean act = val.equals("1");
-				if (act != dmi.pantalla.activa)
-				{
-					dmi.pantalla.activa = act;
-					if (dmi.pantalla.conectada)
-					{
-						if (act) dmi.pantalla.start();
-						else dmi.pantalla.stop();
-					}
-				}
+				dmi.pantalla.habilitar(val.equals("1"));
 			}
 			else if(s.startsWith("asfa::conectado="))
 			{
@@ -244,6 +235,12 @@ public class ECPinterface {
 				dmi.pantalla.eficacia.fase(Fase2);
 			}
 		}
+		try {
+			s.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	public ECPinterface(DMI dmi)
 	{
@@ -267,6 +264,7 @@ public class ECPinterface {
 	}
 	public void sendData(String s)
 	{
+		if (dmi.pantalla.serialClient.isReady()) return;
 		if(out==null) return;
 		s = s+'\n';
 		char[] c = s.toCharArray();

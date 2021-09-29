@@ -182,6 +182,8 @@ public class DMI extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         ecp = new ECPinterface(this);
+        pantalla.serialClient = new PantallaSerializer(pantalla); 
         if (!fullScreen) setVisible(true);
+        else GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(this);
     }
 }

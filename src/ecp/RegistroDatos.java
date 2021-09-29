@@ -452,4 +452,14 @@ public class RegistroDatos
 	{
 		add(0xFF45, activo ? 1 : 0);
 	}
+	void stop()
+	{
+		try {
+			excel.close();
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

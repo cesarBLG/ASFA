@@ -1,15 +1,17 @@
 package dmi.Pantalla;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 import dmi.Pantalla.Pantalla.ModoDisplay;
 import ecp.ASFA.Modo;
 
 public class PantallaGPIO {
 	Pantalla pantalla;
+	List<Socket> sockets = new ArrayList<>();
 	public PantallaGPIO(Pantalla pantalla)
 	{
 		this.pantalla = pantalla;
@@ -24,10 +26,18 @@ public class PantallaGPIO {
 			{
 				try {
 					Socket s = ss.accept();
-					while(true)
-					{
-						dataReceived((byte) s.getInputStream().read());
-					}
+					sockets.add(s);
+					new Thread(() -> {
+						try {
+							while(true) {
+								dataReceived((byte) s.getInputStream().read());
+							}
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						sockets.remove(s);
+					}).start();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -51,17 +61,18 @@ public class PantallaGPIO {
 		}
 		if (b == '0' || b == '1')
 		{
-			boolean activa = b=='1';
-			if (activa != pantalla.activa)
-			{
-				pantalla.activa = activa;
-				if (pantalla.conectada)
-				{
-					if (activa) pantalla.start();
-					else pantalla.stop();
-				}
-			}
-			
+			pantalla.habilitar(b == '1');
 		}
+	}
+	void write(byte b)
+	{
+		sockets.forEach((s) -> {
+			try {
+				s.getOutputStream().write(b);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
 	}
 }

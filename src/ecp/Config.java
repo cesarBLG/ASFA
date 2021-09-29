@@ -12,8 +12,10 @@ public class Config {
 	public static boolean ApagarOrdenador=false;
 	public static boolean UsarCurvasExternas=false;
 	public static boolean UsarHoraExterna=true;
+	public static boolean Watchdog=false;
 	public static String SerialECP="";
 	public static String SerialPantalla="";
+	public static String SerialDIV = "";
 	public static void load()
 	{
     	try
@@ -78,6 +80,15 @@ public class Config {
         			else if (token[0].trim().equalsIgnoreCase("serialpantalla"))
         			{
         				SerialPantalla = token[1].trim();
+        			}
+        			else if (token[0].trim().equalsIgnoreCase("serialdiv"))
+        			{
+        				SerialDIV = token[1].trim();
+        			}
+        			else if (token[0].trim().equalsIgnoreCase("watchdog"))
+        			{
+        				String val = token[1].trim().toLowerCase();
+        				Watchdog = val.equals("true") || val.equals("1");
         			}
     			}
         		line = bufferedReader.readLine();

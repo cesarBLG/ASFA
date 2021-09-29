@@ -1,9 +1,11 @@
 package com;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import dmi.Botones.Botón.TipoBotón;
+import ecp.Clock;
 import ecp.Config;
 import ecp.DisplayInterface;
 import ecp.Main;
@@ -11,6 +13,7 @@ import ecp.ASFA.Modo;
 
 public class ECPStateSerializer extends StateSerializer {
 	DisplayInterface display;
+	boolean tienePantalla = false;
 	public ECPStateSerializer(DisplayInterface display) 
 	{
 		super(Config.SerialECP);
@@ -30,7 +33,7 @@ public class ECPStateSerializer extends StateSerializer {
 	}
 	long lastPR;
 	long lastDisplay;
-
+	long lastFeedback;
     
     public void cambioRepetidor()
     {
@@ -51,6 +54,19 @@ public class ECPStateSerializer extends StateSerializer {
     ConcurrentLinkedQueue<Paquete> pendientes = new ConcurrentLinkedQueue<>();
 	void update()
 	{
+		if (!ready)
+		{
+			try {
+				synchronized(this)
+				{
+					wait(500);
+				}
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return;
+		}
 		long time = System.currentTimeMillis();
 		if (lastPR + 500 <= time)
 		{
@@ -59,9 +75,14 @@ public class ECPStateSerializer extends StateSerializer {
 		}
 		if (lastDisplay + 500 <= time)
 		{
-			write(new Paquete(TipoPaquete.ConexionDisplay, new byte[] {(byte)((display.pantallaactiva?2:0)+(display.pressed(TipoBotón.Conex)?1:0))}));
-			if (display.pantallaactiva) sendEstadoDisplay();
+			write(new Paquete(TipoPaquete.ConexionCabina, new byte[] {(byte)((display.pantallahabilitada?2:0)+(display.pressed(TipoBotón.Conex)?1:0))}));
+			if (display.pantallahabilitada) sendEstadoDisplay();
 			lastDisplay = time;
+		}
+		if (lastFeedback + 1000 <= time && tienePantalla)
+		{
+			display.pantallaconectada = false;
+			display.pantallaactiva = false;
 		}
 		while(!pendientes.isEmpty())
 		{
@@ -180,9 +201,53 @@ public class ECPStateSerializer extends StateSerializer {
 			notify();
 		}
 	}
+	public void estadoECP(int num, String msg)
+	{
+		byte[] msgb = msg.getBytes(StandardCharsets.UTF_8);
+		byte[] data = new byte[msgb.length + 5];
+		data[3] = (byte) num;
+		data[data.length-1] = 0;
+		System.arraycopy(msgb, 0, data, 4, msgb.length);
+		pendientes.add(new Paquete(TipoPaquete.EstadoECP, data));
+		synchronized(this)
+		{
+			notify();
+		}
+	}
+	@Override
+	protected void write(Paquete paquete)
+	{
+		if (display.ASFA.ASFA_Maestro) super.write(paquete);
+	}
 	@Override
 	protected void parse(Paquete paquete)
 	{
-		if (paquete.tipo == TipoPaquete.PulsadoresPR) setEstadoPR(paquete.data);
+		switch(paquete.tipo)
+		{
+			case PulsadoresPR:
+				setEstadoPR(paquete.data);
+				break;
+			case FeedbackDisplay:
+				lastFeedback = System.currentTimeMillis();
+				display.pantallaconectada = true;
+				display.pantallaactiva = (paquete.data[0]&1)!=0;
+				tienePantalla = true;
+				break;
+			case PeticionEstado:
+				if (paquete.data[0] == 0 && display.estadoecp != null && !display.estadoecp.isEmpty())
+				{
+					String str = display.estadoecp;
+					int i = str.indexOf(',');
+					if (i < 0) estadoECP(Integer.parseInt(str), "");
+					else estadoECP(Integer.parseInt(str.substring(0, i)), str.substring(i+1));
+				}
+			case DatosDIV:
+				display.ASFA.div.setData(paquete.data, 0);
+				System.out.println(Arrays.toString(paquete.data));
+				break;
+			default:
+				break;
+		}
+		
 	}
 }

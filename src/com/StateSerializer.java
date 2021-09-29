@@ -3,6 +3,7 @@ package com;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortInvalidPortException;
@@ -18,7 +19,10 @@ public abstract class StateSerializer {
 		IconosDisplay,
 		Sonido,
 		EstadoECP,
-		ConexionDisplay,
+		ConexionCabina,
+		FeedbackDisplay,
+		PeticionEstado,
+		DatosDIV
 	}
 	protected class Paquete
 	{
@@ -80,7 +84,8 @@ public abstract class StateSerializer {
 	protected void write(Paquete p)
 	{
 		byte[] packet = p.data;
-		//try{Main.dmi.pantalla.serialClient.parse(p);}catch(Exception e) {}
+		/*try{Main.dmi.pantalla.serialClient.parse(p);}catch(Exception e) {}
+		try{Main.ASFA.display.serialClients.forEach((c) -> c.parse(p));}catch(Exception e) {}*/
 		if (!ready) return;
 		byte[] data = new byte[packet.length + 4];
 		data[0] = (byte) 0xAD;
@@ -106,7 +111,8 @@ public abstract class StateSerializer {
 		while(true)
 		{
 			try {
-				if ((in.read()&255) == 0xAD)
+				int a = in.read()&255;
+				if ((a) == 0xAD)
 				{
 					int pacno = in.read();
 					int length = in.read();
@@ -121,8 +127,8 @@ public abstract class StateSerializer {
 					}
 					if (control == control_expected)
 					{
-						parse(new Paquete(TipoPaquete.values()[pacno], data));
 						ready = true;
+						parse(new Paquete(TipoPaquete.values()[pacno], data));
 					}
 				}
 			} catch (IOException e) {
@@ -138,4 +144,7 @@ public abstract class StateSerializer {
 		}
 	}
 	protected abstract void parse(Paquete paquete);
+	public boolean isReady() {
+		return ready;
+	}
 }

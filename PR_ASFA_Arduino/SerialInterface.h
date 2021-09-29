@@ -55,7 +55,7 @@ class SerialInterface
   } 
 };
 #else
-#define BIN_SIZE 32
+#define BIN_SIZE 128
 class BinaryInterface
 {
   Stream &serial;
@@ -86,6 +86,10 @@ class BinaryInterface
     serial.write(length);
     serial.write(data, length);
     serial.write(control);
+    /*serial.print(num);
+    serial.print(' ');
+    for(int i=0; i<length; i++) {serial.print(data[i]);serial.print(' ');}
+    serial.println();*/
   }
   void update()
   {

@@ -23,6 +23,7 @@ import dmi.Botones.Botón.TipoBotón;
 import dmi.Pantalla.ÚltimaInfo.Info;
 import ecp.Controles.*;
 import ecp.EstadoBotón.LectorBoton;
+import ecp.Redundancia.DatosRedundancia;
 
 public class ASFA {
 
@@ -79,7 +80,7 @@ public class ASFA {
     //Lectura balizas
     public Captador captador = new Captador(this);
     boolean Eficacia;
-    boolean EficaciaIrrecuperable = false;
+    double TiempoUltimaEficacia;
     double TiempoValidarFrecuencia = 0.001;
     double TiempoValidarFP = 0.05;
     double TiempoPerdidaFP = 0.05;
@@ -99,8 +100,13 @@ public class ASFA {
     
     RegistroDatos Registro = new RegistroDatos(this);
     
-    public ASFA() {
-        Main.ASFA = this;
+    Autotest Autotest;
+    
+    Redundancia redundancia = new Redundancia(this);
+    public boolean ASFA_Maestro = true;
+    
+    public ASFA(boolean maestro) {
+    	ASFA_Maestro = maestro;
         div = new DIV();
         display = new DisplayInterface(this);
 
@@ -119,6 +125,7 @@ public class ASFA {
         Runtime.getRuntime().addShutdownHook(shutdown);
         
         watchdog = new Timer(500, (ev) ->  {
+        	if (!Config.Watchdog) return;
             display.orclient.sendData("asfa::conectado=");
             display.orclient.sendData("asfa::emergency=true");
             display.iluminarTodos(false);
@@ -128,9 +135,10 @@ public class ASFA {
             display.led_basico(2, 0);
             Registro.falloECP(1, true);
             ApagarSonidos();
+            Registro.stop();
             try {
-				Files.move(Paths.get("registro.csv"), Paths.get("registro_dumped.csv"), StandardCopyOption.REPLACE_EXISTING);
-	            Files.move(Paths.get("registro.cls"), Paths.get("registro_dumped.cls"), StandardCopyOption.REPLACE_EXISTING);
+				Files.copy(Paths.get("registro.csv"), Paths.get("registro_dumped.csv"), StandardCopyOption.REPLACE_EXISTING);
+	            Files.copy(Paths.get("registro.cls"), Paths.get("registro_dumped.cls"), StandardCopyOption.REPLACE_EXISTING);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -196,7 +204,6 @@ public class ASFA {
         VentanaL11 = -1;
         VentanaIgnoreL9 = -1;
         UltimaFP = 0;
-        EficaciaIrrecuperable = false;
         AlarmaStart = 0;
         AlarmaEnd = 0;
         RecPNStart = 0;
@@ -217,9 +224,9 @@ public class ASFA {
         captador.lastSent = 0;
         
         display.reset();
+        
+        redundancia.numeroFallos = 0;
     }
-    
-    public boolean averia = false;
     
     public void asfa_wait(long time) throws InterruptedException
     {
@@ -238,6 +245,39 @@ public class ASFA {
     	}
     }
     
+    void test_leds() throws InterruptedException
+    {
+    	if (Config.Fabricante.equals("DIMETRONIC") || Config.Fabricante.equals("SIEMENS")) asfa_wait(1000);
+        display.iluminarTodos(true);
+        display.startSound("S2-1", true);
+        display.led_basico(0, 1);
+        display.led_basico(1, 1);
+        display.led_basico(2, 4);
+        asfa_wait(2000);
+        display.stopSound("S2-1");
+        display.led_basico(2, 0);
+        asfa_wait(1000);
+        String segundoSonido = Config.Fabricante.equals("DIMETRONIC") ? "S3-3" : "S2-1";
+        display.startSound(segundoSonido, false);
+        display.led_basico(2, 1);
+        asfa_wait(2000);
+        display.stopSound(segundoSonido);
+        display.iluminarTodos(false);
+        display.led_basico(0, 0);
+        display.led_basico(1, 0);
+        display.led_basico(2, 0);
+    }
+    void esperarDisplay() throws InterruptedException
+    {
+    	while(!basico && !display.pantallaconectada)
+    	{
+        	asfa_wait(100);
+            if (display.pressed(TipoBotón.ASFA_básico))
+            {
+            	basico = true;
+            }
+    	}
+    }
     public void Conex() {
     	if (Connected) return;
     	
@@ -247,6 +287,7 @@ public class ASFA {
         display.orclient.sendData("asfa::dmi::activo=1");
         display.orclient.sendData("asfa::fabricante="+Config.Fabricante);
     	display.iluminar(TipoBotón.Conex, false);
+    	display.start();
     	Initialize();
     	Connected = true;
 		ASFA_version = Config.Version;
@@ -270,31 +311,19 @@ public class ASFA {
 		}
         display.orclient.sendData("register(simulator_time)");
         display.orclient.sendData("register(asfa::div)");
-        try {
-            if (Config.Fabricante.equals("DIMETRONIC") || Config.Fabricante.equals("SIEMENS"))asfa_wait(500);
-            display.iluminarTodos(true);
-            display.startSound("S2-1", true);
-            display.led_basico(0, 1);
-            display.led_basico(1, 1);
-            display.led_basico(2, 4);
-            asfa_wait(2000);
-            display.stopSound("S2-1");
-            display.led_basico(2, 0);
-            asfa_wait(1000);
-            String segundoSonido = Config.Fabricante.equals("DIMETRONIC") ? "S3-3" : "S2-1";
-            display.startSound(segundoSonido, false);
-            display.led_basico(2, 1);
-            asfa_wait(2000);
-            display.stopSound(segundoSonido);
-            display.iluminarTodos(false);
-            display.led_basico(0, 0);
-            display.led_basico(1, 0);
-            display.led_basico(2, 0);
-        } catch (InterruptedException e) {
-        	Desconex();
-            return;
+
+        byte[] newDivData = div.getData();
+        double time = Clock.getSeconds();
+        while (newDivData == null && Clock.getSeconds()-time < (Config.SerialECP.isEmpty() ? 3 : 30))
+        {
+        	newDivData = div.getData();
+        	try {
+                asfa_wait(100);
+            } catch (InterruptedException e) {
+            	Desconex();
+                return;
+            }
         }
-        byte newDivData[] = div.getData();
         if (newDivData != null)
         {
         	divData = newDivData;
@@ -312,6 +341,17 @@ public class ASFA {
         }
         Registro.falloDIV(newDivData == null);
         display.orclient.sendData("unregister(asfa::div)");
+        
+    	Autotest  = new Autotest(this);
+        try {
+            //if (Config.Fabricante.equals("DIMETRONIC") || Config.Fabricante.equals("SIEMENS")) esperarDisplay();
+        	test_leds();
+        } catch (InterruptedException e) {
+        	Desconex();
+            return;
+        }
+        Autotest.autotest(true);
+        
         if(selectorT < 1 || selectorT > 8) selectorT = 8;
         
         if (divData == null) averiasGraves.add(2);
@@ -329,12 +369,25 @@ public class ASFA {
         
         if (captador.getData() == FrecASFA.AL) averiasLeves.add(4);
         
+        try {
+			esperarDisplay();
+		} catch (InterruptedException e) {
+        	Desconex();
+            return;
+		}
+        
         if (!averiasGraves.isEmpty())
         {
-        	Connected = false;
-        	averia = true;
         	display.set(2, averiasGraves);
-        	return;
+        	while (Connected)
+        	{
+            	try {
+    				asfa_wait(2000);
+    			} catch (InterruptedException e) {
+                	Desconex();
+                    return;
+                }
+        	}
         }
         else if (!averiasLeves.isEmpty())
         {
@@ -392,30 +445,10 @@ public class ASFA {
             }
         	display.stopSound("S5");
         }
-
-        if (!basico) display.start();
-        while(!basico && !display.pantallaconectada)
-    	{
-            try {
-            	asfa_wait(100);
-            } catch (InterruptedException e) {
-            	Desconex();
-                return;
-            }
-            if (display.pressed(TipoBotón.ASFA_básico))
-            {
-            	basico = true;
-		        if(modoRAM) T = 40 + selectorT * 10;
-		        else T = selectorT<3 ? (70 + selectorT * 10) : (40 + selectorT * 20);
-		        T = Math.min(T, Vmax);
-		        if (T>Vbasico) T = Vbasico;
-		        param.T = T;
-		        param.basico = !curvasBasicoDigital;
-            }
-    	}
-        if (basico) display.stop();
-        if (basico && Config.Fabricante.equalsIgnoreCase("SEPSA"))
+        
+        if (basico)
         {
+        	display.stop();
             try {
             	display.startSound("S1-1", true);
                 Thread.sleep(100);
@@ -423,6 +456,10 @@ public class ASFA {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        }
+        else
+        {
+        	display.start();
         }
         
         Controles.add(new ControlArranque(param));
@@ -469,7 +506,6 @@ public class ASFA {
     		if (e!=null) e.lector = LectorBoton.Ninguno;
     	}
     	Connected = Activated = false;
-    	averia = false;
     	Registro.apagado();
     	Clock.reset_local_time();
     	display.orclient.sendData("unregister(simulator_time)");
@@ -521,7 +557,7 @@ public class ASFA {
             display.orclient.sendData("asfa::conectado=" + (ASFAconectado && !ASFAanulado ? "1" : "0"));
         }
         prevASFAconectado = ASFAconectado && !ASFAanulado;
-        FE_lazo = FE && (ASFAconectado || !ASFAanulado) && !AKT;
+        FE_lazo = (FE || (Main.ASFA2!=null && Main.ASFA2.FE)) && (ASFAconectado || !ASFAanulado) && !AKT;
     	if (!ASFAconectado || ASFAanulado)
     	{
     		if (Connected) Desconex();
@@ -530,13 +566,13 @@ public class ASFA {
     	else
     	{
     		
-        	if (display.pressed(TipoBotón.Conex) && !Connected && !averia)
+        	if (display.pressed(TipoBotón.Conex) && !Connected)
         	{
             	watchdog.stop();
         		Conex();
             	watchdog.start();
         	}
-        	if (!display.pressed(TipoBotón.Conex) && (Connected || averia)) Desconex();
+        	if (!display.pressed(TipoBotón.Conex) && Connected) Desconex();
         	display.iluminar(TipoBotón.Conex, !display.botones.get(TipoBotón.Conex).pulsado);
     	}
     	if (prevFE_lazo != FE_lazo)
@@ -563,7 +599,7 @@ public class ASFA {
         if (!CON) {
             FE = true;
         }
-        if (!CON && modo != Modo.EXT && estadoInicio == 0) {
+        if (!CON && modo != Modo.EXT && (!Config.Fabricante.equals("DIMETRONIC") || estadoInicio == 0)) {
             if (modoRAM) modo_ext = Modo.RAM;
             else if (!modoAV && modoCONV) modo_ext = Modo.CONV;
             else if (modoAV && !modoCONV) modo_ext = Modo.AV;
@@ -600,26 +636,17 @@ public class ASFA {
             Registro.modo();
         }
         
-        for (Entry<TipoBotón, EstadoBotón> b : display.botones.entrySet())
-        {
-        	if (b.getKey() != TipoBotón.ASFA_básico && b.getKey() != TipoBotón.Conex && b.getValue().averiado())
-        	{
-                Registro.falloPulsadores(1, true);
-        		EficaciaIrrecuperable = true;
-        		Eficacia = false;
-        		averia = true;
-        		Urgencias();
-        	}
-        }
-        
 		param.Speed = (int)MpS.ToKpH(Odometer.getSpeed());
 		param.Modo = modo;
 
+		Autotest.autotest(false);
+		
         if (modo == Modo.EXT) {
         	UltimaFrecProcesada = frecRecibida = captador.getData();
        	 	if (frecRecibida == FrecASFA.FP) UltimaFP = Clock.getSeconds();
-        	Eficacia = (frecRecibida == FrecASFA.FP || UltimaFP + TiempoPerdidaFP > Clock.getSeconds()) && !EficaciaIrrecuperable;
-            display.iluminar(TipoBotón.Alarma, !Eficacia);
+       	 	Autotest.EficaciaCaptador = frecRecibida == FrecASFA.FP || UltimaFP + TiempoPerdidaFP > Clock.getSeconds();
+        	Eficacia = Autotest.Eficacia(modo_ext, basico);
+            display.iluminar(TipoBotón.Alarma, !(frecRecibida == FrecASFA.FP || UltimaFP + TiempoPerdidaFP > Clock.getSeconds()));
             display.display("Eficacia", Eficacia ? 1 : 0);
             display.display("Modo", modo.ordinal());
             display.display("ModoEXT", modo_ext.ordinal());
@@ -640,13 +667,12 @@ public class ASFA {
 		{
 			if (MpS.ToKpH(Odometer.getSpeed()) < UmbralTrenParado)
 			{
-				if (display.pantallaactiva == selec_basico)
+				if (display.pantallahabilitada == selec_basico)
 				{
 					if (selec_basico) display.stop();
 					else display.start();
-					
 				}
-				if (selec_basico || display.pantallaconectada)
+				//if (selec_basico || display.pantallaconectada)
 				{
 					basico = selec_basico;
 			        if(modoRAM) T = 40 + selectorT * 10;
@@ -676,10 +702,6 @@ public class ASFA {
 			        	display.led_basico(1, 0);
 			        	display.led_basico(2, 0);
 			        }
-			        else
-			        {
-			        	display.stop();
-			        }
 					for(Control c : Controles)
 					{
 				        c.T = T;
@@ -691,8 +713,8 @@ public class ASFA {
 			}
 			else Urgencias();
 		}
-		if (!basico && !display.pantallaconectada) FE = true;
-		if (!basico) display.iluminar(TipoBotón.Modo, MpS.ToKpH(Odometer.getSpeed())<UmbralTrenParado && display.botones.get(TipoBotón.Modo).siguientePulsacion < Clock.getSeconds());
+		boolean cambioModoParado = (display.pantallaactiva || basico) && (!Config.Fabricante.equalsIgnoreCase("SEPSA") || estadoInicio == 0) && MpS.ToKpH(Odometer.getSpeed())<UmbralTrenParado && display.botones.get(TipoBotón.Modo).siguientePulsacion < Clock.getSeconds();
+		if (!basico) display.iluminar(TipoBotón.Modo, cambioModoParado);
 		else display.iluminar(TipoBotón.Modo, modo == Modo.AV);
 		
 		if (MpS.ToKpH(Odometer.getSpeed()) >= UmbralTrenParado)
@@ -700,7 +722,7 @@ public class ASFA {
         display.esperarPulsado(TipoBotón.Modo, LectorBoton.CambioModo);
         display.botones.get(TipoBotón.Modo).tiempoPulsar = MpS.ToKpH(Odometer.getSpeed())<UmbralTrenParado ? 0.5 : 3;
         if(display.pulsado(TipoBotón.Modo, LectorBoton.CambioModo)) {
-        	if(MpS.ToKpH(Odometer.getSpeed())<UmbralTrenParado) {
+        	if(cambioModoParado) {
 				if (!basico) display.iluminar(TipoBotón.Modo, true);
         		if(modo == Modo.CONV || modo == Modo.AV || modo == Modo.RAM) {
         			if (modo == Modo.CONV && modoAV)
@@ -810,7 +832,6 @@ public class ASFA {
         }
         if(modo == Modo.MBRA)
         {
-        	Eficacia = !EficaciaIrrecuperable;
         	UltimaFrecProcesada = frecRecibida = captador.getData();
             display.iluminar(TipoBotón.Alarma, frecRecibida != FrecASFA.FP);
         }
@@ -962,12 +983,12 @@ public class ASFA {
                 RebaseAuto = false;
             }
             if (AlarmaStart != 0) {
-            	if(Eficacia)
+            	if(Autotest.EficaciaCaptador)
             	{
                     display.iluminar(TipoBotón.Alarma, true);
             		display.esperarPulsado(TipoBotón.Alarma, LectorBoton.Alarma);
             	}
-            	else if (RecStart == 0 || UltimaFrecValida != FrecASFA.L7)
+            	else if (RecStart == 0 || UltimaFrecValida != FrecASFA.L7 && !display.botones.get(TipoBotón.Alarma).pulsado)
             	{
                     display.iluminar(TipoBotón.Alarma, false);
                     display.botones.get(TipoBotón.Alarma).lector = LectorBoton.Ninguno;
@@ -987,7 +1008,12 @@ public class ASFA {
             }
         }
         actualizarControles();
-        if (FE && MpS.ToKpH(Odometer.getSpeed()) < UmbralTrenParado && AlarmaStart == 0 && !EficaciaIrrecuperable) {
+
+        Eficacia =  Autotest.Eficacia(modo, basico);
+        if (Eficacia) TiempoUltimaEficacia = Clock.getSeconds();
+        else if (TiempoUltimaEficacia + 3 < Clock.getSeconds()) Urgencias();
+        
+        if (FE && MpS.ToKpH(Odometer.getSpeed()) < UmbralTrenParado && AlarmaStart == 0 && Eficacia) {
             display.esperarPulsado(TipoBotón.Rearme, LectorBoton.Rearme);
             display.iluminar(TipoBotón.Rearme, estadoInicio!=2 || (System.currentTimeMillis()/500)%2 == 0);
             if (display.pulsado(TipoBotón.Rearme, LectorBoton.Rearme)) {
@@ -1046,18 +1072,18 @@ public class ASFA {
         InfoSeñalDistinta = false;
         FrecASFA last = frecRecibida;
         frecRecibida = captador.getData();
+        if (UltimaFP + 3 < Clock.getSeconds() && (Odometer.getSpeed() > UmbralTrenParado || UltimaFrecProcesada == FrecASFA.AL)) Autotest.EficaciaCaptador = false;
         if (frecRecibida != last) UltimoCambio = Clock.getSeconds();
         if (frecRecibida == FrecASFA.FP) {
         	if (UltimoCambio + TiempoValidarFP < Clock.getSeconds())
         	{
-                if (!EficaciaIrrecuperable) Eficacia = true;
                 UltimaFP = Clock.getSeconds();
                 UltimaFrecProcesada = frecRecibida;
+                Autotest.EficaciaCaptador = Autotest.EficaciaCaptadorRecuperable;
         	}
         } 
         else if (frecRecibida == FrecASFA.AL) {
             if (AlarmaStart == 0 && UltimaFP + TiempoPerdidaFP < Clock.getSeconds()) {
-            	Eficacia = false;
                 Alarma();
                 UltimaFrecProcesada = frecRecibida;
             }
@@ -1082,8 +1108,11 @@ public class ASFA {
         	}
             if (frecRecibida != UltimaFrecProcesada && UltimaFrecProcesada != FrecASFA.FP) {
                 if (AlarmaStart == 0 && UltimoCambio + 0.5 < Clock.getSeconds()) {
-                    Eficacia = false;
-                    EficaciaIrrecuperable = ASFA_version < 4 || MpS.ToKpH(Odometer.getSpeed()) > UmbralTrenParado;
+                    if (ASFA_version < 4 || MpS.ToKpH(Odometer.getSpeed()) > UmbralTrenParado)
+                    {
+                    	Autotest.EficaciaCaptador = false;
+                    	Autotest.EficaciaCaptadorRecuperable = false;
+                    }
                     Urgencias();
                     Alarma();
                 }
@@ -1091,7 +1120,6 @@ public class ASFA {
             }
             if (frecRecibida == UltimaFrecProcesada) {
                 if (AlarmaStart == 0 && MpS.ToKpH(Odometer.getSpeed()) > UmbralTrenParado && UltimoCambio + TiempoAlarmaFrecNormal < Clock.getSeconds()) {
-                    Eficacia = false;
                     Alarma();
                 }
                 return;
@@ -1230,8 +1258,7 @@ public class ASFA {
                 		}
                 		else
                 		{
-                            Eficacia = false;
-                            EficaciaIrrecuperable = true;
+                			Autotest.CompatibilidadVia = false;
                 		}
                 	}
                 }
@@ -1778,6 +1805,13 @@ public class ASFA {
         {
         	Registro.cambio_vreal();
             prevVreal = vreal;
+        }
+        {
+        	redundancia.actualizar(vreal, control, max, Odometer.getDistance(), ControlActivo, frecRecibida, UltimaFrecValida, TiempoUltimaRecepcion, DistanciaUltimaRecepcion);
+        	if (redundancia.numeroFallos > 5)
+        	{
+        		Autotest.Redundancia = false;
+        	}
         }
         prevVC = control;
         if (FE) {
