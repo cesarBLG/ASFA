@@ -7,8 +7,11 @@
 // También envía los comandos necesarios para reproducir los sonidos del avisador de la pantalla de visualización
 // También reenvía los datos de control del display procedentes del ECP (Serial0) a la Rasperry que controla
 // la pantalla a través del Serial2
+//#define TEXT_SERIAL
 #include "Avisador_ASFAD.h"
 #include "SerialInterface.h"
+byte datosDIV[64];
+bool DIVconectado = false;
 const int PAnPar = 31; //Pulsador anuncio parada
 const int PAnPre = 33; //Pulsador anuncio precaucion
 const int PPrePar = 37; //Pulsador preanuncio parada/via libre condicional
@@ -110,7 +113,7 @@ Pulsador(PRearme, "rearme"),
 Pulsador(PAlarma, "alarma"),
 Pulsador(POcultacion, "ocultacion"),
 Pulsador(PRebase, "rebase"),
-Pulsador(PAumento, "aumvel"),
+Pulsador(PAumento, "aumento"),
 Pulsador(PLVI, "lvi"),
 Pulsador(PPN, "pn")};
 #else
@@ -197,6 +200,11 @@ void serialDataHandler(const char *line, const char *value)
         estLEDRojo = 0;
         estLEDVerde = val;
       }
+    }    
+    else if (num == 3)
+    {
+      estLEDRojo = 0;
+      estLEDVerde = state;
     }
     con = 1;
   }
@@ -289,8 +297,12 @@ void loop_text()
     Serial.println("register(asfa::sonido::detener)");
     last = millis();
   }
+  for (int i=0; i<sizeof(pulsadores)/sizeof(Pulsador); i++)
+  {
+    pulsadores[i].update();
+  }
   serialInterface.update();
-  avisador.update();
+  avisadorBasico.update();
 }
 #else
 void parseLeds(byte *data)
@@ -370,6 +382,15 @@ void sendPulsadores()
 unsigned long lastSentPulsadores = 0;
 void loop_binary()
 {
+  if (Serial1.available())
+  {
+    int num = Serial1.readBytes(datosDIV, 64);
+    if (num == 64)
+    {
+      DIVconectado = true;
+      ecpInterface.write(8, datosDIV, 64);
+    }
+  }
   bool send = false;
   for (int i=0; i<sizeof(PinesPulsadores)/sizeof(short); i++)
   {
@@ -388,19 +409,7 @@ void loop_binary()
   pantallaInterface.update();
 }
 #endif
-byte datosDIV[64];
-bool DIVconectado = false;
 void loop() {
-  if (Serial1.available())
-  {
-    int num = Serial1.readBytes(datosDIV, 64);
-    if (num == 64)
-    {
-      DIVconectado = true;
-      ecpInterface.write(8, datosDIV, 64);
-    }
-  }
-  
   #ifdef TEXT_SERIAL
   loop_text();
   #else

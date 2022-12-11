@@ -5,6 +5,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Map.Entry;
 
 import javax.swing.JOptionPane;
 
@@ -88,12 +89,16 @@ class EstadoBotón {
 
 public class DisplayInterface {
 	public ASFA ASFA;
-    OR_Client orclient;
+    public OR_Client orclient;
     public List<ECPStateSerializer> serialClients = new ArrayList<ECPStateSerializer>();
-    public boolean pantallaconectada=false;
-    public boolean pantallaactiva=false;
+    public int cabinaActual = 1;
+    public int cabinaActiva;
+    public boolean pantallaconectada = false;
+    public boolean pantallaactiva = false;
     
-    Hashtable<TipoBotón, EstadoBotón> botones = new Hashtable<TipoBotón, EstadoBotón>();
+    Hashtable<TipoBotón, EstadoBotón> botonesCab1 = new Hashtable<>();
+    Hashtable<TipoBotón, EstadoBotón> botonesCab2 = new Hashtable<>();
+    Hashtable<TipoBotón, EstadoBotón> botoneraActiva = botonesCab1;
     
     byte controlByte(int n1, int n2) {
         int number = (n1 << 8) | n2;
@@ -108,15 +113,43 @@ public class DisplayInterface {
     public DisplayInterface(ASFA asfa) {
     	ASFA = asfa;
     	orclient = new OR_Client(ASFA);
-    	/*if (ASFA.ASFA_Maestro) */serialClients.add(new ECPStateSerializer(this, "/dev/ttyUSB0"));
-    	/*else */serialClients.add(new ECPStateSerializer(this, "/dev/ttyUSB1"));
+    	serialClients.add(new ECPStateSerializer(this));
+    	//serialClients.add(new ECPStateSerializer(this, "/dev/ttyUSB1"));
     }
 
+    public void setCabinaActual(int num)
+    {
+    	if (cabinaActual != num)
+    	{
+    		cabinaActual = num;
+    		Hashtable<TipoBotón, EstadoBotón> bots = cabinaActual == 1 ? botonesCab1 : botonesCab2;
+    		for (Entry<TipoBotón, EstadoBotón> b : bots.entrySet())
+    		{
+                String name = b.getKey().name().toLowerCase();
+        		if(name.equals("aumvel")) name = "aumento";
+        		else if(name.equals("ocultación")) name = "ocultacion";
+        		else if(name.equals("asfa_básico")) name = "basico";
+                write("asfa::pulsador::ilum::"+name, b.getValue().iluminado ? 1 : 0);
+    		}
+    		for (int i=0; i<3; i++)
+    		{
+    			write("asfa::leds::"+i, cabinaActiva == cabinaActual ? leds[i] : 0);
+    		}
+    		orclient.sendData("asfa::pantalla::habilitada="+(cabinaActiva == cabinaActual && pantallahabilitada ? "1" : "0"));
+    	}
+    }
+    
     void reset()
     {
     	TipoBotón[] t = TipoBotón.values();
         for (int i = 0; i < t.length; i++) {
-            EstadoBotón e = botones.get(t[i]);
+            EstadoBotón e = botonesCab1.get(t[i]);
+            if (e == null) continue;
+            e.iluminado = false;
+            e.lector = LectorBoton.Ninguno;
+        }
+        for (int i = 0; i < t.length; i++) {
+            EstadoBotón e = botonesCab2.get(t[i]);
             if (e == null) continue;
             e.iluminado = false;
             e.lector = LectorBoton.Ninguno;
@@ -126,18 +159,46 @@ public class DisplayInterface {
     }
     
     public void iluminar(TipoBotón botón, boolean state) {
-        if (!botones.containsKey(botón)) {
-            botones.put(botón, new EstadoBotón(false, state));
-        } else if (botones.get(botón).iluminado == state) {
+    	if (botón == TipoBotón.Conex)
+    	{
+    		boolean changed1 = true;
+    		boolean changed2 = true;
+            if (!botonesCab1.containsKey(botón)) {
+            	botonesCab1.put(botón, new EstadoBotón(false, state));
+            } else if (botonesCab1.get(botón).iluminado == state) {
+                changed1 = false;
+            } else {
+            	botonesCab1.get(botón).iluminado = state;
+            }
+            if (!botonesCab2.containsKey(botón)) {
+            	botonesCab2.put(botón, new EstadoBotón(false, state));
+            } else if (botonesCab2.get(botón).iluminado == state) {
+                changed2 = false;
+            } else {
+            	botonesCab2.get(botón).iluminado = state;
+            }
+            if (changed1 || changed2)
+            {
+                write("asfa::pulsador::ilum::conex", state ? 1 : 0);
+                serialClients.forEach((c) -> c.cambioRepetidor());
+            }
+    		return;
+    	}
+        if (!botoneraActiva.containsKey(botón)) {
+        	botoneraActiva.put(botón, new EstadoBotón(false, state));
+        } else if (botoneraActiva.get(botón).iluminado == state) {
             return;
         } else {
-            botones.get(botón).iluminado = state;
+        	botoneraActiva.get(botón).iluminado = state;
         }
-        String name = botón.name().toLowerCase();
-		if(name.equals("aumvel")) name = "aumento";
-		else if(name.equals("ocultación")) name = "ocultacion";
-		else if(name.equals("asfa_básico")) name = "basico";
-        write("asfa::pulsador::ilum::"+name, state ? 1 : 0);
+        if (cabinaActiva == cabinaActual)
+        {
+            String name = botón.name().toLowerCase();
+    		if(name.equals("aumvel")) name = "aumento";
+    		else if(name.equals("ocultación")) name = "ocultacion";
+    		else if(name.equals("asfa_básico")) name = "basico";
+            write("asfa::pulsador::ilum::"+name, state ? 1 : 0);
+        }
         serialClients.forEach((c) -> c.cambioRepetidor());
     }
 
@@ -150,36 +211,37 @@ public class DisplayInterface {
 
     public void pulsar(TipoBotón botón, boolean state) {
     	synchronized(ASFA) {
-	        if (!botones.containsKey(botón)) {
-	            botones.put(botón, new EstadoBotón(state, false));
-	            ASFA.Registro.pulsador(botón, 1, state);
+    		Hashtable<TipoBotón, EstadoBotón> bots = cabinaActual == 1 ? botonesCab1 : botonesCab2;
+	        if (!bots.containsKey(botón)) {
+	            bots.put(botón, new EstadoBotón(state, false));
+	            ASFA.Registro.pulsador(botón, cabinaActual == -1 ? 2 : 1, state);
 	        } else {
-	        	EstadoBotón b = botones.get(botón);
-	        	if(b.pulsado != state) ASFA.Registro.pulsador(botón, 1, state);
+	        	EstadoBotón b = bots.get(botón);
+	        	if(b.pulsado != state) ASFA.Registro.pulsador(botón, cabinaActual == -1 ? 2 : 1, state);
 	            b.pulsar(state);
 	        }
     	}
     }
 
     public boolean pressed(TipoBotón botón) {
-    	if (!botones.containsKey(botón)) {
-            botones.put(botón, new EstadoBotón(false, false));
+    	if (!botoneraActiva.containsKey(botón)) {
+    		botoneraActiva.put(botón, new EstadoBotón(false, false));
         }
-        return botones.get(botón).pulsado;
+        return botoneraActiva.get(botón).pulsado;
     }
     public void esperarPulsado(TipoBotón botón, LectorBoton detector)
     {
-    	if (!botones.containsKey(botón)) {
-            botones.put(botón, new EstadoBotón(false, false));
+    	if (!botoneraActiva.containsKey(botón)) {
+    		botoneraActiva.put(botón, new EstadoBotón(false, false));
         }
-    	botones.get(botón).esperarPulsado(detector);
+    	botoneraActiva.get(botón).esperarPulsado(detector);
     }
     public boolean pulsado(TipoBotón botón, LectorBoton detector) {
-        return botones.get(botón).flancoPulsado(detector);
+        return botoneraActiva.get(botón).flancoPulsado(detector);
     }
     public boolean algunoPulsando(LectorBoton detector)
     {
-    	for(EstadoBotón b : botones.values())
+    	for(EstadoBotón b : botoneraActiva.values())
     	{
     		if(b.startTime != 0 && detector == b.lector) return true;
     	}
@@ -187,7 +249,7 @@ public class DisplayInterface {
     }
     public boolean iluminado(TipoBotón boton)
     {
-    	EstadoBotón e = botones.get(boton);
+    	EstadoBotón e = botoneraActiva.get(boton);
     	return e != null && e.iluminado;
     }
     Hashtable<String, Integer> controles = new Hashtable<String, Integer>();
@@ -268,21 +330,21 @@ public class DisplayInterface {
     	if (leds[led]!=state)
     	{
     		leds[led] = state;
-            write("asfa::leds::"+led, state);
+            if (cabinaActiva == cabinaActual) write("asfa::leds::"+led, state);
     	}
         serialClients.forEach((c) -> c.cambioRepetidor());
     }
     
-    public boolean pantallahabilitada=false;
+    public boolean pantallahabilitada = false;
     public void start()
     {
-    	pantallahabilitada=true;
-    	orclient.sendData("asfa::pantalla::habilitada=1");
+    	pantallahabilitada = true;
+    	if (cabinaActiva == cabinaActual) orclient.sendData("asfa::pantalla::habilitada=1");
     }
     public void stop()
     {
-    	pantallahabilitada=false;
-    	orclient.sendData("asfa::pantalla::habilitada=0");
+    	pantallahabilitada = false;
+    	if (cabinaActiva == cabinaActual) orclient.sendData("asfa::pantalla::habilitada=0");
     }
     public String estadoecp = "";
     public void set(int num, List<Integer> errors)

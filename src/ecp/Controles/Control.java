@@ -3,10 +3,19 @@ package ecp.Controles;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -58,8 +67,7 @@ public abstract class Control {
     public static List<TablaCurva> cargarCurgasConfigurables()
     {
     	try {
-    		FileReader file = new FileReader("curvas.cfg");
-			BufferedReader bufferedReader = new BufferedReader(file);
+    		BufferedReader bufferedReader = Files.newBufferedReader(Paths.get("curvas.cfg"), StandardCharsets.UTF_8);
 			List<TablaCurva> tablas = new ArrayList<>();
 			while (bufferedReader.ready()) {
 				tablas.add(new TablaCurva(bufferedReader));
@@ -85,8 +93,7 @@ public abstract class Control {
     		conj.addCurva(t);
     	}
     	try {
-    		FileWriter file = new FileWriter("curvas.lua");
-			BufferedWriter w = new BufferedWriter(file);
+			BufferedWriter w = Files.newBufferedWriter(Paths.get("curvas.lua"), StandardCharsets.UTF_8);
 			w.write("ASFADcurva = {\n");
 			for (ConjuntoCurvas conj : AlmacenCurvas.values())
 			{
@@ -94,7 +101,7 @@ public abstract class Control {
 			}
 			w.write("}\n");
 			w.flush();
-			file.close();
+			w.close();
     	}catch(Exception e) {e.printStackTrace();}
     }
     public Curva[] obtenerCurvasAlmacen(int T)
@@ -194,8 +201,7 @@ public abstract class Control {
     {
     	TrainParameters p = new TrainParameters();
     	try {
-    		FileWriter file = new FileWriter("curvas.cfg");
-			BufferedWriter bufferedWriter = new BufferedWriter(file);
+			BufferedWriter bufferedWriter = Files.newBufferedWriter(Paths.get("curvas.cfg"), StandardCharsets.UTF_8);
 			List<TablaCurva> tablas = new ArrayList<>();
 			tablas.addAll(new ControlArranque(p).generarTablasControl());
 			tablas.addAll(new ControlTransicion(p).generarTablasControl());
@@ -226,7 +232,7 @@ public abstract class Control {
 				t.ToFile(bufferedWriter);
 			}
 			bufferedWriter.flush();
-			file.close();
+			bufferedWriter.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

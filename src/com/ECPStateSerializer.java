@@ -243,7 +243,6 @@ public class ECPStateSerializer extends StateSerializer {
 				}
 			case DatosDIV:
 				display.ASFA.div.setData(paquete.data, 0);
-				System.out.println(Arrays.toString(paquete.data));
 				break;
 			default:
 				break;

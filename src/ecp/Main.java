@@ -20,12 +20,12 @@ public class Main {
 
     public static void main(String args[]) {
     	Config.load();
-    	try {
+    	/*try {
         	System.setErr(new PrintStream("/dev/null"));
 			//System.setErr(new PrintStream(new FileOutputStream("errores.log", true)));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}
+		}*/
     	if(args.length!=0) num = Integer.parseInt(args[0]);
     	else num = Config.Modo;
         if(num!=2) ASFA = new ASFA(true);

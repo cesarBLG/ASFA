@@ -16,6 +16,7 @@ public class Config {
 	public static String SerialECP="";
 	public static String SerialPantalla="";
 	public static String SerialDIV = "";
+	public static String SerialCaptador = "";
 	public static void load()
 	{
     	try
@@ -84,6 +85,10 @@ public class Config {
         			else if (token[0].trim().equalsIgnoreCase("serialdiv"))
         			{
         				SerialDIV = token[1].trim();
+        			}
+        			else if (token[0].trim().equalsIgnoreCase("serialcaptador"))
+        			{
+        				SerialCaptador = token[1].trim();
         			}
         			else if (token[0].trim().equalsIgnoreCase("watchdog"))
         			{

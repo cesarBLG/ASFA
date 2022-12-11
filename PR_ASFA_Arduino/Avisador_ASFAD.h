@@ -203,7 +203,7 @@ class ControladorDF3Mini : public ControladorAvisador
   bool canSend()
   {
     unsigned long diff = millis()-ultimoEnvio;
-    return (!waitingAck || diff > 100) && diff > 50;
+    return /*(!waitingAck || diff > 100) && */diff > 200;
   }
   unsigned long statusRequestTime = 0;
   unsigned long nextStateCheck = 0;
@@ -285,6 +285,7 @@ class AvisadorASFAD
      sonidos[son] = 0; 
   }
   unsigned long recordatorioPausa=0;
+  unsigned long margen = 200;
   void update()
   {
     controlador.update();
@@ -296,25 +297,25 @@ class AvisadorASFAD
       if (sonidos[S6] + 3000UL < millis()) detener(S6);
       nuevo = S6;
     } else if (sonidos[S11]) {
-      if (sonidos[S11] + 300UL < millis()) detener(S11);
+      if (sonidos[S11] + 300UL + margen < millis()) detener(S11);
       nuevo = S11;
     } else if (sonidos[S21]) {
       if (sonidos[S21] + 3000UL < millis()) detener(S21);
       nuevo = S21;
     } else if (sonidos[S22]) {
-      if (sonidos[S22] + 300UL < millis()) detener(S22);
+      if (sonidos[S22] + 300UL + margen  < millis()) detener(S22);
       nuevo = S22;
     } else if (sonidos[S23]) {
-      if (sonidos[S23] + 500UL < millis()) detener(S23);
+      if (sonidos[S23] + 500UL + margen < millis()) detener(S23);
       nuevo = S23;
     } else if (sonidos[S24]) {
-      if (sonidos[S24] + 1100UL < millis()) detener(S24);
+      if (sonidos[S24] + 1100UL + margen < millis()) detener(S24);
       nuevo = S24;
     } else if (sonidos[S25]) {
-      if (sonidos[S25] + 1900UL < millis()) detener(S25);
+      if (sonidos[S25] + 1900UL + margen < millis()) detener(S25);
       nuevo = S25;
     } else if (sonidos[S26]) {
-      if (sonidos[S26] + 2900UL < millis()) detener(S26);
+      if (sonidos[S26] + 2900UL + margen < millis()) detener(S26);
       nuevo = S26;
     } else if (sonidos[S33]) {
       if (sonidos[S33] + 6000UL < millis()) detener(S33);

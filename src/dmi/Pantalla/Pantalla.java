@@ -146,6 +146,7 @@ public class Pantalla extends JPanel {
     			e.printStackTrace();
     		}*/
     	}
+    	modo_asfa = null;
     	if (Blinker != null) Blinker.stop();
         setBackground(Color.black);
         Main.dmi.ecp.unsubscribe("asfa::indicador::*");
@@ -473,6 +474,8 @@ public class Pantalla extends JPanel {
         activa = true;
         Main.dmi.ecp.sendData("asfa::pantalla::activa=1");
         set(ModoDisplay.Día);
+        validate();
+        repaint();
     }
 
     public void set(ModoDisplay m) {

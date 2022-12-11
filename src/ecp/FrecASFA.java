@@ -1,7 +1,6 @@
 package ecp;
 
 public enum FrecASFA {
-    FP,
     L1,
     L2,
     L3,
@@ -11,6 +10,7 @@ public enum FrecASFA {
     L7,
     L8,
     L9,
+    FP,
     L10,
     L11,
     AL

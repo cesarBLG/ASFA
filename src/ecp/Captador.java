@@ -1,20 +1,85 @@
 package ecp;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.Queue;
+
+import com.StateSerializer;
+import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
+import com.fazecast.jSerialComm.SerialPortInvalidPortException;
 
 import ecp.ASFA.Modo;
 
 public class Captador {
     
 	ASFA ASFA;
+	class SerialCaptador
+	{
+
+		FrecASFA u = FrecASFA.AL;
+		public SerialCaptador() {
+			if (Config.SerialCaptador == null || Config.SerialCaptador.isEmpty()) return;
+			
+			/*new Thread(() -> {
+				while(true) setup();
+			}).start();*/
+		}
+		void setup()
+		{
+			u = FrecASFA.AL;
+			InputStream in = null;
+			try
+			{
+				SerialPort sp = SerialPort.getCommPort(Config.SerialCaptador);
+				sp.openPort();
+				sp.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
+				in = sp.getInputStream();
+			}
+			catch (SerialPortInvalidPortException e) {
+				e.printStackTrace();
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				return;
+			}
+			while(true) {
+				try {
+					int b = in.read();
+					if (b < 0) continue;
+					FrecASFA f = FrecASFA.values()[b];
+					if (f != u)
+					{
+						u = f;
+						//nuevaFrecuencia(f);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+					return;
+				}
+			}
+		}
+		
+	}
     public Queue<FrecASFA> frecs = new LinkedList<>();
     
 	//FrecASFA captador = FrecASFA.FP;
     
+    SerialCaptador analizadorFrecuencias;
+    
     public Captador(ASFA asfa)
     {
     	ASFA = asfa;
+    	analizadorFrecuencias = new SerialCaptador();
     }
 	
     public void nuevaFrecuencia(FrecASFA f)
@@ -36,6 +101,12 @@ public class Captador {
     		lastSent = Clock.getSeconds();
     	else if (frecs.size() > 1)
     	{
+    		if (frecs.peek() == FrecASFA.AL || frecs.peek() == FrecASFA.FP)
+    		{
+    			frecs.poll();
+        		lastSent = Clock.getSeconds();
+    			return frecs.peek();
+    		}
     		if (lastSent + 0.005 < Clock.getSeconds())
     		{
     			lastSent = 0;

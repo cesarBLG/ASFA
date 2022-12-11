@@ -44,7 +44,8 @@ class SerialInterface
           }
           char *line = data + reindex;
           line[i - reindex] = 0;
-          const char *value = strchr(line, '=') + 1; // Los mensajes llegan en el formato: asfa::pulsador::ilum::anpar=1, por lo que separamos comando y valor
+          char *value = strchr(line, '=') + 1; // Los mensajes llegan en el formato: asfa::pulsador::ilum::anpar=1, por lo que separamos comando y valor
+          value[-1] = 0;
           lineHandler(line, value);
           reindex = i + 1;
         }

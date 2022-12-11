@@ -18,7 +18,12 @@ public interface COM {
     	{
             if (functn == 8)
             {
-                Main.ASFA.captador.nuevaFrecuencia(FrecASFA.values()[val]);
+            	FrecASFA freq = FrecASFA.AL;
+            	if (val == 0) freq = FrecASFA.FP;
+            	else if (val < 10) freq = FrecASFA.values()[val-1];
+            	else if (val == 10) freq = FrecASFA.L10;
+            	else if (val == 11) freq = FrecASFA.L11;
+                Main.ASFA.captador.nuevaFrecuencia(freq);
             }
             else if (functn == 9) Odometer.speed = (float) val / 3.6;
     	}

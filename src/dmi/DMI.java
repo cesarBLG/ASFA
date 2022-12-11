@@ -51,7 +51,6 @@ public class DMI extends JFrame {
 
     public DMI() {
         Main.dmi = this;
-        new Thread(() -> {Icono.cargarIconos();}).start();
         try {
     		Process p = Runtime.getRuntime().exec("./sound");
     		new Thread(() -> {
@@ -87,6 +86,7 @@ public class DMI extends JFrame {
         if(singleScreen) g.insets = new Insets(0, 0, 0, 0);
         else g.insets = new Insets(50, 5, 20, 70);
         pantalla = new Pantalla();
+        new Thread(() -> {Icono.cargarIconos();}).start();
         add(pantalla, g);
         g.gridwidth = 1;
         if(!singleScreen)

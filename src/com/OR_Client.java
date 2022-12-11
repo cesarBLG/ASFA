@@ -11,6 +11,8 @@ import java.net.Socket;
 
 import javax.swing.Timer;
 
+import com.STM.STMState;
+
 import dmi.Sonidos;
 import dmi.Botones.Botón;
 import dmi.Botones.Botón.TipoBotón;
@@ -90,10 +92,12 @@ public class OR_Client {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		subscribe("current_cab");
 		subscribe("asfa::frecuencia");
 		subscribe("asfa::selector_tipo");
 		subscribe("asfa::cg::conectado");
 		subscribe("asfa::cg::anulado");
+		subscribe("asfa::alimentado");
 		subscribe("asfa::akt");
 		subscribe("asfa::con");
 		subscribe("asfa::pulsador::*");
@@ -127,7 +131,7 @@ public class OR_Client {
 		if (matches(s, "asfa::conectado")) sendData("asfa::conectado="+(ASFA.ASFAconectado&&!ASFA.ASFAanulado?"1":"0"));
 		if (matches(s, "asfa::fase")) sendData("asfa::fase=" + (ASFA.Fase2 ? "2" : "1"));
 		if (matches(s, "asfa::ecp::estado") && !ASFA.display.estadoecp.isEmpty()) sendData("asfa::ecp::estado=" + ASFA.display.estadoecp);
-		if (matches(s, "asfa::pantalla::habilitada")) sendData("asfa::pantalla::habilitada=" + (ASFA.display.pantallahabilitada ? 1 : 0));
+		if (matches(s, "asfa::pantalla::habilitada")) sendData("asfa::pantalla::habilitada=" + (ASFA.display.cabinaActiva == ASFA.display.cabinaActual && ASFA.display.pantallahabilitada ? 1 : 0));
 		if (matches(s, "asfa::dmi::activo")) sendData("asfa::dmi::activo=" + (ASFA.Connected ? 1 : 0));
 		int index = s.indexOf('=');
 		if (index < 0) return;
@@ -175,6 +179,7 @@ public class OR_Client {
 			}
 			if (tb == null) return;
             ASFA.display.pulsar(tb, val.equals("1"));
+            if(tb==TipoBotón.PrePar) ASFA.display.pulsar(TipoBotón.VLCond, val.equals("1"));
             if(tb==TipoBotón.Conex)
             {
             	synchronized(ASFA)
@@ -182,7 +187,6 @@ public class OR_Client {
             		ASFA.notify();
             	}
             }
-            if(tb==TipoBotón.PrePar) ASFA.display.pulsar(TipoBotón.VLCond, val.equals("1"));
 		}
 		else if(s.startsWith("simulator_time="))
 		{
@@ -195,7 +199,7 @@ public class OR_Client {
 			{
 				DIV[i] = Integer.decode("0x"+val.substring(2*i, 2*i+2)).byteValue();
 			}
-			ASFA.div.setData(DIV, 0);
+			ASFA.div.setDataAssumeValid(DIV);
 		}
 		else if(s.startsWith("asfa::akt="))
 		{
@@ -243,6 +247,14 @@ public class OR_Client {
 		else if(s.startsWith("asfa::pantalla::activa="))
 		{
 			ASFA.display.pantallaactiva = val.equals("1");
+		}
+		else if(s.startsWith("asfa::alimentado="))
+		{
+			ASFA.Alimentado = val.equals("1");
+		}
+		else if(s.startsWith("current_cab="))
+		{
+			ASFA.display.setCabinaActual(val.equals("1") ? -1 : 1);
 		}
 	}
 	static boolean matches(String topic, String var)

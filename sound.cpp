@@ -148,7 +148,7 @@ int main(int argc, char** argv)
     
     manager.AddParameter(&trig);
     manager.AddParameter(&stop);
-    manager.AddParameter(&vol);
+    //manager.AddParameter(&vol);
     manager.AddParameter(&fabr);
     
     SDL_AddTimer(100, updateVolume, nullptr);
